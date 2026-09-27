@@ -26,6 +26,7 @@ gerar receita no MCP (art. 9º §5º, IV e §6º). Por isso a arbitragem é mode
 ```
 config/caso_base.yaml      parâmetros do caso (valores PLACEHOLDER — substituir por dados reais)
 config/itajuba_2025.yaml   mesmo caso com PLD SE/CO e PV de Itajubá (requer data/ gerado pelo importador)
+config/unifei_escalonada.yaml  planta da UNIFEI (1 MWp + PEM 350 kW) escalonada a 50 MWp + 17,5 MW
 docs/formulacao.md         formulação matemática completa (conjuntos, parâmetros, variáveis, restrições)
 src/pvbess_h2/
   parametros.py            leitura/validação do YAML
@@ -101,6 +102,21 @@ R\$ 600 mil/MW·ano; H₂ a R\$ 35/kg).
   de contrato, precisa ser tomada sobre o ano inteiro.
 - A troca central é **H₂ × receita fixa**: cada MW contratado tira bateria que alimentaria
   o eletrolisador à noite (fator de capacidade do eletrolisador: 0,57 no ótimo).
+
+### Planta da UNIFEI escalonada
+
+Proporção eletrolisador/FV da planta real (PEM NEA|Hytron de 350 kW para ~1 MWp = 0,35),
+escalonada para 50 MWp e **17,5 MW** de eletrolisador (carga mínima de 10%, típica de PEM).
+O BESS continua hipotético (a planta não tem bateria).
+
+| Caso | Eletrolisador | P_cap ótimo | Lucro anual | H₂ produzido | FC do eletrolisador |
+|---|---|---|---|---|---|
+| `itajuba_2025` | 10 MW | 50,8 MW | R\$ 60,1 mi | 905 t | 0,57 |
+| `unifei_escalonada` | 17,5 MW | **54,4 MW** | R\$ 67,5 mi | 1.117 t | 0,40 |
+
+Com um eletrolisador maior, mais PV é convertido em H₂ **durante o dia**, sem passar pela
+bateria. O módulo mercantil perde valor e o ótimo desloca mais potência para o LRCAP.
+Pendências: catálogo do eletrolisador e geração medida da UFV.
 
 ## Próximos passos sugeridos
 
