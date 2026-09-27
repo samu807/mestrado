@@ -118,6 +118,22 @@ Com um eletrolisador maior, mais PV é convertido em H₂ **durante o dia**, sem
 bateria. O módulo mercantil perde valor e o ótimo desloca mais potência para o LRCAP.
 Pendências: catálogo do eletrolisador e geração medida da UFV.
 
+### Sensibilidade: receita fixa do LRCAP × preço do H₂
+
+Benders anual em 48 combinações (6 receitas fixas × 8 preços de H₂), caso `unifei_escalonada`
+(`python scripts/mapa_sensibilidade.py`, ~56 min em 4 núcleos; *gap* máximo 0,11%).
+
+![Mapa de sensibilidade](docs/figuras/mapa_sensibilidade_potencia_lucro.png)
+
+- Em **nenhuma** combinação compensa ficar fora do LRCAP: a potência ótima vai de 43,8 a 60 MW.
+- Com receita fixa ≥ R\$ 1,5 mi/MW·ano (custo estimado de baterias), o ótimo é **toda a bateria
+  no LRCAP** para qualquer preço de H₂ da faixa.
+- A fronteira em que o ótimo deixa de ser 60 MW se desloca para a direita com a receita fixa:
+  H₂ a R\$ 25/kg (R\$ 330 mil), R\$ 30/kg (600 mil), R\$ 40/kg (830 mil), R\$ 45/kg (1,0 mi).
+- Contratar 54,4 MW (ótimo do cenário atual) custa até R\$ 11,6 mi/ano de arrependimento se a
+  receita fixa vier alta; errar para cima (60 MW) tende a custar menos
+  (`docs/figuras/mapa_sensibilidade_arrependimento.png`).
+
 ## Próximos passos sugeridos
 
 1. Quando o edital da ANEEL sair: incluir penalidades e abatimento da receita fixa por

@@ -109,18 +109,19 @@ def graficos(df, p_ref, saida):
     ref = (RECEITAS.index(600e3), PRECOS_H2.index(35))
     fig, ax = plt.subplots(1, 2, figsize=(15, 5.8))
     _heatmap(ax[0], grade("p_cap_otimo_mw"), "Potência ótima no LRCAP", lambda v: f"{v:.0f}",
-             "MW", vmin=0, vmax=60, destaque=ref)
+             "MW", vmin=30, vmax=60, destaque=ref)
     _heatmap(ax[1], grade("lucro_rs") / 1e6, "Lucro anual no ótimo", lambda v: f"{v:.0f}",
              "R$ mi/ano", destaque=ref)
-    fig.text(0.01, 0.01, "Quadro destacado: cenário atual (R$ 600 mil/MW·ano; H₂ a R$ 35/kg). "
-             "Potência 0 = não participa; mínimo de 30 MW (Portaria MME 136/2026, art. 7º, III).",
+    fig.text(0.01, 0.01, "Quadro destacado: cenário atual (R\\$ 600 mil/MW·ano; H₂ a R\\$ 35/kg). "
+             "Escala de 30 MW (mínimo do leilão, Portaria MME 136/2026, art. 7º, III) a 60 MW (BESS inteiro).",
              fontsize=8, color="#555555")
     fig.tight_layout(rect=(0, 0.03, 1, 1))
     fig.savefig(saida / "mapa_potencia_lucro.png", dpi=150)
     plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(8, 5.8))
-    _heatmap(ax, grade("arrependimento_rs") / 1e6, f"Arrependimento de contratar {p_ref:.1f} MW",
+    # Valores negativos (dentro do gap de otimalidade) são exibidos como zero
+    _heatmap(ax, np.clip(grade("arrependimento_rs") / 1e6, 0, None), f"Arrependimento de contratar {p_ref:.1f} MW",
              lambda v: f"{v:.1f}", "R$ mi/ano perdidos vs. o ótimo", vmin=0, destaque=ref,
              vmax=max(np.nanmax(grade("arrependimento_rs") / 1e6), 1e-6))
     fig.tight_layout()
