@@ -33,11 +33,13 @@ src/pvbess_h2/
   modelo.py                construção do modelo Pyomo e chamada do solver
   resultados.py            série horária de resultados, indicadores e gráfico
   importacao.py            leitura dos formatos da CCEE e do PVGIS
+  decomposicao.py          Benders com cortes reforçados (P_cap no mestre, semanas nos subproblemas)
 scripts/
   rodar_caso.py            resolve um caso e salva CSV + indicadores + gráfico em resultados/
   varredura_lrcap.py       sensibilidade: lucro × potência contratada no LRCAP
   importar_dados.py        converte CSVs brutos da CCEE (PLD) e do PVGIS (PV) para data/
-tests/test_modelo.py       testes de consistência (balanço, SOC, H₂ verde, LRCAP...)
+  anual_benders.py         ano completo por decomposição de Benders (blocos semanais em paralelo)
+tests/                     testes (modelo, importação de dados, decomposição)
 ```
 
 ## Como rodar
@@ -46,6 +48,7 @@ tests/test_modelo.py       testes de consistência (balanço, SOC, H₂ verde, L
 pip install -r requirements.txt
 python scripts/rodar_caso.py                     # caso base (7 dias)
 python scripts/varredura_lrcap.py --passos 11    # curva de arbitragem LRCAP x MCP
+python scripts/anual_benders.py                  # ano completo de Itajubá (≈ 75 s em 4 núcleos)
 python -m pytest                                 # testes
 ```
 
@@ -72,28 +75,38 @@ Formatos aceitos diretamente pelo modelo (para outras fontes):
 `timestamp,pld`, `timestamp,fator_capacidade` e, para o despacho do ONS,
 `timestamp,descarga_pu,recarga_pu` (em `lrcap.despacho_ons.arquivo`).
 
-## Primeiros resultados (dados sintéticos, apenas ilustrativos)
+## Resultados — Itajubá (MG), ano de 2025
 
-Caso base (7 dias), com BESS de 60 MW / 300 MWh e despacho diário do ONS (descarga
-18h–21h, recarga 10h–14h):
+PLD horário SE/CO de 2025 (CCEE), PV do PVGIS-ERA5 (50 MWp, fator de capacidade 16,9%),
+BESS de 60 MW / 300 MWh, eletrolisador de 10 MW, despacho diário do ONS (descarga
+18h–21h, recarga 10h–14h). **Parâmetros econômicos ainda provisórios** (receita fixa de
+R\$ 600 mil/MW·ano; H₂ a R\$ 35/kg).
 
-| Potência no LRCAP | Lucro no horizonte |
-|---|---|
-| 0 MW (só mercantil) | R\$ 1,04 mi |
-| **31,4 MW (ótimo)** | **R\$ 1,31 mi** |
-| 60 MW (BESS inteiro) | R\$ 1,19 mi |
+Ótimo anual por Benders (3 iterações, *gap* 0,04%): **P_cap = 50,8 MW**, lucro de
+**R\$ 60,1 mi/ano**.
 
-O ótimo fica perto do mínimo de 30 MW. Com os parâmetros atuais, cada MW deixado no
-módulo mercantil rende mais alimentando o eletrolisador à noite (H₂ a R\$ 35/kg ≈
-R\$ 636/MWh) do que a receita fixa de R\$ 600 mil/MW·ano. **O preço do H₂ e a receita
-fixa do LRCAP continuam sendo os parâmetros decisivos.** O preço inicial do leilão
-ainda será definido pelo MME.
+![Convergência de Benders e função valor](docs/figuras/benders_itajuba_2025.png)
+
+| Potência no LRCAP | Lucro anual | MCP | H₂ | Receita fixa |
+|---|---|---|---|---|
+| 0 MW | R\$ 41,0 mi | 0,9 | 43,8 | 0 |
+| 30 MW (mínimo) | R\$ 56,5 mi | 0,7 | 43,6 | 18,0 |
+| **50,8 MW (ótimo)** | **R\$ 60,1 mi** | 3,8 | 31,7 | 30,5 |
+| 60 MW (BESS inteiro) | R\$ 58,6 mi | 6,5 | 21,5 | 36,0 |
+
+- Participar do LRCAP aumenta o lucro em cerca de R\$ 19 mi/ano em relação a não participar.
+- O ótimo é **plano** entre 45 e 55 MW (variação < 0,5%): a escolha exata depende mais dos
+  parâmetros econômicos provisórios do que da operação.
+- Semanas isoladas levam a ótimos de 35 a 56 MW. Por isso a decisão, que vale por 15 anos
+  de contrato, precisa ser tomada sobre o ano inteiro.
+- A troca central é **H₂ × receita fixa**: cada MW contratado tira bateria que alimentaria
+  o eletrolisador à noite (fator de capacidade do eletrolisador: 0,57 no ótimo).
 
 ## Próximos passos sugeridos
 
 1. Quando o edital da ANEEL sair: incluir penalidades e abatimento da receita fixa por
    indisponibilidade, e o preço inicial do leilão.
-2. Substituir as séries sintéticas por PLD histórico e geração PV do local de estudo.
-3. Definir parâmetros técnico-econômicos com base na literatura (eletrolisador PEM/alcalino, BESS Li-ion).
-4. Estender para ano completo com dias representativos e depois para a versão estocástica,
-   com cenários de despacho do ONS (ver `docs/formulacao.md`, seção 7).
+2. Definir parâmetros técnico-econômicos com base na literatura (eletrolisador PEM/alcalino, BESS Li-ion).
+3. Versão estocástica em dois estágios com CVaR (cenários de despacho do ONS, PLD e PV),
+   reaproveitando a decomposição de Benders (ver `docs/formulacao.md`, seções 6 e 8).
+4. Eletrolisador: custo de partida, tempos mínimos ligado/desligado e *standby*.

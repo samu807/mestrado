@@ -146,7 +146,55 @@ energia renovável local (PV direto ou PV armazenado no módulo mercantil).
 $$ \alpha^{el}\bar P^{el} z_t \le p^{el}_t \le \bar P^{el} z_t, \qquad m_t = \frac{1000}{k^{el}}\, p^{el}_t $$
 $$ s_t = s_{t-1} + (m_t - v_t)\Delta t,\quad s_{-1}=S_0,\quad s_{N-1}\ge S_0, \qquad \sum_{t\in\mathcal{T}_d} v_t\Delta t \ge D^{h2}\ \ \forall d $$
 
-## 6. Hipóteses simplificadoras (v0.2) — a revisar
+## 6. Solução do problema anual — decomposição de Benders
+
+Resolver as 8.760 horas de uma vez (≈ 26 mil variáveis binárias) não terminou em 15 min.
+O problema tem, porém, uma estrutura favorável: **$P^{cap}$ é a única variável que acopla
+o ano**. Dividindo o ano em blocos $w \in \mathcal{W}$ (semanas), com estados cíclicos em cada
+bloco (SOC do módulo mercantil e estoque de H₂ voltam ao valor inicial):
+
+$$
+\max_{P^{cap}\in\{0\}\cup[\underline P^{cap},\,\bar P^{cap}]}\ \ R^{cap}\tfrac{H}{8760}P^{cap} + \sum_{w\in\mathcal{W}} Q_w(P^{cap})
+$$
+
+onde $Q_w(x)$ é o lucro operacional ótimo do bloco $w$ com $P^{cap}=x$ (um MILP de 168 h).
+
+**Por que não o Benders clássico.** Os subproblemas têm binárias ($y^{bat}, y^{rede}, z$),
+então $Q_w$ não é côncava em geral e o corte obtido do dual do LP não é válido.
+
+**Cortes de Benders reforçados** (Zou, Ahmed & Sun, 2019). Com a restrição de cópia
+$P^{cap}_w = x$ e $\lambda_w$ = dual dessa restrição no LP relaxado em $\hat x$:
+
+$$
+C_w(\lambda_w) = \max_{(y,\,z)\,\in\,X_w}\ f_w(y,z) - \lambda_w z
+\qquad\Longrightarrow\qquad
+\theta_w \le C_w(\lambda_w) + \lambda_w P^{cap}
+$$
+
+em que $X_w$ é o conjunto viável do MILP do bloco (com $z$ livre). O corte é válido para
+qualquer $P^{cap}$, pois é uma relaxação lagrangiana. $C_w$ é tomado como o **limite dual**
+do solver, o que preserva a validade mesmo com *gap* de MIP.
+
+**Algoritmo**
+1. Avaliar $\hat x \in \{0,\ \underline P^{cap},\ \bar P^{cap}\}$: para cada bloco, MILP com
+   $P^{cap}=\hat x$ (valor $Q_w$, solução viável), LP relaxado (dual $\lambda_w$) e MILP
+   lagrangiano ($C_w$). Os blocos são independentes e rodam em paralelo.
+2. Mestre (MILP pequeno): $\max R^{cap}\tfrac{H}{8760}P + \sum_w\theta_w$ sujeito aos cortes
+   e a $\underline P^{cap} w \le P \le \bar P^{cap} w$. O valor do mestre é um **limite
+   superior** (UB).
+3. Avaliar o $\hat x$ proposto pelo mestre: $R^{cap}\tfrac{H}{8760}\hat x + \sum_w Q_w(\hat x)$ é
+   uma solução viável, ou seja, um **limite inferior** (LB).
+4. Parar quando $(UB-LB)/LB \le 0{,}1\%$. Se o mestre repropõe um ponto já avaliado, o *gap*
+   restante é reportado como certificado.
+
+Implementação: `src/pvbess_h2/decomposicao.py`; execução: `scripts/anual_benders.py`.
+No caso Itajubá 2025 converge em 3 iterações (~75 s em 4 núcleos), *gap* 0,04%.
+
+**Hipótese introduzida:** a condição cíclica semanal restringe um pouco a operação em
+relação ao ano contínuo (não se transfere energia ou H₂ entre semanas). Com o tanque de H₂
+e a bateria mercantil operando em ciclos diários, o efeito tende a ser pequeno.
+
+## 7. Hipóteses simplificadoras (v0.2) — a revisar
 
 1. **Determinístico e com previsão perfeita** de PLD, geração PV **e despacho do ONS**.
    O despacho real é incerto (art. 5º §2º): é o principal candidato à versão estocástica.
@@ -167,10 +215,11 @@ $$ s_t = s_{t-1} + (m_t - v_t)\Delta t,\quad s_{-1}=S_0,\quad s_{N-1}\ge S_0, \q
    (contêineres/inversores) e a habilitação exige baterias **novas** (art. 7º §2º).
 9. Séries sintéticas no caso base (ver `src/pvbess_h2/dados.py`).
 
-## 7. Extensões previstas
+## 8. Extensões previstas
 
 - **Estocástica em dois estágios**: $P^{cap}$ no 1º estágio; operação por cenário (PLD,
-  PV, **despacho do ONS**) no 2º estágio; medidas de risco (CVaR).
+  PV, **despacho do ONS**) no 2º estágio; medidas de risco (CVaR). A decomposição da
+  seção 6 se estende diretamente: cada par (bloco, cenário) vira um subproblema.
 - **Dias representativos** (clusterização) para simular o ano todo; o limite de 366
   ciclos/ano passa a ser relevante.
 - Penalidades e abatimento da receita fixa por indisponibilidade, quando o edital sair.
