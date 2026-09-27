@@ -24,7 +24,10 @@ def serie_resultados(m: pyo.ConcreteModel, series: pd.DataFrame) -> pd.DataFrame
     df["tanque_h2_kg"] = v(m.s_h2)
     df["p_exportacao_mw"] = v(m.p_exp)
     df["p_importacao_mw"] = v(m.p_imp)
-    df["deficit_lrcap_mw"] = v(m.deficit)
+    df["p_descarga_lrcap_mw"] = [pyo.value(m.p_dis_lr[t]) for t in m.T]
+    df["p_recarga_lrcap_mw"] = [pyo.value(m.p_ch_lr[t]) for t in m.T]
+    df["soc_lrcap_mwh"] = df["ons_soc_pu"] * pyo.value(m.P_cap)
+    df["fluxo_conexao_mw"] = [pyo.value(m.fluxo_conexao[t]) for t in m.T]
     return df.round(6)
 
 
@@ -38,8 +41,12 @@ def indicadores(m: pyo.ConcreteModel, df: pd.DataFrame, p: Parametros) -> pd.Ser
         "custo_importacao_rs": pyo.value(m.custo_importacao),
         "custo_h2_rs": pyo.value(m.custo_h2),
         "custo_degradacao_rs": pyo.value(m.custo_degradacao),
-        "penalidade_lrcap_rs": pyo.value(m.penalidade_lrcap),
+        "custo_recarga_lrcap_rs": pyo.value(m.custo_recarga_lrcap),
         "potencia_lrcap_mw": pyo.value(m.P_cap),
+        "energia_modulo_lrcap_mwh": p.bess.energia_mwh - pyo.value(m.E_merc),
+        "energia_modulo_mercantil_mwh": pyo.value(m.E_merc),
+        "energia_injetada_lrcap_mwh": e("p_descarga_lrcap_mw"),
+        "ciclos_completos_lrcap": df["ons_descarga_pu"].sum() * p.horizonte.dt_h / p.lrcap.duracao_h,
         "energia_pv_disponivel_mwh": e("pv_disp_mw"),
         "energia_pv_utilizada_mwh": e("p_pv_mw"),
         "curtailment_mwh": e("curtailment_mw"),
@@ -47,7 +54,7 @@ def indicadores(m: pyo.ConcreteModel, df: pd.DataFrame, p: Parametros) -> pd.Ser
         "energia_importada_mwh": e("p_importacao_mw"),
         "energia_eletrolisador_mwh": e("p_eletrolisador_mw"),
         "h2_produzido_kg": e("producao_h2_kg_h"),
-        "ciclos_equivalentes_bess": e("p_descarga_bess_mw") / p.bess.energia_mwh,
+        "ciclos_equivalentes_mercantil": e("p_descarga_bess_mw") / max(pyo.value(m.E_merc), 1e-9),
         "fator_capacidade_eletrolisador": df["p_eletrolisador_mw"].mean() / p.eletrolisador.potencia_max_mw,
         "preco_medio_exportacao_rs_mwh": (df["pld_rs_mwh"] * df["p_exportacao_mw"]).sum()
         / max(df["p_exportacao_mw"].sum(), 1e-9),
@@ -68,11 +75,15 @@ def grafico_operacao(df: pd.DataFrame, arquivo: str | Path) -> None:
     ax[0].set_ylabel("MW")
     ax[0].legend(loc="upper right", ncol=4, fontsize=8)
 
-    ax[1].bar(df.index, df["p_carga_bess_mw"], width=0.04, color="#2a9d5c", label="Carga")
-    ax[1].bar(df.index, -df["p_descarga_bess_mw"], width=0.04, color="#c0392b", label="Descarga")
+    ax[1].bar(df.index, df["p_carga_bess_mw"], width=0.04, color="#2a9d5c", label="Carga mercantil")
+    ax[1].bar(df.index, -df["p_descarga_bess_mw"], width=0.04, color="#c0392b", label="Descarga mercantil")
+    ax[1].step(df.index, df["p_recarga_lrcap_mw"] - df["p_descarga_lrcap_mw"], where="post",
+               color="#1f5fbf", lw=1.2, label="Módulo LRCAP (ONS)")
     ax1b = ax[1].twinx()
-    ax1b.plot(df.index, df["soc_mwh"], color="#333333", lw=1.2, label="SOC")
+    ax1b.plot(df.index, df["soc_mwh"], color="#333333", lw=1.2, label="SOC mercantil")
+    ax1b.plot(df.index, df["soc_lrcap_mwh"], color="#1f5fbf", lw=1, ls="--", label="SOC LRCAP")
     ax1b.set_ylabel("SOC [MWh]")
+    ax1b.legend(loc="upper right", fontsize=8)
     ax[1].set_ylabel("BESS [MW]")
     ax[1].legend(loc="upper left", fontsize=8)
 
@@ -81,9 +92,9 @@ def grafico_operacao(df: pd.DataFrame, arquivo: str | Path) -> None:
     ax[2].legend(loc="upper right", fontsize=8)
 
     ax[3].plot(df.index, df["pld_rs_mwh"], color="#333333", lw=1.2, label="PLD")
-    janela = df["janela_lrcap"] > 0
-    ax[3].fill_between(df.index, 0, df["pld_rs_mwh"].max(), where=janela, color="#1f5fbf",
-                       alpha=0.12, step="mid", label="Janela LRCAP")
+    despacho = df["ons_descarga_pu"] > 0
+    ax[3].fill_between(df.index, 0, df["pld_rs_mwh"].max(), where=despacho, color="#1f5fbf",
+                       alpha=0.12, step="post", label="Descarga ONS (LRCAP)")
     ax[3].set_ylabel("R$/MWh")
     ax[3].legend(loc="upper right", fontsize=8)
 

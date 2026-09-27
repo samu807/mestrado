@@ -21,14 +21,16 @@ pv:
   nebulosidade: 0.25           # variabilidade diária (0 = céu limpo) - sintético
 
 bess:
-  energia_mwh: 120.0           # capacidade de energia [MWh]
-  potencia_carga_mw: 30.0      # limite de carga [MW]
-  potencia_descarga_mw: 30.0   # limite de descarga [MW]
+  # Capacidade TOTAL instalada. Ela é dividida entre o módulo LRCAP (operado pelo
+  # ONS) e o módulo mercantil (MCP + H2) conforme a potência contratada no LRCAP.
+  energia_mwh: 300.0           # capacidade de energia [MWh]
+  potencia_carga_mw: 60.0      # limite de carga [MW]
+  potencia_descarga_mw: 60.0   # limite de descarga [MW]
   eficiencia_carga: 0.95
   eficiencia_descarga: 0.95
-  soc_min_frac: 0.10           # SOC mínimo (fração de energia_mwh)
+  soc_min_frac: 0.10           # SOC mínimo (fração da energia de cada módulo) - DoD
   soc_max_frac: 1.00
-  soc_inicial_frac: 0.50       # SOC inicial = final (condição cíclica)
+  soc_inicial_frac: 0.50       # SOC inicial = final do módulo mercantil (condição cíclica)
   custo_degradacao_rs_mwh: 50.0  # custo por MWh descarregado [R$/MWh]
 
 eletrolisador:
@@ -45,8 +47,11 @@ hidrogenio:
   venda_max_kg_h: null         # limite de retirada por hora (null = sem limite)
 
 rede:
-  exportacao_max_mw: 40.0      # MUST / limite do ponto de conexão
-  importacao_max_mw: 40.0
+  # Limites do ponto de conexão COMPARTILHADO (PV + H2 + BESS mercantil + SAE LRCAP),
+  # aplicados ao fluxo líquido. Portaria MME 136/2026, art. 9º §13: o MUST deve
+  # permitir a descarga e a recarga total do SAE.
+  exportacao_max_mw: 80.0
+  importacao_max_mw: 80.0
   permitir_importacao: true
   # Se true, o eletrolisador só pode ser suprido por energia renovável local
   # (PV + BESS carregada pelo PV): a importação da rede é proibida.
@@ -63,14 +68,30 @@ mercado:
   semente: 42                  # semente aleatória das séries sintéticas
 
 lrcap:
+  # Regras: Portaria Normativa MME nº 136/2026 (LRCAP de 2026 - Armazenamento).
+  # A potência contratada é atendida por um MÓDULO do BESS com PMI próprio,
+  # despachado pelo ONS (descarga e recarga). Esse módulo não gera receita no MCP:
+  # a liquidação da sua energia ao PLD vai para a CONCAP (art. 9º §§ 5º-IV e 6º).
   habilitado: true
-  # Receita fixa anual por MW de potência contratada [R$/MW.ano], rateada
-  # proporcionalmente ao horizonte simulado.
+  # Receita fixa por MW contratado [R$/MW.ano], rateada pelo horizonte simulado.
+  # PLACEHOLDER: o preço-teto (PREÇO INICIAL) será definido pelo MME no edital.
   receita_fixa_rs_mw_ano: 600000.0
-  duracao_h: 4.0               # duração mínima de entrega exigida [h]
-  potencia_max_oferta_mw: null # null = limitado pela descarga do BESS e pela rede
-  potencia_fixa_mw: null       # se informado, fixa a potência contratada (análise de sensibilidade)
-  janela_disponibilidade_h: [17, 18, 19, 20, 21]  # horas em que a reserva de energia deve estar disponível
-  # Horas (índices a partir de 0 no horizonte) em que o ONS aciona o recurso.
-  acionamentos: []
-  penalidade_deficit_rs_mwh: 5000.0
+  potencia_min_mw: 30.0        # art. 7º, III: disponibilidade mínima de 30 MW
+  potencia_max_oferta_mw: null # null = limitado pelo BESS e pela conexão
+  potencia_fixa_mw: null       # se informado, fixa a potência contratada (sensibilidade)
+  duracao_h: 4.0               # art. 4º §3º: 4 h por ciclo completo
+  # Energia instalada no módulo LRCAP por MW contratado [MWh/MW]. Deve cobrir
+  # duracao_h / eficiencia_descarga dentro da faixa de SOC (DoD é escolha do
+  # empreendedor, art. 4º §8º).
+  energia_por_mw_h: 4.8
+  rte_referencia: 0.85         # art. 7º, VI e art. 9º §7º: recarga custeada pela CONCAP até injetada/RTE
+  recarga_max_h: 6.0           # art. 4º §10 e art. 7º, VII: recarga completa em até 6 h
+  ciclos_max_dia: 2            # art. 4º §3º
+  ciclos_max_ano: 366          # art. 4º §3º
+  # Perfil de despacho do ONS (exógeno ao empreendedor - art. 5º §2º).
+  despacho_ons:
+    # CSV opcional com colunas `timestamp,descarga_pu,recarga_pu` (fração de P_cap).
+    arquivo: null
+    horas_descarga: [18, 19, 20, 21]      # descarga a potência plena
+    horas_recarga: [10, 11, 12, 13, 14]   # recarga até encher (ONS minimiza custo - art. 4º §14)
+    dias: null                            # null = todos os dias; ou lista de índices de dia (0, 1, ...)

@@ -1,6 +1,6 @@
 """Análise de sensibilidade da arbitragem LRCAP x MCP: fixa a potência contratada no
-LRCAP em diferentes níveis e reotimiza a operação, mostrando como as receitas se
-redistribuem entre capacidade, energia (MCP) e hidrogênio.
+LRCAP (0 ou entre o mínimo de 30 MW e o máximo viável) e reotimiza a operação,
+mostrando como as receitas se redistribuem entre capacidade, energia (MCP) e hidrogênio.
 
 Uso:  python scripts/varredura_lrcap.py [config/caso_base.yaml] [--passos 11]
 """
@@ -17,6 +17,7 @@ sys.path.insert(0, str(RAIZ / "src"))
 
 from pvbess_h2 import (carregar_parametros, construir_modelo, indicadores,  # noqa: E402
                        montar_series, resolver, serie_resultados)
+from pvbess_h2.modelo import potencia_lrcap_max  # noqa: E402
 
 
 def main():
@@ -28,13 +29,13 @@ def main():
     p = carregar_parametros(args.config)
     series = montar_series(p)
 
-    # Potência máxima viável pela reserva de energia exigida na janela
-    b = p.bess
-    p_cap_energia = (b.soc_max_frac - b.soc_min_frac) * b.energia_mwh * b.eficiencia_descarga / p.lrcap.duracao_h
-    p_cap_max = min(b.potencia_descarga_mw, p.rede.exportacao_max_mw, p_cap_energia)
+    p_cap_max = potencia_lrcap_max(p)
+    niveis = [0.0]
+    if p_cap_max > 0:
+        niveis += list(np.linspace(p.lrcap.potencia_min_mw, p_cap_max, max(args.passos - 1, 1)))
 
     linhas = []
-    for pcap in np.linspace(0, p_cap_max, args.passos):
+    for pcap in niveis:
         p.lrcap.potencia_fixa_mw = float(pcap)
         m = construir_modelo(p, series)
         resolver(m)

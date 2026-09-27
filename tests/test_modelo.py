@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import numpy as np
+import pyomo.environ as pyo
 import pytest
 
 from pvbess_h2 import (carregar_parametros, construir_modelo, indicadores, montar_series,
@@ -9,12 +10,15 @@ from pvbess_h2 import (carregar_parametros, construir_modelo, indicadores, monta
 CONFIG = Path(__file__).resolve().parents[1] / "config" / "caso_base.yaml"
 
 
-def resolver_caso(ajustes=None, dias=2):
+def resolver_caso(ajustes=None, dias=2, despacho=None):
     p = carregar_parametros(CONFIG)
     p.horizonte.dias = dias
     for secao, valores in (ajustes or {}).items():
         for k, v in valores.items():
             setattr(getattr(p, secao), k, v)
+    for k, v in (despacho or {}).items():
+        setattr(p.lrcap.despacho_ons, k, v)
+    p.validar()
     s = montar_series(p)
     m = construir_modelo(p, s)
     resolver(m)
@@ -29,13 +33,14 @@ def test_balanco_de_potencia():
     assert np.allclose(oferta, demanda, atol=1e-5)
 
 
-def test_limites_e_exclusividade_bess():
-    p, _, df, _ = resolver_caso()
+def test_limites_e_exclusividade_bess_mercantil():
+    p, m, df, _ = resolver_caso()
     b = p.bess
-    assert (df.soc_mwh >= b.soc_min_frac * b.energia_mwh - 1e-6).all()
-    assert (df.soc_mwh <= b.soc_max_frac * b.energia_mwh + 1e-6).all()
+    e_merc = pyo.value(m.E_merc)
+    assert (df.soc_mwh >= b.soc_min_frac * e_merc - 1e-6).all()
+    assert (df.soc_mwh <= b.soc_max_frac * e_merc + 1e-6).all()
     assert ((df.p_carga_bess_mw * df.p_descarga_bess_mw) < 1e-6).all()
-    assert df.soc_mwh.iloc[-1] >= b.soc_inicial_frac * b.energia_mwh - 1e-6
+    assert df.soc_mwh.iloc[-1] >= b.soc_inicial_frac * e_merc - 1e-6
 
 
 def test_carga_minima_eletrolisador():
@@ -50,19 +55,46 @@ def test_h2_verde_estrito_proibe_importacao():
     assert df.p_importacao_mw.max() < 1e-6
 
 
-def test_reserva_lrcap_na_janela():
-    p, m, df, kpi = resolver_caso()
+def test_divisao_do_bess_entre_modulos():
+    p, _, df, kpi = resolver_caso()
     b, lr = p.bess, p.lrcap
-    reserva = b.soc_min_frac * b.energia_mwh + kpi.potencia_lrcap_mw * lr.duracao_h / b.eficiencia_descarga
-    na_janela = df.janela_lrcap == 1
-    assert (df.soc_mwh[na_janela] >= reserva - 1e-5).all()
+    pcap = kpi.potencia_lrcap_mw
+    assert kpi.energia_modulo_lrcap_mwh == pytest.approx(lr.energia_por_mw_h * pcap, abs=1e-2)
+    assert (df.p_descarga_bess_mw + df.p_descarga_lrcap_mw <= b.potencia_descarga_mw + 1e-6).all()
+    assert (df.p_carga_bess_mw + df.p_recarga_lrcap_mw <= b.potencia_carga_mw + 1e-6).all()
 
 
-def test_acionamento_lrcap_entregue():
-    _, _, df, kpi = resolver_caso({"lrcap": {"acionamentos": [18, 19], "potencia_fixa_mw": 10.0}})
-    assert kpi.potencia_lrcap_mw == pytest.approx(10.0)
-    assert (df.p_exportacao_mw.iloc[[18, 19]] + df.deficit_lrcap_mw.iloc[[18, 19]] >= 10 - 1e-6).all()
-    assert kpi.penalidade_lrcap_rs == pytest.approx(0.0, abs=1e-3)
+def test_potencia_minima_lrcap_30mw():
+    _, _, _, kpi = resolver_caso()
+    assert kpi.potencia_lrcap_mw < 1e-6 or kpi.potencia_lrcap_mw >= 30 - 1e-6
+    # BESS pequeno demais para o mínimo de 30 MW: não participa do LRCAP
+    _, _, _, kpi = resolver_caso({"bess": {"potencia_carga_mw": 20.0, "potencia_descarga_mw": 20.0}})
+    assert kpi.potencia_lrcap_mw == pytest.approx(0.0, abs=1e-6)
+
+
+def test_modulo_lrcap_segue_despacho_ons():
+    p, _, df, kpi = resolver_caso({"lrcap": {"potencia_fixa_mw": 40.0}})
+    assert kpi.potencia_lrcap_mw == pytest.approx(40.0)
+    em_despacho = df.index.hour.isin(p.lrcap.despacho_ons.horas_descarga)
+    assert np.allclose(df.p_descarga_lrcap_mw[em_despacho], 40.0)
+    assert np.allclose(df.p_descarga_lrcap_mw[~em_despacho], 0.0)
+    # SOC do módulo nunca sai da faixa permitida
+    e_lr = p.lrcap.energia_por_mw_h * 40.0
+    assert (df.soc_lrcap_mwh >= p.bess.soc_min_frac * e_lr - 1e-6).all()
+    # Receita no MCP vem só do lado mercantil (energia do módulo LRCAP vai para a CONCAP)
+    assert kpi.receita_mcp_rs == pytest.approx((df.pld_rs_mwh * df.p_exportacao_mw).sum(), rel=1e-6)
+
+
+def test_conexao_compartilhada():
+    p, _, df, _ = resolver_caso({"rede": {"exportacao_max_mw": 45.0, "importacao_max_mw": 45.0},
+                                 "lrcap": {"potencia_fixa_mw": 40.0}})
+    assert (df.fluxo_conexao_mw <= 45.0 + 1e-6).all()
+    assert (df.fluxo_conexao_mw >= -45.0 - 1e-6).all()
+
+
+def test_despacho_ons_inviavel_e_detectado():
+    with pytest.raises(ValueError, match="inviável"):
+        resolver_caso(despacho={"horas_descarga": list(range(12, 20)), "horas_recarga": [2, 3]})
 
 
 def test_lrcap_desabilitado_nao_contrata():

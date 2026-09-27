@@ -7,10 +7,19 @@ implementado em Python/[Pyomo](https://www.pyomo.org/) e resolvido com o
 [HiGHS](https://highs.dev/) (gratuito e de código aberto).
 
 ```
-PV ──┐                         ┌──► Rede (MCP, liquidado ao PLD)
-     ├──► Barramento ──────────┼──► Eletrolisador ──► Tanque H₂ ──► Venda de H₂
-BESS ◄┘   (balanço de potência) └──► LRCAP (reserva de capacidade do BESS)
+ Lado mercantil (operado pelo empreendedor)
+   PV ────────────┐
+   BESS mercantil ◄┼─► Eletrolisador ─► Tanque H₂ ─► venda de H₂
+                   └─► exportação ao MCP (PLD) ──┐
+                                                 ├─► ponto de conexão compartilhado ◄─► SIN
+ BESS módulo LRCAP ◄─► despacho do ONS ──────────┘   (receita fixa; energia liquidada na CONCAP)
 ```
+
+As regras do LRCAP seguem a **Portaria Normativa MME nº 136/2026** (LRCAP de 2026 —
+Armazenamento). O ponto central: a potência contratada é operada pelo ONS e não pode
+gerar receita no MCP (art. 9º §5º, IV e §6º). Por isso a arbitragem é modelada como a
+**divisão do BESS** entre um módulo LRCAP e um módulo mercantil. Detalhes em
+`docs/formulacao.md`.
 
 ## Estrutura
 
@@ -19,7 +28,7 @@ config/caso_base.yaml      parâmetros do caso (valores PLACEHOLDER — substitu
 docs/formulacao.md         formulação matemática completa (conjuntos, parâmetros, variáveis, restrições)
 src/pvbess_h2/
   parametros.py            leitura/validação do YAML
-  dados.py                 séries de entrada (PV, PLD, janelas LRCAP) — reais via CSV ou sintéticas
+  dados.py                 séries de entrada (PV, PLD, despacho do ONS) — reais via CSV ou sintéticas
   modelo.py                construção do modelo Pyomo e chamada do solver
   resultados.py            série horária de resultados, indicadores e gráfico
 scripts/
@@ -47,23 +56,31 @@ Os resultados vão para `resultados/<nome_do_cenario>/`.
   `mercado.arquivo: data/pld_2025.csv`.
 - **Geração PV**: CSV com colunas `timestamp,fator_capacidade` (0–1; ex.: PVGIS/INMET) e
   `pv.arquivo: data/pv_local.csv`.
+- **Despacho do ONS no módulo LRCAP**: CSV com colunas `timestamp,descarga_pu,recarga_pu`
+  (fração da potência contratada) e `lrcap.despacho_ons.arquivo: data/despacho_ons.csv`.
 
 ## Primeiros resultados (dados sintéticos, apenas ilustrativos)
 
-No caso base (7 dias), o modelo contrata ~25,7 MW no LRCAP — o máximo que a reserva de
-4 h de energia permite com um BESS de 120 MWh. O custo dessa escolha aparece na operação:
-o BESS precisa ficar carregado na janela de ponta (17h–21h) e deixa de fazer arbitragem
-justamente nas horas de PLD mais alto, descarregando depois para alimentar o
-eletrolisador durante a noite. Com os parâmetros atuais, o H₂ a R\$ 35/kg equivale a
-~R\$ 636/MWh consumido, acima de quase todo PLD sintético, por isso o eletrolisador
-opera com fator de capacidade de ~80%. **Os preços de H₂ e a receita do LRCAP são os
-parâmetros mais sensíveis**: vale priorizar a coleta desses dados.
+Caso base (7 dias), com BESS de 60 MW / 300 MWh e despacho diário do ONS (descarga
+18h–21h, recarga 10h–14h):
+
+| Potência no LRCAP | Lucro no horizonte |
+|---|---|
+| 0 MW (só mercantil) | R\$ 1,04 mi |
+| **31,4 MW (ótimo)** | **R\$ 1,31 mi** |
+| 60 MW (BESS inteiro) | R\$ 1,19 mi |
+
+O ótimo fica perto do mínimo de 30 MW. Com os parâmetros atuais, cada MW deixado no
+módulo mercantil rende mais alimentando o eletrolisador à noite (H₂ a R\$ 35/kg ≈
+R\$ 636/MWh) do que a receita fixa de R\$ 600 mil/MW·ano. **O preço do H₂ e a receita
+fixa do LRCAP continuam sendo os parâmetros decisivos.** O preço inicial do leilão
+ainda será definido pelo MME.
 
 ## Próximos passos sugeridos
 
-1. Levantar as regras do LRCAP aplicáveis a armazenamento (duração, acionamento,
-   apuração de disponibilidade, penalidades) e ajustar as restrições em `modelo.py`.
+1. Quando o edital da ANEEL sair: incluir penalidades e abatimento da receita fixa por
+   indisponibilidade, e o preço inicial do leilão.
 2. Substituir as séries sintéticas por PLD histórico e geração PV do local de estudo.
 3. Definir parâmetros técnico-econômicos com base na literatura (eletrolisador PEM/alcalino, BESS Li-ion).
-4. Estender para ano completo com dias representativos e depois para a versão estocástica
-   (ver `docs/formulacao.md`, seção 7).
+4. Estender para ano completo com dias representativos e depois para a versão estocástica,
+   com cenários de despacho do ONS (ver `docs/formulacao.md`, seção 7).

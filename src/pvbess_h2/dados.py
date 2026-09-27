@@ -1,4 +1,4 @@
-"""Montagem das séries temporais de entrada (PV, PLD, janelas/acionamentos do LRCAP).
+"""Montagem das séries temporais de entrada (PV, PLD e despacho do ONS no módulo LRCAP).
 
 Quando não há arquivo de dados informado, são geradas séries SINTÉTICAS apenas para
 testar o modelo. Para a dissertação, substitua por dados reais, por exemplo:
@@ -8,6 +8,7 @@ testar o modelo. Para a dissertação, substitua por dados reais, por exemplo:
 
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -59,6 +60,59 @@ def pld_sintetico(p: Parametros, idx: pd.DatetimeIndex, rng: np.random.Generator
     return pd.Series(np.clip(pld, m.pld_min_rs_mwh, m.pld_max_rs_mwh), index=idx)
 
 
+def despacho_ons(p: Parametros, idx: pd.DatetimeIndex) -> pd.DataFrame:
+    """Perfil de despacho do ONS no módulo LRCAP, por MW contratado (p.u. de P_cap).
+
+    Retorna `descarga_pu`, `recarga_pu` e `soc_pu` (energia armazenada em MWh por MW
+    contratado, ao fim de cada intervalo). O módulo começa cheio. Sem arquivo, o
+    perfil é gerado assim: descarga a potência plena nas `horas_descarga` dos dias
+    selecionados e recarga, nas `horas_recarga`, até encher (limitada à potência
+    nominal). O perfil é exógeno ao empreendedor (Portaria MME 136/2026, art. 5º §2º).
+    """
+    b, lr, d = p.bess, p.lrcap, p.lrcap.despacho_ons
+    dt = p.horizonte.dt_h
+    e_max = b.soc_max_frac * lr.energia_por_mw_h
+    e_min = b.soc_min_frac * lr.energia_por_mw_h
+    dia = (idx.normalize() - idx[0].normalize()).days
+
+    if d.arquivo:
+        desc = _ler_serie(d.arquivo, p.base_dir, "descarga_pu", idx).to_numpy()
+        rec = _ler_serie(d.arquivo, p.base_dir, "recarga_pu", idx).to_numpy()
+    else:
+        ativo = np.ones(len(idx), bool) if d.dias is None else np.isin(dia, d.dias)
+        desc = (idx.hour.isin(d.horas_descarga) & ativo).astype(float)
+        rec = None
+
+    soc = np.empty(len(idx))
+    rec_calc = np.zeros(len(idx))
+    e = e_max
+    for t in range(len(idx)):
+        if rec is None:
+            if idx[t].hour in d.horas_recarga:
+                rec_calc[t] = min(1.0, (e_max - e) / (b.eficiencia_carga * dt))
+        else:
+            rec_calc[t] = rec[t]
+        e += (b.eficiencia_carga * rec_calc[t] - desc[t] / b.eficiencia_descarga) * dt
+        if e < e_min - 1e-9 or e > e_max + 1e-9:
+            raise ValueError(
+                f"Despacho ONS inviável em {idx[t]}: SOC do módulo LRCAP = {e:.3f} MWh/MW fora de "
+                f"[{e_min:.3f}, {e_max:.3f}]. Revise horas de descarga/recarga ou lrcap.energia_por_mw_h.")
+        soc[t] = e
+
+    if np.any(desc > 1 + 1e-9) or np.any(rec_calc > 1 + 1e-9) or np.any(desc * rec_calc > 1e-9):
+        raise ValueError("Despacho ONS: potências acima de 1 p.u. ou carga e descarga simultâneas")
+
+    # Limites de ciclos (art. 4º §3º): um ciclo completo = duracao_h horas a P_cap.
+    ciclos_dia = pd.Series(desc * dt, index=dia).groupby(level=0).sum() / lr.duracao_h
+    if (ciclos_dia > lr.ciclos_max_dia + 1e-9).any():
+        warnings.warn(f"Despacho ONS excede {lr.ciclos_max_dia} ciclos completos/dia (art. 4º §3º)")
+    horas = len(idx) * dt
+    if ciclos_dia.sum() > lr.ciclos_max_ano * horas / 8760 + 1e-9:
+        warnings.warn("Despacho ONS excede o limite anual de ciclos, rateado no horizonte (art. 4º §3º)")
+
+    return pd.DataFrame({"descarga_pu": desc, "recarga_pu": rec_calc, "soc_pu": soc}, index=idx)
+
+
 def montar_series(p: Parametros) -> pd.DataFrame:
     """Retorna DataFrame horário com as séries exógenas do modelo."""
     idx = indice_temporal(p)
@@ -74,19 +128,14 @@ def montar_series(p: Parametros) -> pd.DataFrame:
     else:
         pld = pld_sintetico(p, idx, rng)
 
-    janela = idx.hour.isin(p.lrcap.janela_disponibilidade_h).astype(int)
-    acion = np.zeros(len(idx), dtype=int)
-    for t in p.lrcap.acionamentos:
-        if not 0 <= t < len(idx):
-            raise ValueError(f"lrcap.acionamentos: índice {t} fora do horizonte (0..{len(idx) - 1})")
-        acion[t] = 1
-
+    ons = despacho_ons(p, idx)
     return pd.DataFrame(
         {
             "pv_disp_mw": p.pv.potencia_pico_mw * fc.values,
             "pld_rs_mwh": pld.values,
-            "janela_lrcap": janela,
-            "acionamento_lrcap": acion,
+            "ons_descarga_pu": ons["descarga_pu"].values,
+            "ons_recarga_pu": ons["recarga_pu"].values,
+            "ons_soc_pu": ons["soc_pu"].values,
             "dia": (idx.normalize() - idx[0].normalize()).days,
         },
         index=idx,

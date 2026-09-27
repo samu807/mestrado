@@ -73,15 +73,28 @@ class Mercado:
 
 
 @dataclass
+class DespachoONS:
+    arquivo: str | None = None
+    horas_descarga: list[int] = field(default_factory=lambda: [18, 19, 20, 21])
+    horas_recarga: list[int] = field(default_factory=lambda: [10, 11, 12, 13, 14])
+    dias: list[int] | None = None
+
+
+@dataclass
 class LRCAP:
+    """Regras da Portaria Normativa MME nº 136/2026 (LRCAP de 2026 - Armazenamento)."""
     habilitado: bool = True
     receita_fixa_rs_mw_ano: float = 600000.0
-    duracao_h: float = 4.0
+    potencia_min_mw: float = 30.0
     potencia_max_oferta_mw: float | None = None
     potencia_fixa_mw: float | None = None
-    janela_disponibilidade_h: list[int] = field(default_factory=lambda: [17, 18, 19, 20, 21])
-    acionamentos: list[int] = field(default_factory=list)
-    penalidade_deficit_rs_mwh: float = 5000.0
+    duracao_h: float = 4.0
+    energia_por_mw_h: float = 4.8
+    rte_referencia: float = 0.85
+    recarga_max_h: float = 6.0
+    ciclos_max_dia: float = 2
+    ciclos_max_ano: float = 366
+    despacho_ons: DespachoONS = field(default_factory=DespachoONS)
 
 
 @dataclass
@@ -106,7 +119,21 @@ class Parametros:
         assert 0 <= e.carga_min_frac <= 1
         assert e.consumo_especifico_kwh_kg > 0
         assert self.hidrogenio.tanque_inicial_kg <= self.hidrogenio.tanque_max_kg
-        assert all(0 <= h <= 23 for h in self.lrcap.janela_disponibilidade_h)
+        lr, d = self.lrcap, self.lrcap.despacho_ons
+        assert all(0 <= h <= 23 for h in d.horas_descarga + d.horas_recarga)
+        if lr.habilitado:
+            # Requisitos de habilitação técnica (Portaria MME 136/2026, art. 7º)
+            faixa = b.soc_max_frac - b.soc_min_frac
+            assert faixa * lr.energia_por_mw_h * b.eficiencia_descarga >= lr.duracao_h - 1e-9, (
+                f"lrcap.energia_por_mw_h={lr.energia_por_mw_h} não sustenta {lr.duracao_h} h de "
+                f"descarga (art. 7º, IV); mínimo = {lr.duracao_h / (faixa * b.eficiencia_descarga):.3f}")
+            assert b.eficiencia_carga * b.eficiencia_descarga >= lr.rte_referencia, \
+                "RTE do BESS abaixo da mínima do LRCAP (art. 7º, VI)"
+            assert lr.duracao_h / (b.eficiencia_carga * b.eficiencia_descarga) <= lr.recarga_max_h, \
+                "recarga completa a potência nominal excede o tempo máximo (art. 7º, VII)"
+            if lr.potencia_fixa_mw is not None:
+                assert lr.potencia_fixa_mw == 0 or lr.potencia_fixa_mw >= lr.potencia_min_mw, \
+                    "lrcap.potencia_fixa_mw deve ser 0 ou >= potencia_min_mw (art. 7º, III)"
 
 
 def _preencher(cls: type, dados: dict[str, Any] | None):
