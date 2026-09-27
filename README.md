@@ -25,15 +25,18 @@ gerar receita no MCP (art. 9º §5º, IV e §6º). Por isso a arbitragem é mode
 
 ```
 config/caso_base.yaml      parâmetros do caso (valores PLACEHOLDER — substituir por dados reais)
+config/itajuba_2025.yaml   mesmo caso com PLD SE/CO e PV de Itajubá (requer data/ gerado pelo importador)
 docs/formulacao.md         formulação matemática completa (conjuntos, parâmetros, variáveis, restrições)
 src/pvbess_h2/
   parametros.py            leitura/validação do YAML
   dados.py                 séries de entrada (PV, PLD, despacho do ONS) — reais via CSV ou sintéticas
   modelo.py                construção do modelo Pyomo e chamada do solver
   resultados.py            série horária de resultados, indicadores e gráfico
+  importacao.py            leitura dos formatos da CCEE e do PVGIS
 scripts/
   rodar_caso.py            resolve um caso e salva CSV + indicadores + gráfico em resultados/
   varredura_lrcap.py       sensibilidade: lucro × potência contratada no LRCAP
+  importar_dados.py        converte CSVs brutos da CCEE (PLD) e do PVGIS (PV) para data/
 tests/test_modelo.py       testes de consistência (balanço, SOC, H₂ verde, LRCAP...)
 ```
 
@@ -50,14 +53,24 @@ Para criar um novo cenário, copie `config/caso_base.yaml` (ex.: `config/cenario
 altere os parâmetros e rode `python scripts/rodar_caso.py config/cenario_h2_barato.yaml`.
 Os resultados vão para `resultados/<nome_do_cenario>/`.
 
-### Usando dados reais
+### Usando dados reais — caso Itajubá (MG), submercado SE/CO
 
-- **PLD horário**: CSV com colunas `timestamp,pld` (ex.: dados abertos da CCEE) e
-  `mercado.arquivo: data/pld_2025.csv`.
-- **Geração PV**: CSV com colunas `timestamp,fator_capacidade` (0–1; ex.: PVGIS/INMET) e
-  `pv.arquivo: data/pv_local.csv`.
-- **Despacho do ONS no módulo LRCAP**: CSV com colunas `timestamp,descarga_pu,recarga_pu`
-  (fração da potência contratada) e `lrcap.despacho_ons.arquivo: data/despacho_ons.csv`.
+1. **PLD horário** — [dados abertos da CCEE](https://dadosabertos.ccee.org.br), conjunto
+   "PLD horário": baixe o CSV do ano (ex.: 2025).
+2. **Geração PV** — [PVGIS](https://re.jrc.ec.europa.eu/pvg_tools/pt/), aba *Dados horários*:
+   lat. `-22.4256`, long. `-45.4528`, marque *Potência FV* com 1 kWp, perdas 14%,
+   inclinação/azimute otimizados, último ano disponível; baixe em CSV.
+3. Converta para o formato do modelo (o PV é reposicionado no ano do PLD e passado para UTC-3):
+
+   ```bash
+   python scripts/importar_dados.py --pld pld_horario_2025.csv --submercado SE \
+       --pv Timeseries_-22.426_-45.453_*.csv --ano 2025
+   python scripts/rodar_caso.py config/itajuba_2025.yaml
+   ```
+
+Formatos aceitos diretamente pelo modelo (para outras fontes):
+`timestamp,pld`, `timestamp,fator_capacidade` e, para o despacho do ONS,
+`timestamp,descarga_pu,recarga_pu` (em `lrcap.despacho_ons.arquivo`).
 
 ## Primeiros resultados (dados sintéticos, apenas ilustrativos)
 
