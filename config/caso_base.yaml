@@ -1,0 +1,76 @@
+# =============================================================================
+# Caso base - Sistema híbrido PV-BESS-H2 (LRCAP x MCP)
+#
+# ATENÇÃO: todos os valores numéricos abaixo são PLACEHOLDERS ilustrativos para
+# permitir que o modelo rode. Substitua por dados levantados na revisão
+# bibliográfica / edital do LRCAP / CCEE antes de usar em resultados da
+# dissertação.
+# =============================================================================
+
+horizonte:
+  inicio: "2025-01-06 00:00"   # data inicial da série horária
+  dias: 7                      # número de dias simulados
+  dt_h: 1.0                    # passo de tempo [h]
+
+pv:
+  potencia_pico_mw: 50.0       # capacidade instalada [MWp]
+  # Série de disponibilidade: se `arquivo` for informado (CSV com colunas
+  # `timestamp,fator_capacidade`), ela é usada; senão, gera-se um perfil sintético.
+  arquivo: null
+  fator_capacidade_pico: 0.85  # usado apenas no perfil sintético
+  nebulosidade: 0.25           # variabilidade diária (0 = céu limpo) - sintético
+
+bess:
+  energia_mwh: 120.0           # capacidade de energia [MWh]
+  potencia_carga_mw: 30.0      # limite de carga [MW]
+  potencia_descarga_mw: 30.0   # limite de descarga [MW]
+  eficiencia_carga: 0.95
+  eficiencia_descarga: 0.95
+  soc_min_frac: 0.10           # SOC mínimo (fração de energia_mwh)
+  soc_max_frac: 1.00
+  soc_inicial_frac: 0.50       # SOC inicial = final (condição cíclica)
+  custo_degradacao_rs_mwh: 50.0  # custo por MWh descarregado [R$/MWh]
+
+eletrolisador:
+  potencia_max_mw: 10.0
+  carga_min_frac: 0.20         # carga mínima técnica (fração de potencia_max_mw)
+  consumo_especifico_kwh_kg: 55.0
+  custo_variavel_rs_kg: 1.5    # água, O&M variável [R$/kg]
+
+hidrogenio:
+  preco_venda_rs_kg: 35.0
+  tanque_max_kg: 2000.0
+  tanque_inicial_kg: 0.0       # estoque inicial = final (condição cíclica)
+  entrega_min_diaria_kg: 0.0   # contrato mínimo de entrega por dia [kg/dia]
+  venda_max_kg_h: null         # limite de retirada por hora (null = sem limite)
+
+rede:
+  exportacao_max_mw: 40.0      # MUST / limite do ponto de conexão
+  importacao_max_mw: 40.0
+  permitir_importacao: true
+  # Se true, o eletrolisador só pode ser suprido por energia renovável local
+  # (PV + BESS carregada pelo PV): a importação da rede é proibida.
+  h2_verde_estrito: true
+  custo_adicional_importacao_rs_mwh: 250.0  # encargos/TUSD sobre a energia importada
+
+mercado:
+  # PLD horário: se `arquivo` for informado (CSV com colunas `timestamp,pld`),
+  # ele é usado; senão, gera-se uma série sintética.
+  arquivo: null
+  pld_min_rs_mwh: 58.60
+  pld_max_rs_mwh: 1500.00
+  pld_medio_rs_mwh: 180.0      # sintético
+  semente: 42                  # semente aleatória das séries sintéticas
+
+lrcap:
+  habilitado: true
+  # Receita fixa anual por MW de potência contratada [R$/MW.ano], rateada
+  # proporcionalmente ao horizonte simulado.
+  receita_fixa_rs_mw_ano: 600000.0
+  duracao_h: 4.0               # duração mínima de entrega exigida [h]
+  potencia_max_oferta_mw: null # null = limitado pela descarga do BESS e pela rede
+  potencia_fixa_mw: null       # se informado, fixa a potência contratada (análise de sensibilidade)
+  janela_disponibilidade_h: [17, 18, 19, 20, 21]  # horas em que a reserva de energia deve estar disponível
+  # Horas (índices a partir de 0 no horizonte) em que o ONS aciona o recurso.
+  acionamentos: []
+  penalidade_deficit_rs_mwh: 5000.0

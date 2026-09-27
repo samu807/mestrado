@@ -1,0 +1,17 @@
+[project]
+name = "pvbess-h2"
+version = "0.1.0"
+description = "Otimização da operação de um sistema híbrido PV-BESS com produção de H2 verde (LRCAP x MCP)"
+requires-python = ">=3.10"
+dependencies = ["pyomo>=6.7", "highspy>=1.7", "pandas>=2.0", "numpy>=1.24", "pyyaml>=6.0", "matplotlib>=3.7"]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

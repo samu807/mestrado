@@ -1,0 +1,134 @@
+"""Leitura e validação dos parâmetros do caso de estudo (arquivo YAML)."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field, fields, is_dataclass
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+
+@dataclass
+class Horizonte:
+    inicio: str = "2025-01-06 00:00"
+    dias: int = 7
+    dt_h: float = 1.0
+
+
+@dataclass
+class PV:
+    potencia_pico_mw: float = 50.0
+    arquivo: str | None = None
+    fator_capacidade_pico: float = 0.85
+    nebulosidade: float = 0.25
+
+
+@dataclass
+class BESS:
+    energia_mwh: float = 120.0
+    potencia_carga_mw: float = 30.0
+    potencia_descarga_mw: float = 30.0
+    eficiencia_carga: float = 0.95
+    eficiencia_descarga: float = 0.95
+    soc_min_frac: float = 0.10
+    soc_max_frac: float = 1.00
+    soc_inicial_frac: float = 0.50
+    custo_degradacao_rs_mwh: float = 50.0
+
+
+@dataclass
+class Eletrolisador:
+    potencia_max_mw: float = 10.0
+    carga_min_frac: float = 0.20
+    consumo_especifico_kwh_kg: float = 55.0
+    custo_variavel_rs_kg: float = 1.5
+
+
+@dataclass
+class Hidrogenio:
+    preco_venda_rs_kg: float = 35.0
+    tanque_max_kg: float = 2000.0
+    tanque_inicial_kg: float = 0.0
+    entrega_min_diaria_kg: float = 0.0
+    venda_max_kg_h: float | None = None
+
+
+@dataclass
+class Rede:
+    exportacao_max_mw: float = 40.0
+    importacao_max_mw: float = 40.0
+    permitir_importacao: bool = True
+    h2_verde_estrito: bool = True
+    custo_adicional_importacao_rs_mwh: float = 250.0
+
+
+@dataclass
+class Mercado:
+    arquivo: str | None = None
+    pld_min_rs_mwh: float = 58.60
+    pld_max_rs_mwh: float = 1500.0
+    pld_medio_rs_mwh: float = 180.0
+    semente: int = 42
+
+
+@dataclass
+class LRCAP:
+    habilitado: bool = True
+    receita_fixa_rs_mw_ano: float = 600000.0
+    duracao_h: float = 4.0
+    potencia_max_oferta_mw: float | None = None
+    potencia_fixa_mw: float | None = None
+    janela_disponibilidade_h: list[int] = field(default_factory=lambda: [17, 18, 19, 20, 21])
+    acionamentos: list[int] = field(default_factory=list)
+    penalidade_deficit_rs_mwh: float = 5000.0
+
+
+@dataclass
+class Parametros:
+    horizonte: Horizonte = field(default_factory=Horizonte)
+    pv: PV = field(default_factory=PV)
+    bess: BESS = field(default_factory=BESS)
+    eletrolisador: Eletrolisador = field(default_factory=Eletrolisador)
+    hidrogenio: Hidrogenio = field(default_factory=Hidrogenio)
+    rede: Rede = field(default_factory=Rede)
+    mercado: Mercado = field(default_factory=Mercado)
+    lrcap: LRCAP = field(default_factory=LRCAP)
+    # Diretório base para resolver caminhos relativos de arquivos de dados.
+    base_dir: Path = field(default_factory=Path.cwd)
+
+    def validar(self) -> None:
+        b, e = self.bess, self.eletrolisador
+        assert self.horizonte.dias >= 1, "horizonte.dias deve ser >= 1"
+        assert 0 < b.eficiencia_carga <= 1 and 0 < b.eficiencia_descarga <= 1
+        assert 0 <= b.soc_min_frac <= b.soc_inicial_frac <= b.soc_max_frac <= 1, \
+            "exige soc_min_frac <= soc_inicial_frac <= soc_max_frac"
+        assert 0 <= e.carga_min_frac <= 1
+        assert e.consumo_especifico_kwh_kg > 0
+        assert self.hidrogenio.tanque_inicial_kg <= self.hidrogenio.tanque_max_kg
+        assert all(0 <= h <= 23 for h in self.lrcap.janela_disponibilidade_h)
+
+
+def _preencher(cls: type, dados: dict[str, Any] | None):
+    """Cria o dataclass `cls` a partir de um dicionário, rejeitando chaves desconhecidas."""
+    dados = dados or {}
+    nomes = {f.name: f for f in fields(cls)}
+    desconhecidas = set(dados) - set(nomes)
+    if desconhecidas:
+        raise KeyError(f"Chaves desconhecidas em '{cls.__name__}': {sorted(desconhecidas)}")
+    kwargs = {}
+    for nome, valor in dados.items():
+        tipo = nomes[nome].type
+        sub = globals().get(tipo) if isinstance(tipo, str) else tipo
+        kwargs[nome] = _preencher(sub, valor) if is_dataclass(sub) else valor
+    return cls(**kwargs)
+
+
+def carregar_parametros(caminho: str | Path) -> Parametros:
+    caminho = Path(caminho)
+    with open(caminho, encoding="utf-8") as f:
+        dados = yaml.safe_load(f) or {}
+    p = _preencher(Parametros, dados)
+    p.base_dir = caminho.resolve().parent.parent  # raiz do projeto (config/..)
+    p.validar()
+    return p
