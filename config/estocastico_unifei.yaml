@@ -1,0 +1,130 @@
+# =============================================================================
+# ESTOCÁSTICO - planta da UNIFEI escalonada, 5 anos históricos (2021-2025) como cenários
+#
+# Programa de dois estágios com CVaR (src/pvbess_h2/estocastico.py). Cada cenário é um
+# ano de PLD horário SE/CO (CCEE), corrigido pelo IPCA para R$ de dez/2025, pareado com
+# a geração FV do PVGIS-SARAH3 das mesmas datas (2024 e 2025 usam o perfil de 2023,
+# porque o PVGIS-SARAH3 vai até 2023). As séries de horizonte/pv/mercado abaixo só valem
+# para rodadas determinísticas; no modo estocástico, cada cenário define as suas.
+#
+# --- descrição original do caso ---
+# Planta da UNIFEI (Itajubá/MG) ESCALONADA para o porte do LRCAP
+#
+# Planta real: UFV de ~1 MWp + eletrolisador PEM NEA|Hytron de 350 kW (fontes públicas
+# citam 300 kW; CONFIRMAR), sem bateria. Mantém-se a proporção eletrolisador/FV da
+# planta (0,35) e escala-se para 50 MWp. O BESS é hipotético: a planta não tem bateria
+# e o LRCAP exige ao menos 30 MW (Portaria MME 136/2026, art. 7º, III).
+#
+# PENDENTE (dados da planta): catálogo do eletrolisador (consumo específico, curva de
+# carga parcial, carga mínima, partida, standby) e geração medida da UFV.
+#
+# Gere os arquivos de data/ com scripts/importar_dados.py (ver README).
+#
+# ATENÇÃO: todos os valores numéricos abaixo são PLACEHOLDERS ilustrativos para
+# permitir que o modelo rode. Substitua por dados levantados na revisão
+# bibliográfica / edital do LRCAP / CCEE antes de usar em resultados da
+# dissertação.
+# =============================================================================
+
+horizonte:
+  inicio: "2025-08-04 00:00"   # data inicial (dentro do ano dos dados; ago = período seco)
+  dias: 7                      # número de dias simulados
+  dt_h: 1.0                    # passo de tempo [h]
+
+pv:
+  potencia_pico_mw: 50.0       # capacidade instalada [MWp]
+  # Fator de capacidade horário do PVGIS-ERA5 (2023) para Itajubá, reposicionado em 2025
+  arquivo: data/pv_itajuba_2025.csv
+  fator_capacidade_pico: 0.85  # usado apenas no perfil sintético
+  nebulosidade: 0.25           # variabilidade diária (0 = céu limpo) - sintético
+
+bess:
+  # Capacidade TOTAL instalada. Ela é dividida entre o módulo LRCAP (operado pelo
+  # ONS) e o módulo mercantil (MCP + H2) conforme a potência contratada no LRCAP.
+  energia_mwh: 300.0           # capacidade de energia [MWh]
+  potencia_carga_mw: 60.0      # limite de carga [MW]
+  potencia_descarga_mw: 60.0   # limite de descarga [MW]
+  eficiencia_carga: 0.95
+  eficiencia_descarga: 0.95
+  soc_min_frac: 0.10           # SOC mínimo (fração da energia de cada módulo) - DoD
+  soc_max_frac: 1.00
+  soc_inicial_frac: 0.50       # SOC inicial = final do módulo mercantil (condição cíclica)
+  custo_degradacao_rs_mwh: 50.0  # custo por MWh descarregado [R$/MWh]
+
+eletrolisador:
+  potencia_max_mw: 17.5        # 0,35 x 50 MWp (proporção da planta da UNIFEI: 350 kW / 1 MWp)
+  carga_min_frac: 0.10         # PEM típico (catálogo Hytron pendente)
+  consumo_especifico_kwh_kg: 55.0  # sistema; PEM típico 4,3-5,2 kWh/Nm3 = 48-58 kWh/kg
+  custo_variavel_rs_kg: 1.5    # água, O&M variável [R$/kg]
+  custo_partida_rs: 500.0      # PLACEHOLDER: custo por partida (desgaste/purga), a calibrar com o fabricante
+
+hidrogenio:
+  preco_venda_rs_kg: 35.0
+  tanque_max_kg: 2000.0
+  tanque_inicial_kg: 0.0       # estoque inicial = final (condição cíclica)
+  entrega_min_diaria_kg: 0.0   # contrato mínimo de entrega por dia [kg/dia]
+  venda_max_kg_h: null         # limite de retirada por hora (null = sem limite)
+
+rede:
+  # Limites do ponto de conexão COMPARTILHADO (PV + H2 + BESS mercantil + SAE LRCAP),
+  # aplicados ao fluxo líquido. Portaria MME 136/2026, art. 9º §13: o MUST deve
+  # permitir a descarga e a recarga total do SAE.
+  exportacao_max_mw: 80.0
+  importacao_max_mw: 80.0
+  permitir_importacao: true
+  # Se true, o eletrolisador só pode ser suprido por energia renovável local
+  # (PV + BESS carregada pelo PV): a importação da rede é proibida.
+  h2_verde_estrito: true
+  custo_adicional_importacao_rs_mwh: 250.0  # encargos/TUSD sobre a energia importada
+
+mercado:
+  # PLD horário do submercado Sudeste/Centro-Oeste (CCEE, dados abertos)
+  arquivo: data/pld_se_2025.csv
+  pld_min_rs_mwh: 58.60
+  pld_max_rs_mwh: 1500.00
+  pld_medio_rs_mwh: 180.0      # sintético
+  semente: 42                  # semente aleatória das séries sintéticas
+
+lrcap:
+  # Regras: Portaria Normativa MME nº 136/2026 (LRCAP de 2026 - Armazenamento).
+  # A potência contratada é atendida por um MÓDULO do BESS com PMI próprio,
+  # despachado pelo ONS (descarga e recarga). Esse módulo não gera receita no MCP:
+  # a liquidação da sua energia ao PLD vai para a CONCAP (art. 9º §§ 5º-IV e 6º).
+  habilitado: true
+  # Receita fixa por MW contratado [R$/MW.ano], rateada pelo horizonte simulado.
+  # PLACEHOLDER: o preço-teto (PREÇO INICIAL) será definido pelo MME no edital.
+  receita_fixa_rs_mw_ano: 600000.0
+  potencia_min_mw: 30.0        # art. 7º, III: disponibilidade mínima de 30 MW
+  potencia_max_oferta_mw: null # null = limitado pelo BESS e pela conexão
+  potencia_fixa_mw: null       # se informado, fixa a potência contratada (sensibilidade)
+  duracao_h: 4.0               # art. 4º §3º: 4 h por ciclo completo
+  # Energia instalada no módulo LRCAP por MW contratado [MWh/MW]. Deve cobrir
+  # duracao_h / eficiencia_descarga dentro da faixa de SOC (DoD é escolha do
+  # empreendedor, art. 4º §8º).
+  energia_por_mw_h: 4.8
+  rte_referencia: 0.85         # art. 7º, VI e art. 9º §7º: recarga custeada pela CONCAP até injetada/RTE
+  recarga_max_h: 6.0           # art. 4º §10 e art. 7º, VII: recarga completa em até 6 h
+  ciclos_max_dia: 2            # art. 4º §3º
+  ciclos_max_ano: 366          # art. 4º §3º
+  # Perfil de despacho do ONS (exógeno ao empreendedor - art. 5º §2º).
+  despacho_ons:
+    modo: pld                             # descarga no bloco de 4 h de maior PLD após a janela solar
+    janela_recarga: [8, 9, 10, 11, 12, 13, 14, 15, 16]   # recarga nas horas de menor PLD desta janela
+    # CSV opcional com colunas `timestamp,descarga_pu,recarga_pu` (fração de P_cap).
+    arquivo: null
+    horas_descarga: [18, 19, 20, 21]      # descarga a potência plena
+    horas_recarga: [10, 11, 12, 13, 14]   # recarga até encher (ONS minimiza custo - art. 4º §14)
+    dias: null                            # null = todos os dias; ou lista de índices de dia (0, 1, ...)
+
+estocastico:
+  alpha: 0.8        # com 5 anos equiprováveis: CVaR = lucro do pior ano
+  beta: 0.0         # peso do CVaR no objetivo (0 = neutro ao risco); varie para a fronteira
+  dias_bloco: 7
+  # IPCA (IBGE): 2021 10,06%; 2022 5,79%; 2023 4,62%; 2024 4,83%; 2025 4,26%.
+  # fator_preco = IPCA acumulado do ano seguinte ao cenário até dez/2025.
+  cenarios:
+    - {nome: "2021", ano: 2021, pld_arquivo: data/pld_se_2021.csv, pv_arquivo: data/pv_itajuba_sarah3_2021.csv, fator_preco: 1.2097}
+    - {nome: "2022", ano: 2022, pld_arquivo: data/pld_se_2022.csv, pv_arquivo: data/pv_itajuba_sarah3_2022.csv, fator_preco: 1.1435}
+    - {nome: "2023", ano: 2023, pld_arquivo: data/pld_se_2023.csv, pv_arquivo: data/pv_itajuba_sarah3_2023.csv, fator_preco: 1.093}
+    - {nome: "2024", ano: 2024, pld_arquivo: data/pld_se_2024.csv, pv_arquivo: data/pv_itajuba_sarah3_2024.csv, fator_preco: 1.0426}
+    - {nome: "2025", ano: 2025, pld_arquivo: data/pld_se_2025.csv, pv_arquivo: data/pv_itajuba_sarah3_2025.csv, fator_preco: 1.0}

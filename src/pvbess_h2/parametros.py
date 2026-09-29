@@ -43,6 +43,7 @@ class Eletrolisador:
     carga_min_frac: float = 0.20
     consumo_especifico_kwh_kg: float = 55.0
     custo_variavel_rs_kg: float = 1.5
+    custo_partida_rs: float = 0.0          # custo por partida (desgaste da pilha, purga)
 
 
 @dataclass
@@ -70,10 +71,16 @@ class Mercado:
     pld_max_rs_mwh: float = 1500.0
     pld_medio_rs_mwh: float = 180.0
     semente: int = 42
+    fator_preco: float = 1.0               # multiplica o PLD lido (ex.: correção pelo IPCA)
 
 
 @dataclass
 class DespachoONS:
+    # "fixo": descarga/recarga nas horas indicadas; "pld": descarga no bloco de
+    # duracao_h horas de maior PLD fora da janela solar e recarga nas horas de menor
+    # PLD dentro de janela_recarga (proxy do despacho de menor custo, art. 4º §14).
+    modo: str = "fixo"
+    janela_recarga: list[int] = field(default_factory=lambda: list(range(8, 17)))
     arquivo: str | None = None
     horas_descarga: list[int] = field(default_factory=lambda: [18, 19, 20, 21])
     horas_recarga: list[int] = field(default_factory=lambda: [10, 11, 12, 13, 14])
@@ -98,6 +105,35 @@ class LRCAP:
 
 
 @dataclass
+class Cenario:
+    """Um ano histórico de PLD e geração FV (cenário do 2º estágio)."""
+    nome: str
+    ano: int
+    pld_arquivo: str
+    pv_arquivo: str
+    probabilidade: float | None = None     # None = uniforme
+    fator_preco: float = 1.0               # correção do PLD para a moeda de referência
+
+
+@dataclass
+class Estocastico:
+    alpha: float = 0.8                     # nível do CVaR
+    beta: float = 0.0                      # peso do CVaR no objetivo (0 = neutro ao risco)
+    dias_bloco: int = 7
+    dias_por_cenario: int | None = None    # None = ano completo; menor = rodadas de teste
+    cenarios: list = field(default_factory=list)
+
+    def probabilidades(self) -> list[float]:
+        n = len(self.cenarios)
+        pr = [c.probabilidade for c in self.cenarios]
+        if all(x is None for x in pr):
+            return [1.0 / n] * n
+        assert all(x is not None for x in pr), "informe a probabilidade de todos os cenários ou de nenhum"
+        assert abs(sum(pr) - 1) < 1e-6, "probabilidades dos cenários devem somar 1"
+        return pr
+
+
+@dataclass
 class Parametros:
     horizonte: Horizonte = field(default_factory=Horizonte)
     pv: PV = field(default_factory=PV)
@@ -107,6 +143,7 @@ class Parametros:
     rede: Rede = field(default_factory=Rede)
     mercado: Mercado = field(default_factory=Mercado)
     lrcap: LRCAP = field(default_factory=LRCAP)
+    estocastico: Estocastico = field(default_factory=Estocastico)
     # Diretório base para resolver caminhos relativos de arquivos de dados.
     base_dir: Path = field(default_factory=Path.cwd)
 
@@ -120,7 +157,9 @@ class Parametros:
         assert e.consumo_especifico_kwh_kg > 0
         assert self.hidrogenio.tanque_inicial_kg <= self.hidrogenio.tanque_max_kg
         lr, d = self.lrcap, self.lrcap.despacho_ons
-        assert all(0 <= h <= 23 for h in d.horas_descarga + d.horas_recarga)
+        assert all(0 <= h <= 23 for h in d.horas_descarga + d.horas_recarga + d.janela_recarga)
+        assert d.modo in ("fixo", "pld"), "lrcap.despacho_ons.modo deve ser 'fixo' ou 'pld'"
+        assert 0 <= self.estocastico.alpha < 1 and self.estocastico.beta >= 0
         if lr.habilitado:
             # Requisitos de habilitação técnica (Portaria MME 136/2026, art. 7º)
             faixa = b.soc_max_frac - b.soc_min_frac
@@ -156,6 +195,8 @@ def carregar_parametros(caminho: str | Path) -> Parametros:
     with open(caminho, encoding="utf-8") as f:
         dados = yaml.safe_load(f) or {}
     p = _preencher(Parametros, dados)
+    p.estocastico.cenarios = [c if isinstance(c, Cenario) else _preencher(Cenario, c)
+                              for c in p.estocastico.cenarios]
     p.base_dir = caminho.resolve().parent.parent  # raiz do projeto (config/..)
     p.validar()
     return p

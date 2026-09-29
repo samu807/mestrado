@@ -24,6 +24,8 @@ def main():
     ap.add_argument("--submercado", default="SE")
     ap.add_argument("--pv", help="CSV ou JSON horário do PVGIS (potência para 1 kWp)")
     ap.add_argument("--kwp", type=float, default=1.0, help="potência pico usada no PVGIS [kWp]")
+    ap.add_argument("--pv-ano-origem", type=int, help="ano a extrair de um arquivo PVGIS com vários anos")
+    ap.add_argument("--sufixo-pv", default="", help="acrescentado ao nome do CSV de PV (ex.: _sarah3)")
     ap.add_argument("--ano", type=int, required=True, help="ano de destino das séries")
     ap.add_argument("--local", default="itajuba")
     args = ap.parse_args()
@@ -37,8 +39,8 @@ def main():
         print(f"PLD: {len(pld)} horas, média R$ {pld.pld.mean():.2f}/MWh, "
               f"mín {pld.pld.min():.2f}, máx {pld.pld.max():.2f} -> {saida}")
     if args.pv:
-        pv = importar_pvgis(args.pv, kwp=args.kwp, ano_destino=args.ano)
-        saida = destino / f"pv_{args.local}_{args.ano}.csv"
+        pv = importar_pvgis(args.pv, kwp=args.kwp, ano_destino=args.ano, ano_origem=args.pv_ano_origem)
+        saida = destino / f"pv_{args.local}{args.sufixo_pv}_{args.ano}.csv"
         pv.to_csv(saida, index=False)
         print(f"PV: {len(pv)} horas, fator de capacidade médio {pv.fator_capacidade.mean():.3f} -> {saida}")
 

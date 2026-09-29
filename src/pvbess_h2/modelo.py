@@ -171,6 +171,16 @@ def construir_modelo(p: Parametros, series: pd.DataFrame) -> pyo.ConcreteModel:
 
     m.tanque_final = pyo.Constraint(expr=m.s_h2[n - 1] >= h2.tanque_inicial_kg)
 
+    # Partidas do eletrolisador (u_t = 1 quando liga em t), com condição cíclica no
+    # horizonte: o estado anterior à primeira hora é o da última.
+    m.u_el = pyo.Var(m.T, within=pyo.NonNegativeReals, bounds=(0, 1))
+
+    @m.Constraint(m.T)
+    def partida_el(m, t):
+        if el.custo_partida_rs <= 0:
+            return pyo.Constraint.Skip
+        return m.u_el[t] >= m.z_el[t] - m.z_el[t - 1 if t > 0 else n - 1]
+
     @m.Constraint(m.D)
     def entrega_min_diaria(m, d):
         if h2.entrega_min_diaria_kg <= 0:
@@ -191,7 +201,8 @@ def construir_modelo(p: Parametros, series: pd.DataFrame) -> pyo.ConcreteModel:
     m.custo_importacao = pyo.Expression(
         expr=sum((m.pld[t] + rede.custo_adicional_importacao_rs_mwh) * m.p_imp[t] * dt for t in m.T))
     m.receita_h2 = pyo.Expression(expr=sum(h2.preco_venda_rs_kg * m.v_h2[t] * dt for t in m.T))
-    m.custo_h2 = pyo.Expression(expr=sum(el.custo_variavel_rs_kg * m.m_h2[t] * dt for t in m.T))
+    m.custo_h2 = pyo.Expression(expr=sum(el.custo_variavel_rs_kg * m.m_h2[t] * dt for t in m.T)
+                                + sum(el.custo_partida_rs * m.u_el[t] for t in m.T))
     m.receita_lrcap = pyo.Expression(expr=lr.receita_fixa_rs_mw_ano * fracao_ano * m.P_cap)
     m.custo_recarga_lrcap = pyo.Expression(expr=custo_rec_pu * m.P_cap)
     m.custo_degradacao = pyo.Expression(

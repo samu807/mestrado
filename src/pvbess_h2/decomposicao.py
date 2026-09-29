@@ -94,8 +94,12 @@ class ResultadoBloco:
 
 
 def avaliar_bloco(args) -> ResultadoBloco:
-    """Resolve um bloco em x_hat: valor viável Q e corte reforçado (lam, c)."""
-    p, inicio, dias, x_hat, gap = args
+    """Resolve um bloco em x_hat: valor viável Q e corte reforçado (lam, c).
+
+    Com um 6º elemento verdadeiro em `args`, resolve só o MILP com P_cap fixo (sem corte).
+    """
+    p, inicio, dias, x_hat, gap, *extra = args
+    so_valor = bool(extra and extra[0])
     q = _params_bloco(p, inicio, dias)
     m, _ = _construir_subproblema(q)
     m.x_hat = x_hat
@@ -104,6 +108,8 @@ def avaliar_bloco(args) -> ResultadoBloco:
     # 1) MILP com P_cap fixo: solução viável (limite inferior)
     r = opt.solve(m)
     q_val = r.best_feasible_objective
+    if so_valor:
+        return ResultadoBloco(q_val, float("nan"), float("nan"))
 
     # 2) LP relaxado com P_cap fixo: dual da restrição de cópia
     binarias = _binarias(m)

@@ -78,9 +78,10 @@ def _ler_pvgis(arquivo: Path) -> pd.DataFrame:
 
 
 def importar_pvgis(arquivo: str | Path, kwp: float = 1.0, ano_destino: int | None = None,
-                   fuso_h: int = -3) -> pd.DataFrame:
+                   fuso_h: int = -3, ano_origem: int | None = None) -> pd.DataFrame:
     """Lê a série horária do PVGIS e retorna `timestamp,fator_capacidade` em horário local.
 
+    `ano_origem` seleciona um ano de um arquivo com vários anos (em horário local).
     `ano_destino` recoloca a série em outro ano (mesmo mês/dia/hora), para combinar um
     ano de irradiância do PVGIS com o ano do PLD. 29/02 é descartado ou repetido de 28/02.
     """
@@ -89,6 +90,10 @@ def importar_pvgis(arquivo: str | Path, kwp: float = 1.0, ano_destino: int | Non
     local = (utc + pd.Timedelta(hours=fuso_h)).dt.floor("h")
     fc = (df["P"].astype(float) / (1000.0 * kwp)).clip(0, 1)
     serie = pd.Series(fc.values, index=local.values).groupby(level=0).mean()
+    if ano_origem is not None:
+        serie = serie[serie.index.year == ano_origem]
+        if serie.empty:
+            raise ValueError(f"{arquivo}: sem dados para o ano {ano_origem}")
 
     if ano_destino is not None:
         idx = pd.date_range(f"{ano_destino}-01-01", f"{ano_destino}-12-31 23:00", freq="h")

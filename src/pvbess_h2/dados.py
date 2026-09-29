@@ -60,7 +60,41 @@ def pld_sintetico(p: Parametros, idx: pd.DatetimeIndex, rng: np.random.Generator
     return pd.Series(np.clip(pld, m.pld_min_rs_mwh, m.pld_max_rs_mwh), index=idx)
 
 
-def despacho_ons(p: Parametros, idx: pd.DatetimeIndex) -> pd.DataFrame:
+def _perfil_pld(p: Parametros, idx: pd.DatetimeIndex, pld: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Despacho do ONS ligado ao PLD do cenário (proxy do despacho de menor custo).
+
+    Por dia: descarga a potência plena no bloco de `duracao_h` horas consecutivas de maior
+    PLD médio após a janela solar (rampa noturna); recarga nas horas de menor PLD dentro de
+    `janela_recarga`, com a energia necessária para repor uma descarga completa. A ordem
+    (recarga de dia, descarga à noite) garante no máximo 1 ciclo por dia.
+    """
+    b, lr, d = p.bess, p.lrcap, p.lrcap.despacho_ons
+    dt = p.horizonte.dt_h
+    h_desc = int(round(lr.duracao_h / dt))
+    janela = sorted(d.janela_recarga)
+    q = lr.duracao_h / (b.eficiencia_descarga * b.eficiencia_carga) / dt  # p.u.·passo a recarregar
+    desc = np.zeros(len(idx))
+    rec = np.zeros(len(idx))
+    dia = (idx.normalize() - idx[0].normalize()).days
+    for dd in np.unique(dia):
+        pos = np.flatnonzero(dia == dd)
+        horas = idx.hour[pos]
+        noite = pos[horas > janela[-1]]
+        if len(noite) >= h_desc:
+            medias = [pld[noite[i:i + h_desc]].mean() for i in range(len(noite) - h_desc + 1)]
+            i0 = int(np.argmax(medias))
+            desc[noite[i0:i0 + h_desc]] = 1.0
+        dentro = pos[np.isin(horas, janela)]
+        restante = q
+        for k in dentro[np.argsort(pld[dentro], kind="stable")]:
+            if restante <= 1e-9:
+                break
+            rec[k] = min(1.0, restante)
+            restante -= rec[k]
+    return desc, rec
+
+
+def despacho_ons(p: Parametros, idx: pd.DatetimeIndex, pld: np.ndarray | None = None) -> pd.DataFrame:
     """Perfil de despacho do ONS no módulo LRCAP, por MW contratado (p.u. de P_cap).
 
     Retorna `descarga_pu`, `recarga_pu` e `soc_pu` (energia armazenada em MWh por MW
@@ -78,6 +112,9 @@ def despacho_ons(p: Parametros, idx: pd.DatetimeIndex) -> pd.DataFrame:
     if d.arquivo:
         desc = _ler_serie(d.arquivo, p.base_dir, "descarga_pu", idx).to_numpy()
         rec = _ler_serie(d.arquivo, p.base_dir, "recarga_pu", idx).to_numpy()
+    elif d.modo == "pld":
+        desc, rec_pld = _perfil_pld(p, idx, np.asarray(pld, dtype=float))
+        rec = None
     else:
         ativo = np.ones(len(idx), bool) if d.dias is None else np.isin(dia, d.dias)
         desc = (idx.hour.isin(d.horas_descarga) & ativo).astype(float)
@@ -88,8 +125,9 @@ def despacho_ons(p: Parametros, idx: pd.DatetimeIndex) -> pd.DataFrame:
     e = e_max
     for t in range(len(idx)):
         if rec is None:
-            if idx[t].hour in d.horas_recarga:
-                rec_calc[t] = min(1.0, (e_max - e) / (b.eficiencia_carga * dt))
+            limite = rec_pld[t] if d.modo == "pld" and not d.arquivo else float(idx[t].hour in d.horas_recarga)
+            if limite > 0:
+                rec_calc[t] = min(limite, max(0.0, (e_max - e) / (b.eficiencia_carga * dt)))
         else:
             rec_calc[t] = rec[t]
         e += (b.eficiencia_carga * rec_calc[t] - desc[t] / b.eficiencia_descarga) * dt
@@ -124,11 +162,11 @@ def montar_series(p: Parametros) -> pd.DataFrame:
         fc = perfil_pv_sintetico(p, idx, rng)
 
     if p.mercado.arquivo:
-        pld = _ler_serie(p.mercado.arquivo, p.base_dir, "pld", idx)
+        pld = _ler_serie(p.mercado.arquivo, p.base_dir, "pld", idx) * p.mercado.fator_preco
     else:
         pld = pld_sintetico(p, idx, rng)
 
-    ons = despacho_ons(p, idx)
+    ons = despacho_ons(p, idx, pld.to_numpy())
     return pd.DataFrame(
         {
             "pv_disp_mw": p.pv.potencia_pico_mw * fc.values,
