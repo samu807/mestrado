@@ -134,11 +134,35 @@ Benders anual em 48 combinações (6 receitas fixas × 8 preços de H₂), caso 
   receita fixa vier alta; errar para cima (60 MW) tende a custar menos
   (`docs/figuras/mapa_sensibilidade_arrependimento.png`).
 
+### Modelo estocástico: 5 anos históricos (2021–2025) como cenários
+
+Programa de dois estágios com CVaR (`python scripts/estocastico.py`, ~15 min em 4 núcleos):
+potência no LRCAP no 1º estágio; operação em cada ano de PLD SE/CO (corrigido pelo IPCA
+para dez/2025) e FV PVGIS-SARAH3, com despacho do ONS ligado ao PLD. α = 0,8 (pior ano),
+anos equiprováveis. Caso `estocastico_unifei` (17,5 MW de eletrolisador, receita fixa de
+R\$ 600 mil/MW·ano, H₂ a R\$ 35/kg, partida a R\$ 500 — provisórios).
+
+![Resultado estocástico](docs/figuras/estocastico_unifei.png)
+
+| Potência no LRCAP | Lucro esperado | CVaR (pior ano, 2022) |
+|---|---|---|
+| 0 MW | R\$ 45,0 mi | R\$ 43,2 mi |
+| 30 MW | R\$ 60,7 mi | R\$ 59,0 mi |
+| **53,4 MW (ótimo)** | **R\$ 68,1 mi** | **R\$ 65,4 mi** |
+| 60 MW | R\$ 67,0 mi | R\$ 63,6 mi |
+
+- O mesmo ponto (53,4 MW) é ótimo para β = 0; 0,5; 1 e 2 (*gap* ≤ 0,07%): **não há troca
+  entre risco e retorno** nesta configuração — a potência que maximiza o lucro médio também
+  maximiza o do pior ano.
+- O pior ano é 2022 (PLD no piso o ano todo) e o melhor, 2021 (crise hídrica); a diferença
+  entre eles é de cerca de R\$ 8 mi/ano, pequena perto do ganho de contratar no LRCAP.
+- O ótimo estocástico (53,4 MW) fica próximo do determinístico de 2025 (54,4 MW).
+
 ## Próximos passos sugeridos
 
 1. Quando o edital da ANEEL sair: incluir penalidades e abatimento da receita fixa por
    indisponibilidade, e o preço inicial do leilão.
 2. Definir parâmetros técnico-econômicos com base na literatura (eletrolisador PEM/alcalino, BESS Li-ion).
-3. Versão estocástica em dois estágios com CVaR (cenários de despacho do ONS, PLD e PV),
-   reaproveitando a decomposição de Benders (ver `docs/formulacao.md`, seções 6 e 8).
+3. Modelo estocástico: calcular VSS e EVPI, avaliar fora da amostra e repetir o mapa
+   receita fixa × preço do H₂ com os 5 cenários.
 4. Eletrolisador: custo de partida, tempos mínimos ligado/desligado e *standby*.

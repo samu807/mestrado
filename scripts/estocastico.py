@@ -27,36 +27,48 @@ from pvbess_h2.estocastico import avaliar_potencia, resolver_estocastico  # noqa
 AZUL, LARANJA, CINZA, TINTA = "#256abf", "#d9731a", "#9a9a9a", "#1a1a1a"
 
 
-def graficos(curva, fronteira, lucros, nomes, p_min, saida):
+def graficos(curva, p_otimo, nomes, p_min, saida):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(1, 2, figsize=(12.5, 4.6))
     c = curva.sort_values("p_cap_mw")
+    viavel = c[c.p_cap_mw >= p_min - 1e-6]
+    zero = c[c.p_cap_mw < 1e-6]
     for n in nomes:
-        ax[0].plot(c.p_cap_mw, c[f"lucro_{n}"] / 1e6, color=CINZA, lw=0.8, alpha=0.8)
-        ax[0].annotate(n, (c.p_cap_mw.iloc[-1], c[f"lucro_{n}"].iloc[-1] / 1e6), xytext=(4, 0),
+        ax[0].plot(viavel.p_cap_mw, viavel[f"lucro_{n}"] / 1e6, color=CINZA, lw=0.8)
+        ax[0].annotate(n, (viavel.p_cap_mw.iloc[-1], viavel[f"lucro_{n}"].iloc[-1] / 1e6), xytext=(4, 0),
                        textcoords="offset points", va="center", fontsize=8, color="#555555")
-    ax[0].plot(c.p_cap_mw, c.esperado_rs / 1e6, "o-", color=AZUL, lw=2, label="Lucro esperado")
-    ax[0].plot(c.p_cap_mw, c.cvar_rs / 1e6, "s-", color=LARANJA, lw=2, label="CVaR (pior ano)")
-    if p_min > 0:
-        ax[0].axvspan(0, p_min, color="#999999", alpha=0.12, lw=0, label="Inviável (0 < P < 30 MW)")
+    ax[0].plot(viavel.p_cap_mw, viavel.esperado_rs / 1e6, "o-", color=AZUL, lw=2, label="Lucro esperado")
+    ax[0].plot(viavel.p_cap_mw, viavel.cvar_rs / 1e6, "s-", color=LARANJA, lw=2, label="CVaR (pior ano)")
+    if not zero.empty:
+        ax[0].plot(0, zero.esperado_rs.iloc[0] / 1e6, "o", color=AZUL)
+        ax[0].plot(0, zero.cvar_rs.iloc[0] / 1e6, "s", color=LARANJA)
+        ax[0].annotate("sem LRCAP", (0, zero.esperado_rs.iloc[0] / 1e6), xytext=(6, 6),
+                       textcoords="offset points", fontsize=8, color="#555555")
+    ax[0].axvspan(1e-3, p_min, color="#999999", alpha=0.12, lw=0, label="Inviável (0 < P < 30 MW)")
+    ax[0].axvline(p_otimo, color=TINTA, lw=0.8, ls="--")
+    ax[0].annotate(f"ótimo {p_otimo:.1f} MW", (p_otimo, ax[0].get_ylim()[0]), xytext=(-4, 6),
+                   textcoords="offset points", ha="right", fontsize=8)
     ax[0].set_xlabel("Potência contratada no LRCAP [MW]")
     ax[0].set_ylabel("Lucro anual [R$ mi, dez/2025]")
     ax[0].set_title("(a) Lucro por ano e indicadores × potência contratada", fontsize=10)
     ax[0].legend(frameon=False, fontsize=8, loc="upper left")
 
+    escolhas = [(0.0, "Sem LRCAP", CINZA), (p_min, f"{p_min:g} MW (mínimo)", "#9ec5f4"),
+                (p_otimo, f"{p_otimo:.1f} MW (ótimo)", AZUL), (c.p_cap_mw.max(), f"{c.p_cap_mw.max():g} MW", LARANJA)]
     x = np.arange(len(nomes))
-    larg = 0.8 / len(lucros)
-    for i, (rotulo, valores) in enumerate(lucros.items()):
-        ax[1].bar(x + (i - (len(lucros) - 1) / 2) * larg, np.array(valores) / 1e6, width=larg * 0.92,
-                  color=[AZUL, LARANJA, "#6da7ec", "#8c5a2b"][i % 4], label=rotulo)
+    larg = 0.8 / len(escolhas)
+    for i, (pc, rot, cor) in enumerate(escolhas):
+        linha = c.iloc[(c.p_cap_mw - pc).abs().argmin()]
+        ax[1].bar(x + (i - (len(escolhas) - 1) / 2) * larg, [linha[f"lucro_{n}"] / 1e6 for n in nomes],
+                  width=larg * 0.92, color=cor, label=rot)
     ax[1].set_xticks(x, nomes)
     ax[1].set_xlabel("Cenário (ano histórico)")
     ax[1].set_ylabel("Lucro anual [R$ mi, dez/2025]")
-    ax[1].set_title("(b) Lucro por cenário nas decisões ótimas", fontsize=10)
-    ax[1].legend(frameon=False, fontsize=8)
+    ax[1].set_title("(b) Lucro por ano para cada decisão de contratação", fontsize=10)
+    ax[1].legend(frameon=False, fontsize=8, ncol=4, loc="upper center", bbox_to_anchor=(0.5, -0.16))
     for a in ax:
         a.grid(alpha=0.25, lw=0.6)
         a.spines[["top", "right"]].set_visible(False)
@@ -72,6 +84,7 @@ def main():
     ap.add_argument("--alpha", type=float)
     ap.add_argument("--curva", type=float, nargs="*", default=[0, 30, 40, 50, 60])
     ap.add_argument("--tol", type=float, default=1e-3)
+    ap.add_argument("--so-graficos", action="store_true", help="refaz as figuras a partir dos CSVs")
     ap.add_argument("--processos", type=int, default=4)
     args = ap.parse_args()
     warnings.filterwarnings("ignore", category=UserWarning)
@@ -83,7 +96,12 @@ def main():
     saida = RAIZ / "resultados" / (Path(args.config).stem + "_estocastico")
     saida.mkdir(parents=True, exist_ok=True)
 
-    memoria, linhas, historicos, lucros = {}, [], [], {}
+    if args.so_graficos:
+        curva = pd.read_csv(saida / "curva_potencia.csv")
+        fronteira = pd.read_csv(saida / "fronteira.csv")
+        graficos(curva, fronteira.p_cap_mw.iloc[0], nomes, base.lrcap.potencia_min_mw, saida)
+        return
+    memoria, linhas, historicos = {}, [], []
     for beta in args.betas:
         p = copy.deepcopy(base)
         p.estocastico.beta = beta
@@ -94,7 +112,6 @@ def main():
                        "esperado_rs": av.esperado, "cvar_rs": av.cvar, "objetivo_rs": av.objetivo,
                        "gap": gap, **{f"lucro_{n}": v for n, v in zip(nomes, av.lucro_cenarios)}})
         historicos.append(hist.assign(beta=beta))
-        lucros.setdefault(f"P = {av.p_cap:.1f} MW (β = {beta:g})", av.lucro_cenarios)
         print(f"beta = {beta:g}: P_cap = {av.p_cap:.2f} MW  E = R$ {av.esperado / 1e6:.2f} mi  "
               f"CVaR = R$ {av.cvar / 1e6:.2f} mi  gap = {gap:.3%}", flush=True)
 
@@ -115,7 +132,7 @@ def main():
                            **{f"lucro_{n}": l for n, l in zip(nomes, v)}}
                           for x, v in sorted(pontos.items())])
     curva.to_csv(saida / "curva_potencia.csv", index=False)
-    graficos(curva, fronteira, lucros, nomes, base.lrcap.potencia_min_mw, saida)
+    graficos(curva, fronteira.p_cap_mw.iloc[0], nomes, base.lrcap.potencia_min_mw, saida)
     (saida / "memoria_cortes.json").write_text(json.dumps(
         {"lucros": {str(k): v for k, v in memoria["lucros"].items()}}, indent=1))
     print("\n" + fronteira[["beta", "p_cap_mw", "esperado_rs", "cvar_rs", "gap"]].to_string(index=False))
