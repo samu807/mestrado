@@ -40,6 +40,8 @@ scripts/
   varredura_lrcap.py       sensibilidade: lucro × potência contratada no LRCAP
   importar_dados.py        converte CSVs brutos da CCEE (PLD) e do PVGIS (PV) para data/
   anual_benders.py         ano completo por decomposição de Benders (blocos semanais em paralelo)
+  estocastico.py           programa estocástico com CVaR (anos históricos como cenários)
+  vss_evpi.py              VSS e EVPI do programa estocástico
 tests/                     testes (modelo, importação de dados, decomposição)
 ```
 
@@ -158,11 +160,37 @@ R\$ 600 mil/MW·ano, H₂ a R\$ 35/kg, partida a R\$ 500 — provisórios).
   entre eles é de cerca de R\$ 8 mi/ano, pequena perto do ganho de contratar no LRCAP.
 - O ótimo estocástico (53,4 MW) fica próximo do determinístico de 2025 (54,4 MW).
 
+#### VSS e EVPI (β = 0)
+
+`python scripts/vss_evpi.py` (~45 min em 4 núcleos; tolerância de Benders 0,01%). O ano médio
+é a média hora a hora dos 5 anos (PLD corrigido pelo IPCA).
+
+| Decisão | P_cap | 2021 | 2022 | 2023 | 2024 | 2025 | Esperado |
+|---|---|---|---|---|---|---|---|
+| RP (estocástico) | 54,38 MW | 73,47 | 65,38 | 66,58 | 67,40 | 67,77 | **68,121** |
+| EV (ano médio) | 54,34 MW | 73,46 | 65,39 | 66,58 | 67,40 | 67,77 | **68,121** (EEV) |
+| WS (ótimo de cada ano) | 60 / 51,5 / 51,0 / 52,7 / 54,6 | 73,95 | 65,47 | 66,70 | 67,44 | 67,77 | **68,266** |
+
+(R\$ mi/ano, dez/2025.)
+
+- **VSS = RP − EEV ≈ R\$ 300/ano** (< 0,001%, abaixo da tolerância): a decisão do ano médio
+  é praticamente a mesma do modelo estocástico. Com a tolerância mais apertada, o ótimo
+  estocástico passou de 53,4 para 54,4 MW, com diferença de lucro de só R\$ 20 mil/ano:
+  a curva é plana perto do ótimo.
+- **EVPI = WS − RP ≈ R\$ 145 mil/ano** (0,21%; limite superior de R\$ 161 mil): saber de
+  antemão o ano que vai ocorrer valeria pouco. A maior perda está em 2021 (crise hídrica),
+  quando o melhor seria colocar toda a bateria no LRCAP (60 MW).
+- O modelo do ano médio acerta a **decisão**, mas superestima o **lucro** (EV = R\$ 68,89 mi
+  contra R\$ 68,12 mi de EEV): a média suaviza os picos e vales de PLD e de irradiação.
+- Com estes cenários, a incerteza de PLD e de FV **não muda** a potência a contratar. A
+  incerteza que pesa na decisão é a dos parâmetros econômicos (receita fixa e preço do H₂;
+  ver mapa de sensibilidade).
+
 ## Próximos passos sugeridos
 
 1. Quando o edital da ANEEL sair: incluir penalidades e abatimento da receita fixa por
    indisponibilidade, e o preço inicial do leilão.
 2. Definir parâmetros técnico-econômicos com base na literatura (eletrolisador PEM/alcalino, BESS Li-ion).
-3. Modelo estocástico: calcular VSS e EVPI, avaliar fora da amostra e repetir o mapa
+3. Modelo estocástico: avaliar fora da amostra e repetir o mapa
    receita fixa × preço do H₂ com os 5 cenários.
 4. Eletrolisador: custo de partida, tempos mínimos ligado/desligado e *standby*.
