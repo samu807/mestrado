@@ -129,6 +129,7 @@ def main():
     ap.add_argument("--processos", type=int, default=4)
     ap.add_argument("--so-graficos", action="store_true")
     ap.add_argument("--rotulo", default="curva_oferta", help="nome da figura e do resumo")
+    ap.add_argument("--nome-base", help="legenda do caso base na figura")
     args = ap.parse_args()
     warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -137,6 +138,8 @@ def main():
     saida = RAIZ / "resultados" / "curva_oferta"
     saida.mkdir(parents=True, exist_ok=True)
     nomes = {k: CASOS[k][0] for k in args.casos}
+    if args.nome_base and "base" in nomes:
+        nomes["base"] = args.nome_base
 
     if not args.so_graficos:
         for caso in args.casos:

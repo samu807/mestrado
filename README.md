@@ -42,7 +42,8 @@ scripts/
   anual_benders.py         ano completo por decomposição de Benders (blocos semanais em paralelo)
   estocastico.py           programa estocástico com CVaR (anos históricos como cenários)
   vss_evpi.py              VSS e EVPI do programa estocástico
-  curva_oferta.py          curva de oferta no LRCAP (contrato de H₂, importação, frequência de despacho)
+  curva_oferta.py          curva de oferta no LRCAP (contrato de H₂, importação, despacho, degradação, dimensionamento)
+  erro_decomposicao.py     efeito do tamanho do bloco da decomposição (7, 14, 28 dias)
 tests/                     testes (modelo, importação de dados, decomposição)
 ```
 
@@ -249,6 +250,47 @@ Contrato de H₂: volume diário firme (mínimo = máximo), multa de R\$ 35/kg n
   A operação mercantil (MCP, H₂) é idêntica nos três casos, e o ótimo não muda.
 - Esse custo pode ser calculado à parte, sem simulação; a frequência importa para o limiar de
   entrada, não para a potência ótima.
+
+### Robustez: degradação, dimensionamento e decomposição
+
+**Custo de degradação do BESS.** O valor de R\$ 50/MWh é baixo. Custo de reposição dos módulos ÷
+energia descarregada na vida útil: pack estacionário de US\$ 70/kWh (BNEF, 2025) × R\$ 5,40/US\$ ×
+1,74 (tributos no Brasil, EPE) ÷ (4.000–6.000 ciclos × 90% de DoD) ≈ **R\$ 120–185/MWh**.
+
+![Curva de oferta por custo de degradação](docs/figuras/curva_oferta_degradacao.png)
+
+| Degradação | Ótimo (R\$ 600 mil) | Lucro esperado | Receita mínima para entrar | Custo do último MW |
+|---|---|---|---|---|
+| R\$ 50/MWh | 55 MW | R\$ 68,1 mi | R\$ 76 mil/MW·ano | R\$ 895 mil |
+| R\$ 100/MWh | 55 MW | R\$ 63,7 mi | R\$ 149 mil | R\$ 881 mil |
+| R\$ 200/MWh | 52,5 MW | R\$ 54,9 mi | R\$ 295 mil | R\$ 854 mil |
+
+- A potência ótima quase não muda (55 → 52,5 MW com 4× a degradação): o custo maior também
+  encarece o uso mercantil da bateria, e os dois efeitos se compensam no alto da curva.
+- O que muda é o limiar de entrada (R\$ 76 → 295 mil) e o lucro (−R\$ 13 mi/ano).
+
+**Tamanho do eletrolisador** (H₂ ilimitado; referência 17,5 MW):
+
+![Curva de oferta por tamanho do eletrolisador](docs/figuras/curva_oferta_eletrolisador.png)
+
+| Eletrolisador | Ótimo (R\$ 600 mil) | Lucro esperado | FC do eletrolisador | Custo marginal até 45 MW |
+|---|---|---|---|---|
+| 10 MW | 50 MW | R\$ 60,4 mi | 0,53 | R\$ 330–550 mil |
+| 17,5 MW | 55 MW | R\$ 68,1 mi | 0,37 | R\$ 80–370 mil |
+| 25 MW | 57,5 MW | R\$ 73,5 mi | 0,30 | R\$ 76–80 mil |
+
+- Com eletrolisador maior, mais FV vira H₂ de dia e a bateria mercantil vale menos: o custo
+  de contratar fica plano (~R\$ 77 mil/MW·ano) até 45 MW. Com 10 MW, a bateria é necessária
+  desde o mínimo de 30 MW. A relação eletrolisador/FV (0,35, herdada da UNIFEI) molda a curva.
+
+**Tanque de H₂ no contrato de 3 t/dia** (2 t → 10 t): resultado idêntico (déficit de 61 t/ano,
+mesma curva). O gargalo é a capacidade do eletrolisador (3 t/dia exigem ~9,4 h a plena carga),
+não a armazenagem de H₂.
+
+**Erro da decomposição semanal** (`python scripts/erro_decomposicao.py`, caso 2025, P_cap fixo
+em 54,44 MW): lucro idêntico com blocos de 7, 14 e 28 dias (diferença < 10⁻¹¹). Benders com
+blocos de 14 dias: 55,5 MW e R\$ 67,53 mi (contra 54,4 MW e R\$ 67,51 mi com 7 dias), diferença
+de 0,03%, dentro da região plana do ótimo. A condição cíclica semanal não restringe a operação.
 
 ## Próximos passos sugeridos
 
