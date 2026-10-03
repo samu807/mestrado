@@ -196,7 +196,24 @@ Em consequência, a frequência do despacho, embora desconhecida, não altera a 
 
 ## 4.7 Sensibilidade à receita fixa e ao preço do hidrogênio
 
-Como a receita fixa do LRCAP e o preço do hidrogênio não possuem referências consolidadas, o caso determinístico de 2025 foi resolvido para 48 combinações desses parâmetros: seis valores de receita fixa, entre R\$ 330 mil e R\$ 2,33 milhões/(MW·ano), e oito preços de hidrogênio, entre R\$ 10 e R\$ 45/kg. Os valores de receita fixa incluem referências aproximadas de leilões de capacidade para armazenamento no exterior (R\$ 330 mil), de leilões de capacidade para usinas térmicas existentes (R\$ 830 mil) e novas (R\$ 2,33 milhões) e do custo anualizado estimado de sistemas de baterias (R\$ 1,5 milhão). Cada combinação foi resolvida pelo método de Benders, com *gap* máximo de 0,11%. Os resultados são apresentados na Figura 4.5.
+Como a receita fixa do LRCAP e o preço do hidrogênio não possuem referências consolidadas, o caso determinístico de 2025 foi resolvido para 48 combinações desses parâmetros: seis valores de receita fixa, entre R\$ 330 mil e R\$ 2,33 milhões/(MW·ano), e oito preços de hidrogênio, entre R\$ 10 e R\$ 45/kg. Na ausência de leilões anteriores de armazenamento no Brasil, os valores de receita fixa foram escolhidos a partir de quatro referências, sintetizadas no Quadro 4.1.
+
+::: {custom-style="Legenda"}
+Quadro 4.1 – Referências para a faixa de receita fixa avaliada
+:::
+
+| Receita fixa (R\$/MW·ano) | Referência | Observação |
+|------------------|------------------------------------|------------------------------------|
+| 330 mil | Primeiro leilão do MACSE, Itália, 30/09/2025: preço médio de € 12.959/(MWh·ano) para sistemas de baterias de íons de lítio, contratos de 15 anos (TERNA, 2025) | Convertido para um sistema de 4 h (€ 51.836/(MW·ano)) com a PTAX de 30/09/2025 (R\$ 6,2396/€), o que resulta em R\$ 323 mil; arredondado na grade |
+| 830 mil | Leilão nº 3/2026-ANEEL (LRCAP), 20/03/2026: 501,3 MW de termelétricas existentes a óleo e biodiesel, preço médio de R\$ 831.251,52/(MW·ano), deságio de 50,1% (CCEE, 2026b) | Usinas existentes, sem investimento novo: piso de referência para o produto potência |
+| 1,0 e 1,5 mi | CAPEX de referência de sistemas de baterias de R\$ 5.000 a 6.000/kW (BRASIL; EPE, 2025) | A anualização do CAPEX a 10% a.a. em 15 anos resulta em R\$ 657 mil a R\$ 789 mil/(MW·ano); os valores da grade acrescentam O&M, encargos, tributos e reposição de módulos para manter a disponibilidade |
+| 2,33 mi | Leilão nº 2/2026-ANEEL (LRCAP), 18/03/2026: 18,97 GW de termelétricas a gás natural, biometano e carvão e ampliações de hidrelétricas, novas e existentes, preço médio de R\$ 2,334 milhões/(MW·ano), deságio de 5,5% (CCEE, 2026a) | Custo de atender à mesma necessidade de potência com a expansão térmica e hidrelétrica: teto de referência |
+
+::: {custom-style="Fonte"}
+Fonte: elaborado pelo autor.
+:::
+
+O valor de R\$ 600 mil/(MW·ano), adotado no caso de referência, situa-se, portanto, abaixo do preço obtido por usinas existentes no LRCAP de 2026 e abaixo do custo anualizado de investimento em baterias, e deve ser interpretado como hipótese conservadora para a receita fixa. Cada combinação foi resolvida pelo método de Benders, com *gap* máximo de 0,11%. Os resultados são apresentados na Figura 4.5.
 
 ::: {custom-style="Legenda"}
 Figura 4.5 – Potência ótima no LRCAP e lucro anual em função da receita fixa e do preço do hidrogênio (caso determinístico de 2025)
@@ -230,7 +247,7 @@ Fonte: elaborado pelo autor.
 
 O arrependimento é nulo ou inferior a R\$ 0,4 milhão por ano na vizinhança do caso de referência (receita de R\$ 600 mil e hidrogênio entre R\$ 30 e R\$ 45/kg), mas cresce para até R\$ 11,6 milhões por ano quando a receita fixa é elevada, situação em que contratar toda a potência seria ótimo. O arrependimento é assimétrico: subestimar a potência a contratar custa mais do que superestimá-la. Com receita de R\$ 330 mil e hidrogênio a R\$ 45/kg, por exemplo, contratar 54,4 MW em vez do ótimo de 43,8 MW custa R\$ 2,5 milhões por ano, enquanto, com receita de R\$ 1,5 milhão e hidrogênio a R\$ 35/kg, contratar 54,4 MW em vez de 60 MW custa R\$ 4,4 milhões por ano. Diante da incerteza sobre a receita fixa — que, no leilão, é o próprio lance —, essa assimetria favorece decisões de contratação mais próximas da potência máxima.
 
-Esses resultados são coerentes com a curva de oferta da Seção 4.4, obtida com o modelo estocástico: a potência ótima para R\$ 600 mil e hidrogênio a R\$ 35/kg (54,4 MW no caso determinístico) e a receita a partir da qual se oferta toda a potência (cerca de R\$ 900 mil, contra a fronteira entre R\$ 830 mil e R\$ 1,0 milhão no mapa) são compatíveis entre as duas análises.
+Os resultados das Figuras 4.5 e 4.6 são coerentes com a curva de oferta da Seção 4.4, obtida com o modelo estocástico: a potência ótima para R\$ 600 mil e hidrogênio a R\$ 35/kg (54,4 MW no caso determinístico) e a receita a partir da qual se oferta toda a potência (cerca de R\$ 900 mil, contra a fronteira entre R\$ 830 mil e R\$ 1,0 milhão no mapa) são compatíveis entre as duas análises.
 
 ## 4.8 Síntese
 
@@ -247,3 +264,21 @@ d) **a receita fixa e o preço do hidrogênio definem a fronteira entre contrata
 e) **as incertezas de preço, de geração e de despacho têm efeito pequeno sobre a decisão:** o modelo determinístico de 2025 e o estocástico conduzem à mesma potência ótima, a variação entre anos históricos resulta em VSS nulo e EVPI de 0,2% do lucro esperado, e a frequência do despacho do ONS desloca o custo de oportunidade de um valor constante, sem alterar a potência ótima.
 
 Em conjunto, esses resultados sugerem que a decisão de contratação é determinada menos pelo comportamento do mercado de energia e mais pelas condições de comercialização do hidrogênio — volume, preço e critério de qualificação —, que são, portanto, as informações prioritárias para a definição do lance no leilão.
+
+## REFERÊNCIAS
+
+::: {custom-style="Referencia"}
+BRASIL. Ministério de Minas e Energia; EPE – EMPRESA DE PESQUISA ENERGÉTICA. **Caderno de parâmetros de custos**: geração e transmissão – PDE 2035. Brasília: MME/EPE, nov. 2025.
+:::
+
+::: {custom-style="Referencia"}
+CCEE – CÂMARA DE COMERCIALIZAÇÃO DE ENERGIA ELÉTRICA. **InfoLeilão Expresso**: 04º LRCAP 2026 – Leilão nº 2/2026-ANEEL. São Paulo: CCEE, mar. 2026a. Disponível em: https://www.ccee.org.br. Acesso em: 3 out. 2026.
+:::
+
+::: {custom-style="Referencia"}
+CCEE – CÂMARA DE COMERCIALIZAÇÃO DE ENERGIA ELÉTRICA. **InfoLeilão Expresso**: 05º LRCAP 2026 – Leilão nº 3/2026-ANEEL. São Paulo: CCEE, mar. 2026b. Disponível em: https://www.ccee.org.br. Acesso em: 3 out. 2026.
+:::
+
+::: {custom-style="Referencia"}
+TERNA. **Terna completes first MACSE auction**: 10 GWh of energy storage capacity awarded. Roma: Terna S.p.A., 1 out. 2025. Comunicado de imprensa. Disponível em: https://www.terna.it. Acesso em: 3 out. 2026.
+:::

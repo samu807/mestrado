@@ -28,8 +28,10 @@ from pvbess_h2.decomposicao import operacao_anual, resolver_benders  # noqa: E40
 
 RECEITAS = [330e3, 600e3, 830e3, 1.0e6, 1.5e6, 2.334e6]      # R$/MW.ano
 PRECOS_H2 = [10, 15, 20, 25, 30, 35, 40, 45]                  # R$/kg
-ROTULO_RF = {330e3: "330 mil\n(MACSE)", 600e3: "600 mil", 830e3: "830 mil\n(térmica exist.)",
-             1.0e6: "1,0 mi", 1.5e6: "1,5 mi\n(custo bateria)", 2.334e6: "2,33 mi\n(térmica nova)"}
+# Referências: MACSE (Terna, 2025; 4 h, PTAX de 30/09/2025); Leilões nº 3/2026 e nº 2/2026-ANEEL
+# (LRCAP de março de 2026); custo de BESS a partir do CAPEX de referência da EPE (PDE 2035).
+ROTULO_RF = {330e3: "330 mil\n(MACSE)", 600e3: "600 mil", 830e3: "830 mil\n(LRCAP 3/2026)",
+             1.0e6: "1,0 mi", 1.5e6: "1,5 mi\n(custo BESS)", 2.334e6: "2,33 mi\n(LRCAP 2/2026)"}
 
 # Rampa sequencial azul (claro = baixo, escuro = alto)
 AZUL = ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"]
