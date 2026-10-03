@@ -1,6 +1,6 @@
 # 3 METODOLOGIA
 
-Este capítulo descreve o modelo de otimização desenvolvido para apoiar a decisão de um empreendedor que opera um sistema híbrido composto por usina fotovoltaica (FV), sistema de armazenamento de energia em baterias (*Battery Energy Storage System*, BESS) e eletrolisador para produção de hidrogênio verde, diante da possibilidade de comercializar parte da capacidade de armazenamento no Leilão de Reserva de Capacidade na forma de Potência (LRCAP) e o restante no Mercado de Curto Prazo (MCP). A Seção 3.1 apresenta o problema e o escopo do estudo; a Seção 3.2 discute o enquadramento regulatório que orienta a modelagem; a Seção 3.3 descreve o sistema; a Seção 3.4 apresenta a formulação matemática; a Seção 3.5 trata dos dados de entrada; a Seção 3.6 descreve o método de solução; a Seção 3.7 resume a implementação computacional; e a Seção 3.8 consolida as hipóteses e limitações.
+Este capítulo descreve o modelo de otimização desenvolvido para apoiar a decisão de um empreendedor que opera um sistema híbrido composto por usina fotovoltaica (FV), sistema de armazenamento de energia em baterias (*Battery Energy Storage System*, BESS) e eletrolisador para produção de hidrogênio verde, diante da possibilidade de comercializar parte da capacidade de armazenamento no Leilão de Reserva de Capacidade na forma de Potência (LRCAP) e o restante no Mercado de Curto Prazo (MCP). A Seção 3.1 apresenta o problema e o escopo do estudo; a Seção 3.2 discute o enquadramento regulatório que orienta a modelagem; a Seção 3.3 descreve o sistema; a Seção 3.4 apresenta a formulação matemática; a Seção 3.5 trata dos dados de entrada; a Seção 3.6 descreve o método de solução; a Seção 3.7 apresenta a extensão estocástica do modelo e os indicadores de valor da informação; a Seção 3.8 resume a implementação computacional; e a Seção 3.9 consolida as hipóteses e limitações.
 
 ## 3.1 Definição do problema e escopo
 
@@ -12,7 +12,7 @@ a) as capacidades instaladas da usina FV, do BESS e do eletrolisador são dados 
 
 b) o horizonte de análise é de um ano, com resolução horária, representativo da operação ao longo do contrato de 15 anos previsto para o LRCAP;
 
-c) a abordagem é determinística, com conhecimento perfeito das séries de preço, de geração e de despacho do Operador Nacional do Sistema Elétrico (ONS) — a extensão estocástica é discutida na Seção 3.8;
+c) na formulação básica, a abordagem é determinística, com conhecimento perfeito das séries de preço, de geração e de despacho do Operador Nacional do Sistema Elétrico (ONS); a incerteza entre anos é tratada pela extensão estocástica da Seção 3.7;
 
 d) a função objetivo considera receitas e custos operacionais; custos de investimento não são incluídos, uma vez que as capacidades são fixas.
 
@@ -348,15 +348,131 @@ Fonte: elaborado pelo autor.
 
 Uma propriedade relevante do método é que ele fornece, a cada iteração, limites superior e inferior para o lucro ótimo, de modo que a qualidade da solução final é certificada, e não apenas estimada. Essa característica o distingue de métodos heurísticos e meta-heurísticos, como algoritmos genéticos, frequentemente empregados em problemas de dimensionamento e operação de sistemas de armazenamento (FENG *et al.*, 2022), mas que não oferecem garantia de otimalidade.
 
-## 3.7 Implementação computacional
+## 3.7 Extensão estocástica e valor da informação
 
-O modelo foi implementado na linguagem Python, com o uso da biblioteca de modelagem algébrica Pyomo (BYNUM *et al.*, 2021) e do *solver* HiGHS (HUANGFU; HALL, 2018). A estrutura do código separa: (i) a leitura e validação dos parâmetros, organizados em arquivos de configuração em formato YAML, com verificação automática dos requisitos regulatórios; (ii) a importação e o tratamento das séries de dados; (iii) a construção do modelo de otimização; (iv) a decomposição de Benders; e (v) o pós-processamento dos resultados. Os subproblemas semanais são resolvidos em paralelo em processos independentes, cada qual restrito a uma linha de execução do *solver*, a fim de evitar a concorrência por núcleos de processamento. A consistência do modelo é verificada por um conjunto de testes automatizados que conferem, entre outros aspectos, o balanço de potência, os limites dos estados de carga, a exclusividade entre carga e descarga, o cumprimento do despacho do ONS, o limite do ponto de conexão e a validade dos cortes de Benders. O código e os dados são mantidos sob controle de versão, o que assegura a reprodutibilidade dos resultados.
+A formulação das Seções 3.4 a 3.6 supõe que as séries de preço e de geração do ano de análise sejam conhecidas no momento da contratação. Na prática, a potência ofertada no LRCAP é definida antes do início do contrato e permanece fixa durante 15 anos, enquanto o PLD e a irradiância variam de um ano para outro. Esta seção apresenta a extensão estocástica do modelo, que trata essa incerteza, e os indicadores utilizados para quantificar o benefício de considerá-la: o valor da solução estocástica (VSS) e o valor esperado da informação perfeita (EVPI).
 
-## 3.8 Hipóteses e limitações
+### 3.7.1 Formulação em dois estágios
+
+O problema é reescrito como um programa estocástico de dois estágios com recurso (BIRGE; LOUVEAUX, 2011; CONEJO; CARRIÓN; MORALES, 2010). No primeiro estágio, decide-se a potência contratada $P^{cap}$, comum a todos os cenários. No segundo estágio, observado o cenário $s \in \mathcal{S}$, com probabilidade $\pi_s$, a operação horária se ajusta de forma ótima à decisão de contratação. O lucro anual do cenário $s$ é dado pela Equação {eq:lucro-cenario}:
+
+$$
+\Pi_s\!\left(P^{cap}\right) = R^{cap}\, P^{cap} + \sum_{w \in \mathcal{W}_s} Q_{s,w}\!\left(P^{cap}\right)
+$$ {#eq:lucro-cenario}
+
+em que $\mathcal{W}_s$ é o conjunto de blocos semanais do ano associado ao cenário $s$ e $Q_{s,w}$ é o lucro operacional ótimo do bloco, definido como na Seção 3.6.2, com as séries daquele cenário.
+
+Para representar a aversão ao risco do empreendedor, o objetivo combina o lucro esperado com o valor condicional em risco (*Conditional Value-at-Risk*, CVaR), conforme a Equação {eq:estoc}:
+
+$$
+\max_{P^{cap} \in \mathcal{X}} \; \sum_{s \in \mathcal{S}} \pi_s\, \Pi_s\!\left(P^{cap}\right) + \beta\, \mathrm{CVaR}_\alpha\!\left(\Pi\!\left(P^{cap}\right)\right)
+$$ {#eq:estoc}
+
+em que $\mathcal{X} = \{0\} \cup [\underline P^{cap}, \bar P^{cap}]$ é o conjunto de potências admissíveis, $\beta \geq 0$ é o peso atribuído ao risco ($\beta = 0$ corresponde a um agente neutro ao risco) e $\alpha$ é o nível de confiança do CVaR. Para uma distribuição discreta de lucros, o CVaR corresponde ao lucro médio na cauda inferior de probabilidade $1 - \alpha$ e pode ser escrito na forma linear de Rockafellar e Uryasev (2000), apresentada na Equação {eq:cvar}:
+
+$$
+\mathrm{CVaR}_\alpha(\Pi) = \max_{\zeta,\, \nu \geq 0} \left\{ \zeta - \frac{1}{1-\alpha} \sum_{s \in \mathcal{S}} \pi_s\, \nu_s \;\; : \;\; \nu_s \geq \zeta - \Pi_s \;\; \forall s \in \mathcal{S} \right\}
+$$ {#eq:cvar}
+
+em que $\zeta$ é uma variável auxiliar cujo valor ótimo corresponde ao valor em risco (VaR) e $\nu_s$ mede o quanto o lucro do cenário $s$ fica abaixo de $\zeta$.
+
+### 3.7.2 Cenários
+
+Os cenários correspondem aos cinco anos históricos de 2021 a 2025, considerados equiprováveis ($\pi_s = 1/5$). Cada cenário reúne:
+
+a) a série horária do PLD do submercado SE/CO do respectivo ano (CCEE, 2026), corrigida para valores de dezembro de 2025 pelo IPCA (IBGE, 2026), por meio do fator $f_s = \prod_{a = a_s + 1}^{2025} (1 + \mathrm{IPCA}_a)$, em que $a_s$ é o ano do cenário. Com variações anuais do IPCA de 5,79% (2022), 4,62% (2023), 4,83% (2024) e 4,26% (2025), obtêm-se fatores de 1,2097, 1,1435, 1,0930, 1,0426 e 1,0000 para os cenários de 2021 a 2025, respectivamente;
+
+b) a série de fator de capacidade FV obtida no PVGIS a partir da base de satélite SARAH-3, para as mesmas coordenadas e configuração descritas na Seção 3.5. Como a base cobre apenas o período até 2023, os cenários de 2024 e 2025 utilizam a série de 2023;
+
+c) o perfil de despacho do ONS, que, em lugar do perfil fixo da Seção 3.5, passa a depender do preço do cenário: em cada dia, a descarga ocorre no bloco de $H^{cap} = 4$ horas consecutivas de maior PLD médio após o período de geração solar, e a recarga, nas horas de menor PLD da janela entre 8 h e 16 h, até a restauração do estado de carga. Trata-se de uma aproximação do despacho por mínimo custo previsto na Portaria (BRASIL, 2026, art. 4º, § 14), que preserva a correlação entre o despacho e o preço em cada cenário.
+
+No caso estocástico, considera-se ainda um custo por partida do eletrolisador, $c^{part}$, associado a uma variável $u_t \geq z_t - z_{t-1}$, que penaliza ligamentos frequentes.
+
+Com cinco cenários equiprováveis e $\alpha = 0{,}8$, a cauda de probabilidade $1 - \alpha = 0{,}2$ contém exatamente um cenário, de modo que o CVaR coincide com o lucro do pior ano. Ressalta-se que cinco anos constituem uma amostra pequena da variabilidade hidrológica e de preços, de forma que os resultados refletem a amostra histórica disponível e não uma distribuição de probabilidade ajustada.
+
+### 3.7.3 Método de solução
+
+A decomposição de Benders da Seção 3.6 estende-se naturalmente ao caso estocástico: cada par (cenário, bloco semanal) constitui um subproblema independente, e o problema mestre passa a conter uma variável $\theta_{s,w}$ por subproblema, além das variáveis do CVaR, conforme as Equações {eq:mestre-estoc} a {eq:mestre-estoc-cvar}:
+
+$$
+\max\; \sum_{s \in \mathcal{S}} \pi_s\, \Pi_s + \beta \left( \zeta - \frac{1}{1-\alpha} \sum_{s \in \mathcal{S}} \pi_s\, \nu_s \right)
+$$ {#eq:mestre-estoc}
+
+sujeito a:
+
+$$
+\Pi_s = R^{cap} P + \sum_{w \in \mathcal{W}_s} \theta_{s,w} \quad \forall s; \qquad \theta_{s,w} \leq C^{k}_{s,w} + \lambda^{k}_{s,w}\, P \quad \forall s, w, k
+$$ {#eq:mestre-estoc-cortes}
+
+$$
+\nu_s \geq \zeta - \Pi_s, \quad \nu_s \geq 0 \quad \forall s; \qquad \underline P^{cap} w \leq P \leq \bar P^{cap} w
+$$ {#eq:mestre-estoc-cvar}
+
+Como o objetivo é não decrescente em cada $\Pi_s$ e os cortes superestimam $Q_{s,w}$, o valor ótimo do mestre continua a ser um limite superior válido. Os cortes não dependem de $\alpha$ e de $\beta$, o que permite reaproveitá-los na construção da fronteira entre risco e retorno.
+
+Quanto à validade dos cortes reforçados com uma variável de primeiro estágio contínua, observa-se que a desigualdade $Q_{s,w}(x) \leq C_{s,w}(\lambda_{s,w}) + \lambda_{s,w}\, x$ decorre apenas da dualidade lagrangiana e vale para qualquer $x$ admissível, seja ele contínuo ou inteiro. O que exige variáveis de primeiro estágio binárias, no trabalho de Zou, Ahmed e Sun (2019), é a garantia de que os cortes sejam exatos nos pontos avaliados e, portanto, a convergência finita do algoritmo. Como essa garantia não se aplica a $P^{cap}$, a qualidade da solução é atestada pelo *gap* entre os limites superior e inferior, e não pela convergência teórica.
+
+### 3.7.4 Valor da solução estocástica e valor esperado da informação perfeita
+
+O VSS e o EVPI (BIRGE, 1982; BIRGE; LOUVEAUX, 2011) quantificam, respectivamente, o ganho de resolver o problema estocástico em lugar de um problema determinístico baseado em valores médios e o ganho que se obteria caso o cenário fosse conhecido antes da contratação. Ambos são definidos para o objetivo de valor esperado e, por isso, são calculados com $\beta = 0$. Para um problema de maximização, definem-se quatro quantidades.
+
+O valor do **problema estocástico** (*recourse problem*, RP) é o lucro esperado ótimo da Equação {eq:estoc} com $\beta = 0$, dado pela Equação {eq:rp}:
+
+$$
+\mathrm{RP} = \max_{P^{cap} \in \mathcal{X}} \; \sum_{s \in \mathcal{S}} \pi_s\, \Pi_s\!\left(P^{cap}\right)
+$$ {#eq:rp}
+
+A **solução espera-e-vê** (*wait-and-see*, WS) corresponde a um agente que conhece o cenário antes de decidir a potência e escolhe, em cada um, a contratação ótima, conforme a Equação {eq:ws}:
+
+$$
+\mathrm{WS} = \sum_{s \in \mathcal{S}} \pi_s \max_{P^{cap} \in \mathcal{X}} \Pi_s\!\left(P^{cap}\right)
+$$ {#eq:ws}
+
+O **problema do valor esperado** (*expected value*, EV) substitui os cenários por um único cenário médio, $\bar\xi$, e fornece a decisão $\bar x^{EV}$, segundo a Equação {eq:ev}:
+
+$$
+\bar x^{EV} \in \arg\max_{P^{cap} \in \mathcal{X}} \; \Pi_{\bar\xi}\!\left(P^{cap}\right)
+$$ {#eq:ev}
+
+O **valor esperado da solução EV** (EEV) é o lucro esperado obtido quando a decisão $\bar x^{EV}$ é aplicada aos cenários originais, dado pela Equação {eq:eev}:
+
+$$
+\mathrm{EEV} = \sum_{s \in \mathcal{S}} \pi_s\, \Pi_s\!\left(\bar x^{EV}\right)
+$$ {#eq:eev}
+
+A partir dessas quantidades, os indicadores são dados pelas Equações {eq:evpi} e {eq:vss}:
+
+$$
+\mathrm{EVPI} = \mathrm{WS} - \mathrm{RP}
+$$ {#eq:evpi}
+
+$$
+\mathrm{VSS} = \mathrm{RP} - \mathrm{EEV}
+$$ {#eq:vss}
+
+Como $\bar x^{EV}$ é uma decisão admissível para o problema estocástico, e como o agente com informação perfeita pode, em particular, repetir a decisão estocástica em todos os cenários, vale a relação $\mathrm{EEV} \leq \mathrm{RP} \leq \mathrm{WS}$, de modo que ambos os indicadores são não negativos. Um VSS reduzido indica que o modelo determinístico baseado no cenário médio já conduz a uma boa decisão de contratação; um EVPI reduzido indica que a incerteza modelada tem pouco impacto sobre o lucro alcançável, e que, portanto, haveria pouco a ganhar com previsões mais precisas.
+
+O cenário médio $\bar\xi$ é construído pela média hora a hora das séries dos cinco anos, alinhadas por mês, dia e hora, com a exclusão do dia 29 de fevereiro de 2024: $\bar\lambda_t = \sum_{s \in \mathcal{S}} \pi_s\, f_s\, \lambda_{s,t}$ para o PLD corrigido e, analogamente, para o fator de capacidade FV. O perfil de despacho do ONS do cenário médio é obtido pela mesma regra da Seção 3.7.2, aplicada a $\bar\lambda_t$. Destaca-se que o valor ótimo do problema EV não é utilizado como estimativa do lucro: a média hora a hora suaviza os picos e vales de preço e de irradiância e tende a distorcer o lucro operacional. O problema EV serve apenas para gerar a decisão $\bar x^{EV}$, cujo desempenho é avaliado pelo EEV.
+
+O cálculo segue as etapas abaixo:
+
+a) **RP:** resolve-se o problema estocástico com $\beta = 0$ pelo método da Seção 3.7.3;
+
+b) **WS:** resolve-se, para cada cenário $s$ isoladamente, o problema determinístico anual pelo mesmo método, e calcula-se a média ponderada dos valores ótimos;
+
+c) **EV e EEV:** resolve-se o problema anual com o cenário médio para obter $\bar x^{EV}$; em seguida, fixa-se $P^{cap} = \bar x^{EV}$ e resolvem-se os subproblemas de todos os pares (cenário, bloco), o que fornece $\Pi_s(\bar x^{EV})$ e, pela Equação {eq:eev}, o EEV.
+
+Como RP e WS são obtidos com uma tolerância $\varepsilon$ de convergência, adotada como 0,01% nesta etapa, cada um é conhecido por um intervalo $[LB, UB]$. Os indicadores são, então, reportados com os respectivos limites: $\mathrm{EVPI} \in [\mathrm{WS}^{LB} - \mathrm{RP}^{UB},\; \mathrm{WS}^{UB} - \mathrm{RP}^{LB}]$ e $\mathrm{VSS} \in [\mathrm{RP}^{LB} - \mathrm{EEV},\; \mathrm{RP}^{UB} - \mathrm{EEV}]$. Diferenças inferiores à ordem de $\varepsilon \cdot \mathrm{RP}$ não são distinguíveis do erro de convergência e devem ser interpretadas como nulas.
+
+## 3.8 Implementação computacional
+
+O modelo foi implementado na linguagem Python, com o uso da biblioteca de modelagem algébrica Pyomo (BYNUM *et al.*, 2021) e do *solver* HiGHS (HUANGFU; HALL, 2018). A estrutura do código separa: (i) a leitura e validação dos parâmetros, organizados em arquivos de configuração em formato YAML, com verificação automática dos requisitos regulatórios; (ii) a importação e o tratamento das séries de dados; (iii) a construção do modelo de otimização; (iv) a decomposição de Benders, nas versões determinística e estocástica; (v) o cálculo do VSS e do EVPI; e (vi) o pós-processamento dos resultados. Os subproblemas semanais são resolvidos em paralelo em processos independentes, cada qual restrito a uma linha de execução do *solver*, a fim de evitar a concorrência por núcleos de processamento. A consistência do modelo é verificada por um conjunto de testes automatizados que conferem, entre outros aspectos, o balanço de potência, os limites dos estados de carga, a exclusividade entre carga e descarga, o cumprimento do despacho do ONS, o limite do ponto de conexão e a validade dos cortes de Benders. O código e os dados são mantidos sob controle de versão, o que assegura a reprodutibilidade dos resultados.
+
+## 3.9 Hipóteses e limitações
 
 As principais hipóteses adotadas, e as respectivas implicações, são as seguintes:
 
-a) **previsão perfeita:** as séries de PLD, de geração FV e de despacho do ONS são conhecidas antecipadamente, o que tende a superestimar o lucro alcançável na operação real. Em particular, a incerteza do despacho do ONS, cujo risco é alocado ao empreendedor pela Portaria, é candidata natural a uma extensão estocástica em dois estágios, em que $P^{cap}$ é decidida no primeiro estágio e a operação se adapta a cenários no segundo;
+a) **previsão perfeita dentro de cada ano:** mesmo na extensão estocástica, a operação de cada cenário é otimizada com conhecimento antecipado das séries daquele ano, o que tende a superestimar o lucro alcançável na operação real. A incerteza tratada pela Seção 3.7 é apenas a variação entre anos; a incerteza do despacho do ONS, cujo risco é alocado ao empreendedor pela Portaria, é representada somente pela regra de despacho baseada no PLD;
 
 b) **agente tomador de preço:** a operação do sistema não altera o PLD;
 
@@ -364,7 +480,7 @@ c) **receita fixa simplificada:** a receita fixa é rateada linearmente no horiz
 
 d) **disponibilidade integral:** o módulo LRCAP atende a 100% do despacho, sem indisponibilidades programadas ou forçadas;
 
-e) **eletrolisador simplificado:** eficiência constante em toda a faixa de operação, sem custos de partida, tempos mínimos de operação e de parada, estado de espera (*standby*) ou limites de rampa;
+e) **eletrolisador simplificado:** eficiência constante em toda a faixa de operação, com custo de partida apenas na extensão estocástica e sem tempos mínimos de operação e de parada, estado de espera (*standby*) ou limites de rampa;
 
 f) **degradação linear:** o custo de degradação do BESS é proporcional à energia descarregada, sem dependência da profundidade de descarga;
 
@@ -372,12 +488,22 @@ g) **divisão contínua do BESS:** a alocação entre os módulos é tratada com
 
 h) **condições cíclicas semanais:** a decomposição impõe que os estados de armazenamento retornem ao valor inicial ao final de cada semana, impedindo transferências de energia ou de hidrogênio entre semanas;
 
-i) **anos distintos:** a série de irradiância (2023) e a de preços (2025) referem-se a anos diferentes. Para uma usina de pequeno porte em relação ao SIN, a correlação horária entre a geração local e o PLD tende a ser fraca, mas a hipótese deve ser considerada na interpretação dos resultados.
+i) **anos distintos:** no caso determinístico, a série de irradiância (2023) e a de preços (2025) referem-se a anos diferentes; no caso estocástico, o mesmo ocorre nos cenários de 2024 e 2025, que utilizam a irradiância de 2023. Para uma usina de pequeno porte em relação ao SIN, a correlação horária entre a geração local e o PLD tende a ser fraca, mas a hipótese deve ser considerada na interpretação dos resultados;
+
+j) **amostra de cenários:** os cinco anos históricos são tratados como equiprováveis e constituem uma amostra pequena; o VSS e o EVPI são, portanto, medidos dentro da amostra, e a avaliação da decisão fora da amostra é deixada para trabalhos futuros.
 
 ## REFERÊNCIAS
 
 ::: {custom-style="Referencia"}
 BENDERS, J. F. Partitioning procedures for solving mixed-variables programming problems. **Numerische Mathematik**, v. 4, n. 1, p. 238–252, 1962.
+:::
+
+::: {custom-style="Referencia"}
+BIRGE, J. R. The value of the stochastic solution in stochastic linear programs with fixed recourse. **Mathematical Programming**, v. 24, n. 1, p. 314–325, 1982.
+:::
+
+::: {custom-style="Referencia"}
+BIRGE, J. R.; LOUVEAUX, F. **Introduction to stochastic programming**. 2. ed. New York: Springer, 2011.
 :::
 
 ::: {custom-style="Referencia"}
@@ -397,6 +523,10 @@ CONEJO, A. J. *et al.* **Decomposition techniques in mathematical programming**:
 :::
 
 ::: {custom-style="Referencia"}
+CONEJO, A. J.; CARRIÓN, M.; MORALES, J. M. **Decision making under uncertainty in electricity markets**. New York: Springer, 2010.
+:::
+
+::: {custom-style="Referencia"}
 FENG, L. *et al.* Optimization analysis of energy storage application based on electricity price arbitrage and ancillary services. **Journal of Energy Storage**, v. 55, p. 105508, 2022.
 :::
 
@@ -405,11 +535,19 @@ HERSBACH, H. *et al.* The ERA5 global reanalysis. **Quarterly Journal of the Roy
 :::
 
 ::: {custom-style="Referencia"}
+IBGE – INSTITUTO BRASILEIRO DE GEOGRAFIA E ESTATÍSTICA. **Índice Nacional de Preços ao Consumidor Amplo (IPCA)**: séries históricas. Rio de Janeiro: IBGE, 2026. Disponível em: https://www.ibge.gov.br/estatisticas/economicas/precos-e-custos/9256-indice-nacional-de-precos-ao-consumidor-amplo.html. Acesso em: 3 out. 2026.
+:::
+
+::: {custom-style="Referencia"}
 HUANGFU, Q.; HALL, J. A. J. Parallelizing the dual revised simplex method. **Mathematical Programming Computation**, v. 10, n. 1, p. 119–142, 2018.
 :::
 
 ::: {custom-style="Referencia"}
 HULD, T.; MÜLLER, R.; GAMBARDELLA, A. A new solar radiation database for estimating PV performance in Europe and Africa. **Solar Energy**, v. 86, n. 6, p. 1803–1815, 2012.
+:::
+
+::: {custom-style="Referencia"}
+ROCKAFELLAR, R. T.; URYASEV, S. Optimization of conditional value-at-risk. **Journal of Risk**, v. 2, n. 3, p. 21–41, 2000.
 :::
 
 ::: {custom-style="Referencia"}
