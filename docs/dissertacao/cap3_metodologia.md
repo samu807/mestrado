@@ -50,7 +50,7 @@ Fonte: elaborado pelo autor com base em Brasil (2026).
 
 ## 3.3 Descrição do sistema
 
-A Figura 3.1 apresenta a topologia do sistema modelado. No lado mercantil, a usina FV, o módulo mercantil do BESS e o eletrolisador estão conectados a um barramento comum, no qual se impõe o balanço de potência. O hidrogênio produzido é armazenado em um tanque e comercializado a preço fixo. A energia excedente pode ser exportada ao SIN e liquidada ao PLD. O módulo LRCAP, embora fisicamente instalado no mesmo sítio, possui ponto de medição próprio e segue um perfil de descarga e recarga determinado pelo ONS. Os fluxos de ambos os lados convergem para o ponto de conexão compartilhado, cuja capacidade limita o fluxo líquido em cada hora.
+A Figura 3.1 apresenta a topologia do sistema modelado. No lado mercantil, a usina FV, o módulo mercantil do BESS e o eletrolisador estão conectados a um barramento comum, no qual se impõe o balanço de potência. O hidrogênio produzido é armazenado em um tanque e comercializado a preço fixo, seja sem limite de volume, seja por meio de um contrato de fornecimento com entrega diária (Seção 3.4.5). A energia excedente pode ser exportada ao SIN e liquidada ao PLD. O módulo LRCAP, embora fisicamente instalado no mesmo sítio, possui ponto de medição próprio e segue um perfil de descarga e recarga determinado pelo ONS. Os fluxos de ambos os lados convergem para o ponto de conexão compartilhado, cuja capacidade limita o fluxo líquido em cada hora.
 
 ::: {custom-style="Legenda"}
 Figura 3.1 – Topologia do sistema híbrido FV–BESS–H₂ com divisão do BESS entre os módulos LRCAP e mercantil
@@ -98,7 +98,9 @@ Tabela 3.1 – Parâmetros do modelo e valores do caso de referência
 | $c^{h2}$ | Custo variável de produção de H₂ | R\$/kg | 1,5 |
 | $\pi^{h2}$ | Preço de venda do H₂ | R\$/kg | 35 |
 | $\bar S, S_0$ | Capacidade e estoque inicial do tanque de H₂ | kg | 2.000; 0 |
-| $D^{h2}$ | Entrega mínima diária de H₂ | kg/dia | 0 |
+| $D^{h2}$ | Entrega mínima diária de H₂ (contrato) | kg/dia | 0 (sem contrato); 2.000 ou 3.000 |
+| $\bar D^{h2}$ | Entrega máxima diária de H₂ (demanda do comprador) | kg/dia | ilimitada (sem contrato); igual a $D^{h2}$ |
+| $\pi^{def}$ | Multa por kg de H₂ não entregue | R\$/kg | 35 |
 | $\bar P^{exp}, \bar P^{imp}$ | Limites de exportação e importação no ponto de conexão | MW | 80 |
 | $c^{imp}$ | Custo adicional sobre a energia importada | R\$/MWh | 250 |
 | $R^{cap}$ | Receita fixa do LRCAP | R\$/(MW·ano) | 600.000 |
@@ -130,6 +132,7 @@ Tabela 3.2 – Variáveis de decisão
 | $p^{el}_t$ | Potência consumida pelo eletrolisador | $[0, \bar P^{el}]$, MW |
 | $m_t, v_t$ | Produção e venda de H₂ | $\mathbb{R}_{\geq 0}$, kg/h |
 | $s_t$ | Estoque de H₂ | $[0, \bar S]$, kg |
+| $q^{def}_d$ | Déficit de entrega de H₂ no dia $d$ | $\mathbb{R}_{\geq 0}$, kg |
 | $p^{exp}_t, p^{imp}_t$ | Exportação e importação do lado mercantil | $\mathbb{R}_{\geq 0}$, MW |
 | $y^{bat}_t$ | Estado do módulo mercantil (1 = carregando) | $\{0, 1\}$ |
 | $y^{rede}_t$ | Sentido do intercâmbio (1 = exportando) | $\{0, 1\}$ |
@@ -147,12 +150,13 @@ $$
 \max\; \sum_{t \in \mathcal{T}} \lambda_t\, p^{exp}_t\, \Delta t
 - \sum_{t \in \mathcal{T}} \left(\lambda_t + c^{imp}\right) p^{imp}_t\, \Delta t
 + \sum_{t \in \mathcal{T}} \left(\pi^{h2} v_t - c^{h2} m_t\right) \Delta t
+- \sum_{d \in \mathcal{D}} \pi^{def} q^{def}_d
 + R^{cap}\, \frac{N \Delta t}{8760}\, P^{cap}
 - \kappa\, P^{cap}
 - \sum_{t \in \mathcal{T}} c^{deg} \left(p^{dis}_t + \delta_t P^{cap}\right) \Delta t
 $$ {#eq:fo}
 
-Os termos correspondem, respectivamente, à receita da energia exportada ao MCP, ao custo da energia importada, à margem da comercialização do hidrogênio, à receita fixa do LRCAP rateada no horizonte, ao custo da recarga excedente do módulo LRCAP e ao custo de degradação do BESS, aplicado à energia descarregada por ambos os módulos. Ressalta-se que a energia injetada pelo módulo LRCAP não compõe a receita do MCP do empreendedor, em conformidade com o art. 9º, § 6º, da Portaria.
+Os termos correspondem, respectivamente, à receita da energia exportada ao MCP, ao custo da energia importada, à margem da comercialização do hidrogênio, à multa por déficit de entrega de hidrogênio, à receita fixa do LRCAP rateada no horizonte, ao custo da recarga excedente do módulo LRCAP e ao custo de degradação do BESS, aplicado à energia descarregada por ambos os módulos. Ressalta-se que a energia injetada pelo módulo LRCAP não compõe a receita do MCP do empreendedor, em conformidade com o art. 9º, § 6º, da Portaria.
 
 O coeficiente $\kappa$ representa o custo, por MW contratado, da energia de recarga que excede o quociente entre a energia injetada e a eficiência de referência, a qual deve ser custeada pelo empreendedor (BRASIL, 2026, art. 9º, §§ 7º e 8º). Como o perfil de despacho é exógeno e proporcional a $P^{cap}$, $\kappa$ é calculado previamente pela Equação {eq:kappa}:
 
@@ -248,17 +252,25 @@ $$
 m_t = \frac{1000}{k^{el}}\, p^{el}_t \qquad \forall t \in \mathcal{T}
 $$ {#eq:prod}
 
-O balanço do tanque de hidrogênio, com condição de contorno análoga à do BESS, e a entrega mínima diária são expressos pelas Equações {eq:tanque} e {eq:entrega}:
+O balanço do tanque de hidrogênio, com condição de contorno análoga à do BESS, é expresso pela Equação {eq:tanque}:
 
 $$
 s_t = s_{t-1} + \left(m_t - v_t\right) \Delta t, \qquad s_{-1} = S_0, \qquad s_{N-1} \geq S_0
 $$ {#eq:tanque}
 
+**Contrato de fornecimento de hidrogênio.** Sem limite de volume, o hidrogênio funciona como um consumidor de energia de capacidade ilimitada a preço fixo. Com os valores da Tabela 3.1, cada MWh entregue ao eletrolisador vale $(\pi^{h2} - c^{h2}) \cdot 1000/k^{el} \approx$ R\$ 609/MWh, valor muito superior ao PLD médio, de modo que o eletrolisador absorve quase toda a energia disponível e o MCP perde relevância. Na prática, a comercialização de hidrogênio em escala depende de contratos bilaterais com um comprador industrial, cuja demanda é limitada e cuja entrega deve ser regular. Para representar essa situação, o modelo admite um contrato de fornecimento com entrega diária entre $D^{h2}$ e $\bar D^{h2}$, conforme as Equações {eq:entrega} e {eq:entrega-max}:
+
 $$
-\sum_{t \in \mathcal{T}_d} v_t\, \Delta t \geq D^{h2} \qquad \forall d \in \mathcal{D}
+\sum_{t \in \mathcal{T}_d} v_t\, \Delta t + q^{def}_d \geq D^{h2} \qquad \forall d \in \mathcal{D}
 $$ {#eq:entrega}
 
-O modelo resultante, composto pela função objetivo da Equação {eq:fo} e pelas restrições das Equações {eq:cap} a {eq:entrega}, é um MILP. Para um horizonte de uma semana (168 h), o problema possui 1.681 variáveis contínuas, 505 variáveis binárias e 2.692 restrições; para um ano (8.760 h), 87.601 variáveis contínuas, 26.281 binárias e 140.164 restrições.
+$$
+\sum_{t \in \mathcal{T}_d} v_t\, \Delta t \leq \bar D^{h2} \qquad \forall d \in \mathcal{D}
+$$ {#eq:entrega-max}
+
+A variável $q^{def}_d$ representa a parcela da entrega mínima não cumprida no dia $d$, sujeita à multa $\pi^{def}$ na função objetivo. Sem ela, um dia de baixa irradiância tornaria o problema inviável, já que a importação de energia é vedada no caso de referência; com ela, o modelo decide entre produzir o hidrogênio, inclusive com energia previamente armazenada no BESS, e pagar a multa. Quando não há multa definida, adota-se $q^{def}_d = 0$ e a entrega mínima é obrigatória. Nos casos com contrato, adota-se $D^{h2} = \bar D^{h2}$, isto é, um volume diário firme, e $\pi^{def} = \pi^{h2}$, valor que corresponde a ressarcir o comprador pelo produto que ele precisará adquirir de outro fornecedor. Os volumes de 2.000 e 3.000 kg/dia correspondem, respectivamente, a cerca de 65% e 98% da produção média do caso sem contrato (3.060 kg/dia). Nessa configuração, o hidrogênio produzido além do volume contratado não pode ser vendido, e a energia excedente passa a ser exportada ao MCP ou vertida, o que restabelece o papel do mercado de curto prazo na arbitragem. O caso sem contrato corresponde a $D^{h2} = 0$ e $\bar D^{h2}$ ilimitado.
+
+O modelo resultante, composto pela função objetivo da Equação {eq:fo} e pelas restrições das Equações {eq:cap} a {eq:entrega-max}, é um MILP. Sem contrato de hidrogênio, para um horizonte de uma semana (168 h), o problema possui 1.688 variáveis contínuas, 505 variáveis binárias e 2.692 restrições; para um ano (8.760 h), 87.966 variáveis contínuas, 26.281 binárias e 140.164 restrições. O contrato acrescenta duas restrições por dia.
 
 ## 3.5 Dados de entrada
 
@@ -280,7 +292,7 @@ Fonte: elaborado pelo autor com dados de CCEE (2026) e do PVGIS.
 
 **Despacho do ONS.** Na ausência de histórico de despacho de sistemas de armazenamento contratados no LRCAP, adota-se um perfil diário sintético: descarga na potência contratada entre 18 h e 22 h, horário de maior demanda líquida, e recarga entre 10 h e 15 h, até a restauração completa do estado de carga, limitada à potência nominal. O perfil é coerente com a diretriz de que a programação da recarga busque minimizar o custo total de operação do SIN (BRASIL, 2026, art. 4º, § 14), o que tende a deslocá-la para as horas de excedente de geração solar. O perfil resulta em um ciclo completo por dia (365 no ano), dentro dos limites regulatórios.
 
-**Parâmetros técnico-econômicos.** Os parâmetros do eletrolisador foram definidos a partir da faixa típica da tecnologia PEM, cujo consumo específico de energia situa-se entre 4,3 e 5,2 kWh/Nm³, ou aproximadamente 48 a 58 kWh/kg, até que os dados do fabricante do equipamento da UNIFEI sejam incorporados. A receita fixa do LRCAP e o preço do hidrogênio não possuem, até o momento, referências de mercado consolidadas no Brasil e são, por isso, objeto de análise de sensibilidade.
+**Parâmetros técnico-econômicos.** Os parâmetros do eletrolisador foram definidos a partir da faixa típica da tecnologia PEM, cujo consumo específico de energia situa-se entre 4,3 e 5,2 kWh/Nm³, ou aproximadamente 48 a 58 kWh/kg, até que os dados do fabricante do equipamento da UNIFEI sejam incorporados. A receita fixa do LRCAP e o preço do hidrogênio não possuem, até o momento, referências de mercado consolidadas no Brasil e são, por isso, objeto de análise de sensibilidade. O mesmo se aplica aos termos do contrato de fornecimento de hidrogênio — volume diário e multa por déficit —, avaliados em cenários alternativos ao caso sem contrato.
 
 ## 3.6 Método de solução
 
@@ -490,7 +502,9 @@ h) **condições cíclicas semanais:** a decomposição impõe que os estados de
 
 i) **anos distintos:** no caso determinístico, a série de irradiância (2023) e a de preços (2025) referem-se a anos diferentes; no caso estocástico, o mesmo ocorre nos cenários de 2024 e 2025, que utilizam a irradiância de 2023. Para uma usina de pequeno porte em relação ao SIN, a correlação horária entre a geração local e o PLD tende a ser fraca, mas a hipótese deve ser considerada na interpretação dos resultados;
 
-j) **amostra de cenários:** os cinco anos históricos são tratados como equiprováveis e constituem uma amostra pequena; o VSS e o EVPI são, portanto, medidos dentro da amostra, e a avaliação da decisão fora da amostra é deixada para trabalhos futuros.
+j) **contrato de hidrogênio simplificado:** o contrato é representado por um volume diário fixo, a preço fixo e com multa linear por déficit. Não se consideram cláusulas de *take-or-pay* sobre volumes anuais, flexibilidade de entrega entre dias, reajuste de preço ou a venda do excedente a outros compradores, e a multa adotada é um valor de referência ainda não calibrado com contratos reais;
+
+k) **amostra de cenários:** os cinco anos históricos são tratados como equiprováveis e constituem uma amostra pequena; o VSS e o EVPI são, portanto, medidos dentro da amostra, e a avaliação da decisão fora da amostra é deixada para trabalhos futuros.
 
 ## REFERÊNCIAS
 
