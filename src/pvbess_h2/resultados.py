@@ -54,6 +54,8 @@ def indicadores(m: pyo.ConcreteModel, df: pd.DataFrame, p: Parametros) -> pd.Ser
         "energia_importada_mwh": e("p_importacao_mw"),
         "energia_eletrolisador_mwh": e("p_eletrolisador_mw"),
         "h2_produzido_kg": e("producao_h2_kg_h"),
+        "h2_vendido_kg": e("venda_h2_kg_h"),
+        "deficit_h2_kg": sum(pyo.value(m.deficit_h2[d]) for d in m.D),
         "ciclos_equivalentes_mercantil": e("p_descarga_bess_mw") / max(pyo.value(m.E_merc), 1e-9),
         "fator_capacidade_eletrolisador": df["p_eletrolisador_mw"].mean() / p.eletrolisador.potencia_max_mw,
         "preco_medio_exportacao_rs_mwh": (df["pld_rs_mwh"] * df["p_exportacao_mw"]).sum()

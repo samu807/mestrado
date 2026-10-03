@@ -181,11 +181,22 @@ def construir_modelo(p: Parametros, series: pd.DataFrame) -> pyo.ConcreteModel:
             return pyo.Constraint.Skip
         return m.u_el[t] >= m.z_el[t] - m.z_el[t - 1 if t > 0 else n - 1]
 
+    # Contrato de fornecimento de H2: entrega mínima diária (com déficit multado, se
+    # houver penalidade) e teto diário de venda.
+    m.deficit_h2 = pyo.Var(m.D, within=pyo.NonNegativeReals,
+                           bounds=(0, 0 if h2.penalidade_deficit_rs_kg is None else None))
+
     @m.Constraint(m.D)
     def entrega_min_diaria(m, d):
         if h2.entrega_min_diaria_kg <= 0:
             return pyo.Constraint.Skip
-        return sum(m.v_h2[t] * dt for t in horas_do_dia[d]) >= h2.entrega_min_diaria_kg
+        return sum(m.v_h2[t] * dt for t in horas_do_dia[d]) + m.deficit_h2[d] >= h2.entrega_min_diaria_kg
+
+    @m.Constraint(m.D)
+    def entrega_max_diaria(m, d):
+        if h2.entrega_max_diaria_kg is None:
+            return pyo.Constraint.Skip
+        return sum(m.v_h2[t] * dt for t in horas_do_dia[d]) <= h2.entrega_max_diaria_kg
 
     # ------------------------------------------------------------ Função objetivo
     fracao_ano = horas_horizonte / 8760.0
@@ -202,7 +213,8 @@ def construir_modelo(p: Parametros, series: pd.DataFrame) -> pyo.ConcreteModel:
         expr=sum((m.pld[t] + rede.custo_adicional_importacao_rs_mwh) * m.p_imp[t] * dt for t in m.T))
     m.receita_h2 = pyo.Expression(expr=sum(h2.preco_venda_rs_kg * m.v_h2[t] * dt for t in m.T))
     m.custo_h2 = pyo.Expression(expr=sum(el.custo_variavel_rs_kg * m.m_h2[t] * dt for t in m.T)
-                                + sum(el.custo_partida_rs * m.u_el[t] for t in m.T))
+                                + sum(el.custo_partida_rs * m.u_el[t] for t in m.T)
+                                + sum((h2.penalidade_deficit_rs_kg or 0.0) * m.deficit_h2[d] for d in m.D))
     m.receita_lrcap = pyo.Expression(expr=lr.receita_fixa_rs_mw_ano * fracao_ano * m.P_cap)
     m.custo_recarga_lrcap = pyo.Expression(expr=custo_rec_pu * m.P_cap)
     m.custo_degradacao = pyo.Expression(

@@ -53,6 +53,10 @@ class Hidrogenio:
     tanque_inicial_kg: float = 0.0
     entrega_min_diaria_kg: float = 0.0
     venda_max_kg_h: float | None = None
+    # Contrato de fornecimento: teto diário de venda (demanda do comprador) e multa por
+    # kg não entregue abaixo da entrega mínima (None = entrega mínima obrigatória).
+    entrega_max_diaria_kg: float | None = None
+    penalidade_deficit_rs_kg: float | None = None
 
 
 @dataclass
@@ -155,7 +159,10 @@ class Parametros:
             "exige soc_min_frac <= soc_inicial_frac <= soc_max_frac"
         assert 0 <= e.carga_min_frac <= 1
         assert e.consumo_especifico_kwh_kg > 0
-        assert self.hidrogenio.tanque_inicial_kg <= self.hidrogenio.tanque_max_kg
+        h2 = self.hidrogenio
+        assert h2.tanque_inicial_kg <= h2.tanque_max_kg
+        assert h2.entrega_max_diaria_kg is None or h2.entrega_max_diaria_kg >= h2.entrega_min_diaria_kg, \
+            "hidrogenio.entrega_max_diaria_kg deve ser >= entrega_min_diaria_kg"
         lr, d = self.lrcap, self.lrcap.despacho_ons
         assert all(0 <= h <= 23 for h in d.horas_descarga + d.horas_recarga + d.janela_recarga)
         assert d.modo in ("fixo", "pld"), "lrcap.despacho_ons.modo deve ser 'fixo' ou 'pld'"

@@ -106,3 +106,19 @@ def test_lrcap_desabilitado_nao_contrata():
 def test_entrega_minima_diaria_h2():
     p, _, df, _ = resolver_caso({"hidrogenio": {"entrega_min_diaria_kg": 3000.0}})
     assert (df.groupby("dia").venda_h2_kg_h.sum() * p.horizonte.dt_h >= 3000 - 1e-4).all()
+
+
+def test_contrato_h2_teto_diario():
+    p, _, df, _ = resolver_caso({"hidrogenio": {"entrega_max_diaria_kg": 1500.0}})
+    vendas = df.venda_h2_kg_h.groupby(df.index.date).sum() * p.horizonte.dt_h
+    assert (vendas <= 1500.0 + 1e-6).all()
+
+
+def test_contrato_h2_deficit_multado():
+    # Entrega mínima inalcançável: sem multa seria inviável; com multa, o déficit é pago.
+    ajuste = {"entrega_min_diaria_kg": 50000.0, "entrega_max_diaria_kg": 50000.0,
+              "penalidade_deficit_rs_kg": 10.0}
+    p, m, df, kpi = resolver_caso({"hidrogenio": ajuste})
+    vendas = df.venda_h2_kg_h.groupby(df.index.date).sum() * p.horizonte.dt_h
+    assert kpi.deficit_h2_kg == pytest.approx((50000.0 - vendas).sum(), rel=1e-4)
+    assert kpi.custo_h2_rs >= 10.0 * kpi.deficit_h2_kg - 1e-3
