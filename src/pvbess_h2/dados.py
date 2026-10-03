@@ -9,6 +9,7 @@ testar o modelo. Para a dissertação, substitua por dados reais, por exemplo:
 from __future__ import annotations
 
 import warnings
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -94,6 +95,72 @@ def _perfil_pld(p: Parametros, idx: pd.DatetimeIndex, pld: np.ndarray) -> tuple[
     return desc, rec
 
 
+def _regra(p: Parametros) -> tuple:
+    """Campos que definem o período de descarga usado para ranquear os dias."""
+    d = p.lrcap.despacho_ons
+    return (d.modo, max(d.janela_recarga), tuple(d.horas_descarga),
+            int(round(p.lrcap.duracao_h / p.horizonte.dt_h)))
+
+
+def _nota_dia(regra: tuple, pld: pd.Series) -> pd.Series:
+    """PLD médio de cada dia no período em que o ONS descarregaria (critério de seleção)."""
+    modo, fim_janela, horas_descarga, h = regra
+    if modo == "pld":   # melhor bloco de h horas após a janela solar, como em _perfil_pld
+        noite = pld[pld.index.hour > fim_janela]
+        return noite.groupby(noite.index.normalize()).agg(
+            lambda x: x.rolling(h).mean().max() if len(x) >= h else -np.inf)
+    sel = pld[pld.index.hour.isin(horas_descarga)]
+    return sel.groupby(sel.index.normalize()).mean()
+
+
+def _van_der_corput(k: np.ndarray) -> np.ndarray:
+    """Sequência de baixa discrepância em [0, 1) (base 2)."""
+    k, v, den = np.asarray(k, dtype=np.int64) + 1, np.zeros(len(k)), 1.0
+    while (k > 0).any():
+        den *= 2
+        v += (k % 2) / den
+        k //= 2
+    return v
+
+
+def _maiores(nota: pd.Series, n: float) -> set:
+    """Os n dias de maior nota. Empates (ex.: PLD no piso o dia todo) são desfeitos por uma
+    sequência de baixa discrepância no dia do ano, que espalha os escolhidos pelo ano em
+    vez de favorecer os primeiros dias."""
+    desempate = _van_der_corput(nota.index.dayofyear.to_numpy() - 1)
+    ordem = np.lexsort((desempate, -nota.round(6).to_numpy()))
+    return set(nota.index[ordem[:int(round(min(n, len(nota))))]])
+
+
+@lru_cache(maxsize=32)
+def _dias_selecionados_ano(arquivo: str, fator: float, regra: tuple, ciclos: float) -> frozenset:
+    """Dias de despacho de cada ano civil do arquivo de PLD: os N de maior nota."""
+    df = pd.read_csv(arquivo, parse_dates=["timestamp"]).set_index("timestamp")
+    nota = _nota_dia(regra, df["pld"].astype(float) * fator)
+    dias = set()
+    for _, g in nota.groupby(nota.index.year):
+        dias |= _maiores(g, ciclos)
+    return frozenset(dias)
+
+
+def dias_despacho(p: Parametros, idx: pd.DatetimeIndex, pld: np.ndarray) -> np.ndarray:
+    """Máscara horária dos dias com despacho do ONS quando `ciclos_ano` é informado.
+
+    Com PLD de arquivo, a seleção é feita sobre o ano civil inteiro (os N dias de maior
+    PLD no período de descarga), de modo que blocos semanais vejam a mesma escolha que o
+    ano completo. Com PLD sintético, N é rateado no horizonte.
+    """
+    n = p.lrcap.despacho_ons.ciclos_ano
+    if p.mercado.arquivo:
+        arq = Path(p.mercado.arquivo)
+        arq = arq if arq.is_absolute() else p.base_dir / arq
+        escolhidos = _dias_selecionados_ano(str(arq), float(p.mercado.fator_preco), _regra(p), float(n))
+    else:
+        nota = _nota_dia(_regra(p), pd.Series(np.asarray(pld, dtype=float), index=idx))
+        escolhidos = _maiores(nota, n * len(nota) / 365)
+    return np.isin(idx.normalize(), list(escolhidos))
+
+
 def despacho_ons(p: Parametros, idx: pd.DatetimeIndex, pld: np.ndarray | None = None) -> pd.DataFrame:
     """Perfil de despacho do ONS no módulo LRCAP, por MW contratado (p.u. de P_cap).
 
@@ -119,6 +186,8 @@ def despacho_ons(p: Parametros, idx: pd.DatetimeIndex, pld: np.ndarray | None = 
         ativo = np.ones(len(idx), bool) if d.dias is None else np.isin(dia, d.dias)
         desc = (idx.hour.isin(d.horas_descarga) & ativo).astype(float)
         rec = None
+    if d.ciclos_ano is not None and not d.arquivo:
+        desc = desc * dias_despacho(p, idx, pld)   # sem descarga, o módulo fica cheio e não recarrega
 
     soc = np.empty(len(idx))
     rec_calc = np.zeros(len(idx))

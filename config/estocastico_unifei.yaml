@@ -115,6 +115,7 @@ lrcap:
     horas_descarga: [18, 19, 20, 21]      # descarga a potência plena
     horas_recarga: [10, 11, 12, 13, 14]   # recarga até encher (ONS minimiza custo - art. 4º §14)
     dias: null                            # null = todos os dias; ou lista de índices de dia (0, 1, ...)
+    ciclos_ano: null                      # null = todo dia; N = só os N dias de maior PLD na descarga, por ano
 
 estocastico:
   alpha: 0.8        # com 5 anos equiprováveis: CVaR = lucro do pior ano

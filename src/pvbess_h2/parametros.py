@@ -89,6 +89,11 @@ class DespachoONS:
     horas_descarga: list[int] = field(default_factory=lambda: [18, 19, 20, 21])
     horas_recarga: list[int] = field(default_factory=lambda: [10, 11, 12, 13, 14])
     dias: list[int] | None = None
+    # Número de despachos (ciclos completos) por ano. None = todos os dias. Com valor,
+    # despacham-se apenas os N dias de cada ano civil com maior PLD no período de
+    # descarga (proxy de sistema mais apertado); requer PLD lido de arquivo para o
+    # ranqueamento anual (com PLD sintético, o N é rateado no horizonte).
+    ciclos_ano: float | None = None
 
 
 @dataclass
@@ -166,6 +171,9 @@ class Parametros:
         lr, d = self.lrcap, self.lrcap.despacho_ons
         assert all(0 <= h <= 23 for h in d.horas_descarga + d.horas_recarga + d.janela_recarga)
         assert d.modo in ("fixo", "pld"), "lrcap.despacho_ons.modo deve ser 'fixo' ou 'pld'"
+        assert d.ciclos_ano is None or 0 <= d.ciclos_ano <= 366, "lrcap.despacho_ons.ciclos_ano em [0, 366]"
+        assert d.ciclos_ano is None or (d.dias is None and not d.arquivo), \
+            "lrcap.despacho_ons.ciclos_ano não se combina com 'dias' nem com 'arquivo'"
         assert 0 <= self.estocastico.alpha < 1 and self.estocastico.beta >= 0
         if lr.habilitado:
             # Requisitos de habilitação técnica (Portaria MME 136/2026, art. 7º)

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pyomo.environ as pyo
 import pytest
 
@@ -122,3 +123,37 @@ def test_contrato_h2_deficit_multado():
     vendas = df.venda_h2_kg_h.groupby(df.index.date).sum() * p.horizonte.dt_h
     assert kpi.deficit_h2_kg == pytest.approx((50000.0 - vendas).sum(), rel=1e-4)
     assert kpi.custo_h2_rs >= 10.0 * kpi.deficit_h2_kg - 1e-3
+
+
+def test_ciclos_ano_seleciona_dias_de_maior_pld():
+    from pvbess_h2.dados import despacho_ons, indice_temporal, pld_sintetico
+    p = carregar_parametros(CONFIG)
+    p.horizonte.dias = 28
+    p.lrcap.despacho_ons.modo = "pld"
+    p.lrcap.despacho_ons.ciclos_ano = 130          # 130/365 * 28 dias = 10 despachos
+    p.validar()
+    idx = indice_temporal(p)
+    pld = pld_sintetico(p, idx, np.random.default_rng(p.mercado.semente)).to_numpy()
+    ons = despacho_ons(p, idx, pld)
+    por_dia = ons.descarga_pu.groupby(idx.normalize()).sum() / p.lrcap.duracao_h
+    assert por_dia.sum() == pytest.approx(10)
+    # dias despachados têm pico noturno de PLD maior que os não despachados
+    noite = pd.Series(pld, index=idx)[idx.hour > max(p.lrcap.despacho_ons.janela_recarga)]
+    pico = noite.groupby(noite.index.normalize()).apply(lambda x: x.rolling(4).mean().max())
+    assert pico[por_dia > 0].min() >= pico[por_dia == 0].max() - 1e-9
+    # sem descarga não há recarga: o módulo fica cheio
+    sem = por_dia[por_dia == 0].index
+    assert ons.recarga_pu[idx.normalize().isin(sem) & (ons.soc_pu.shift().fillna(0) >= ons.soc_pu.max() - 1e-9)].sum() == 0
+
+
+def test_ciclos_ano_com_arquivo_e_igual_em_blocos():
+    # A seleção anual não depende de como o ano é fatiado em blocos.
+    from pvbess_h2.dados import montar_series
+    p = carregar_parametros(Path(__file__).resolve().parents[1] / "config" / "estocastico_unifei.yaml")
+    p.lrcap.despacho_ons.ciclos_ano = 100
+    p.horizonte.inicio, p.horizonte.dias = "2025-01-01 00:00", 365
+    anual = montar_series(p).ons_descarga_pu
+    assert anual.sum() / p.lrcap.duracao_h == pytest.approx(100)
+    p.horizonte.inicio, p.horizonte.dias = "2025-03-03 00:00", 14
+    bloco = montar_series(p).ons_descarga_pu
+    assert np.allclose(bloco.values, anual.loc[bloco.index].values)

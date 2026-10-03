@@ -74,6 +74,10 @@ Os resultados vão para `resultados/<nome_do_cenario>/`.
    python scripts/rodar_caso.py config/itajuba_2025.yaml
    ```
 
+**Frequência do despacho do ONS.** Por padrão o módulo LRCAP é despachado todos os dias. Com
+`lrcap.despacho_ons.ciclos_ano: N`, só os N dias de cada ano civil com maior PLD no período de
+descarga são despachados (sistema mais apertado); nos demais, o módulo fica cheio e não recarrega.
+
 Formatos aceitos diretamente pelo modelo (para outras fontes):
 `timestamp,pld`, `timestamp,fator_capacidade` e, para o despacho do ONS,
 `timestamp,descarga_pu,recarga_pu` (em `lrcap.despacho_ons.arquivo`).
