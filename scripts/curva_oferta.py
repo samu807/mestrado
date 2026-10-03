@@ -46,6 +46,16 @@ CASOS = {
     # Frequência do despacho do ONS (H2 ilimitado, sem importação)
     **{f"ciclos_{n}": (f"{n} despachos/ano", {"lrcap.despacho_ons": {"ciclos_ano": float(n)}})
        for n in (50, 150, 365)},
+    # Custo de degradação do BESS (H2 ilimitado, sem importação; base = R$ 50/MWh)
+    **{f"deg_{c}": (f"Degradação R$ {c}/MWh", {"bess": {"custo_degradacao_rs_mwh": float(c)}})
+       for c in (100, 200)},
+    # Dimensionamento: eletrolisador (base 17,5 MW) e tanque de H2 no contrato de 3 t/dia (base 2 t)
+    **{f"el_{str(e).replace('.', '_')}": (f"Eletrolisador {e:g} MW".replace(".", ","),
+                                          {"eletrolisador": {"potencia_max_mw": float(e)}})
+       for e in (10, 25)},
+    "contrato_3t_tanque_10t": ("Contrato 3 t/dia, tanque de 10 t",
+                               {"hidrogenio": {"entrega_min_diaria_kg": 3000.0, "entrega_max_diaria_kg": 3000.0,
+                                               "penalidade_deficit_rs_kg": MULTA, "tanque_max_kg": 10000.0}}),
 }
 INDICADORES = ["receita_mcp_rs", "receita_h2_rs", "custo_importacao_rs", "custo_h2_rs", "custo_degradacao_rs",
                "energia_exportada_mwh", "energia_importada_mwh", "energia_eletrolisador_mwh", "curtailment_mwh",
