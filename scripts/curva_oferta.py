@@ -7,7 +7,8 @@ O custo de oportunidade marginal de contratar mais um MW é -dQ/dP, e a potênci
 para cada receita fixa R é argmax_P { R * P + Q(P) } — a curva de oferta do empreendedor.
 
 Uso:  python scripts/curva_oferta.py [config/estocastico_unifei.yaml] [--casos base importacao]
-          [--passo 2.5] [--processos 4] [--so-graficos]
+          [--passo 2.5] [--processos 4] [--so-graficos] [--rotulo curva_oferta]
+      python scripts/curva_oferta.py --casos ciclos_50 ciclos_150 ciclos_365 --rotulo curva_oferta_ciclos
 """
 
 import argparse
@@ -42,6 +43,9 @@ CASOS = {
                                {"rede": {"h2_verde_estrito": False},
                                 "hidrogenio": {"entrega_min_diaria_kg": 3000.0, "entrega_max_diaria_kg": 3000.0,
                                                "penalidade_deficit_rs_kg": MULTA}}),
+    # Frequência do despacho do ONS (H2 ilimitado, sem importação)
+    **{f"ciclos_{n}": (f"{n} despachos/ano", {"lrcap.despacho_ons": {"ciclos_ano": float(n)}})
+       for n in (50, 150, 365)},
 }
 INDICADORES = ["receita_mcp_rs", "receita_h2_rs", "custo_importacao_rs", "custo_h2_rs", "custo_degradacao_rs",
                "energia_exportada_mwh", "energia_importada_mwh", "energia_eletrolisador_mwh", "curtailment_mwh",
@@ -51,8 +55,11 @@ INDICADORES = ["receita_mcp_rs", "receita_h2_rs", "custo_importacao_rs", "custo_
 def aplicar(base, ajustes):
     p = copy.deepcopy(base)
     for secao, valores in ajustes.items():
+        alvo = p
+        for parte in secao.split("."):
+            alvo = getattr(alvo, parte)
         for k, v in valores.items():
-            setattr(getattr(p, secao), k, v)
+            setattr(alvo, k, v)
     p.validar()
     return p
 
@@ -65,7 +72,7 @@ def oferta(curva: pd.DataFrame, receitas: np.ndarray) -> pd.DataFrame:
                          "lucro_rs": [r * P[i] + Q[i] for r, i in zip(receitas, idx)]})
 
 
-def graficos(curvas, nomes, saida):
+def graficos(curvas, nomes, saida, rotulo):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -100,7 +107,7 @@ def graficos(curvas, nomes, saida):
         a.grid(alpha=0.25, lw=0.6)
         a.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(saida / "curva_oferta.png", dpi=150)
+    fig.savefig(saida / f"{rotulo}.png", dpi=150)
     plt.close(fig)
 
 
@@ -111,6 +118,7 @@ def main():
     ap.add_argument("--passo", type=float, default=2.5)
     ap.add_argument("--processos", type=int, default=4)
     ap.add_argument("--so-graficos", action="store_true")
+    ap.add_argument("--rotulo", default="curva_oferta", help="nome da figura e do resumo")
     args = ap.parse_args()
     warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -148,7 +156,7 @@ def main():
             print(f"[{caso}] ótimo com R$ {r_ref / 1e3:.0f} mil/MW·ano: {x_ref:.1f} MW", flush=True)
 
     curvas = {k: pd.read_csv(saida / f"{k}.csv") for k in args.casos if (saida / f"{k}.csv").exists()}
-    graficos(curvas, nomes, saida)
+    graficos(curvas, nomes, saida, args.rotulo)
 
     # Resumo: limiar de entrada, potência ótima na referência e operação
     linhas = []
@@ -166,7 +174,7 @@ def main():
                        "receita_para_60mw_rs_mw_ano": tudo,
                        "p_otimo_ref_mw": o.p_cap_mw.iloc[0], "lucro_ref_rs": o.lucro_rs.iloc[0], **op.drop("p_cap_mw")})
     resumo = pd.DataFrame(linhas)
-    resumo.to_csv(saida / "resumo.csv", index=False)
+    resumo.to_csv(saida / f"resumo_{args.rotulo}.csv", index=False)
     pd.set_option("display.width", 200)
     print(resumo.T.to_string())
     print(f"\nResultados salvos em {saida}")
