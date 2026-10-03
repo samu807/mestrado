@@ -49,7 +49,7 @@ def graficos(curva, p_otimo, nomes, p_min, saida):
                        textcoords="offset points", fontsize=8, color="#555555")
     ax[0].axvspan(1e-3, p_min, color="#999999", alpha=0.12, lw=0, label="Inviável (0 < P < 30 MW)")
     ax[0].axvline(p_otimo, color=TINTA, lw=0.8, ls="--")
-    ax[0].annotate(f"ótimo {p_otimo:.1f} MW", (p_otimo, ax[0].get_ylim()[0]), xytext=(-4, 6),
+    ax[0].annotate(f"ótimo {p_otimo:.1f} MW".replace(".", ","), (p_otimo, ax[0].get_ylim()[0]), xytext=(-4, 6),
                    textcoords="offset points", ha="right", fontsize=8)
     ax[0].set_xlabel("Potência contratada no LRCAP [MW]")
     ax[0].set_ylabel("Lucro anual [R$ mi, dez/2025]")
@@ -57,7 +57,7 @@ def graficos(curva, p_otimo, nomes, p_min, saida):
     ax[0].legend(frameon=False, fontsize=8, loc="upper left")
 
     escolhas = [(0.0, "Sem LRCAP", CINZA), (p_min, f"{p_min:g} MW (mínimo)", "#9ec5f4"),
-                (p_otimo, f"{p_otimo:.1f} MW (ótimo)", AZUL), (c.p_cap_mw.max(), f"{c.p_cap_mw.max():g} MW", LARANJA)]
+                (p_otimo, f"{p_otimo:.1f} MW (ótimo)".replace(".", ","), AZUL), (c.p_cap_mw.max(), f"{c.p_cap_mw.max():g} MW", LARANJA)]
     x = np.arange(len(nomes))
     larg = 0.8 / len(escolhas)
     for i, (pc, rot, cor) in enumerate(escolhas):
@@ -98,8 +98,17 @@ def main():
 
     if args.so_graficos:
         curva = pd.read_csv(saida / "curva_potencia.csv")
-        fronteira = pd.read_csv(saida / "fronteira.csv")
-        graficos(curva, fronteira.p_cap_mw.iloc[0], nomes, base.lrcap.potencia_min_mw, saida)
+        p_otimo = pd.read_csv(saida / "fronteira.csv").p_cap_mw.iloc[0]
+        # Ótimo refinado (tolerância menor) do cálculo do VSS/EVPI, se existir
+        arq_rp = saida / "vss_evpi_decisoes.csv"
+        if arq_rp.exists():
+            rp = pd.read_csv(arq_rp).iloc[0]
+            p_otimo = float(rp.p_cap_mw)
+            linha = {"p_cap_mw": p_otimo, "esperado_rs": rp.esperado_rs, "cvar_rs": rp.cvar_rs,
+                     **{f"lucro_{n}": rp[n] for n in nomes}}
+            curva = pd.concat([curva[(curva.p_cap_mw - p_otimo).abs() > 1e-3], pd.DataFrame([linha])])
+            curva = curva.sort_values("p_cap_mw").reset_index(drop=True)
+        graficos(curva, p_otimo, nomes, base.lrcap.potencia_min_mw, saida)
         return
     memoria, linhas, historicos = {}, [], []
     for beta in args.betas:

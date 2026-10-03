@@ -61,7 +61,7 @@ Figura 4.2 – Lucro anual em função da potência contratada no LRCAP: (a) por
 Fonte: elaborado pelo autor.
 :::
 
-Com tolerância de convergência de 0,1%, o algoritmo de Benders identificou o ótimo em 53,4 MW, valor assinalado na Figura 4.2. Com a tolerância de 0,01% adotada no cálculo do VSS e do EVPI, o ótimo passou para 54,4 MW, com lucro esperado de R\$ 68,12 milhões por ano — apenas R\$ 20 mil acima do obtido com 53,4 MW. A diferença ilustra uma característica central do problema: a função de lucro é muito plana na vizinhança do ótimo, com variação inferior a 0,4% entre 50 e 56 MW. Do ponto de vista prático, a decisão relevante é contratar entre 50 e 55 MW; a localização exata do máximo é menos importante do que as hipóteses que o determinam, examinadas nas seções seguintes.
+O ótimo, assinalado na Figura 4.2, é $P^{cap} = 54{,}4$ MW, com lucro esperado de R\$ 68,12 milhões por ano, obtido com tolerância de convergência de 0,01%. Com a tolerância de 0,1% usada inicialmente, o algoritmo de Benders havia encerrado em 53,4 MW, com lucro esperado apenas R\$ 20 mil inferior. A diferença ilustra uma característica central do problema: a função de lucro é muito plana na vizinhança do ótimo, com variação inferior a 0,4% entre 50 e 56 MW. Do ponto de vista prático, a decisão relevante é contratar entre 50 e 55 MW; a localização exata do máximo é menos importante do que as hipóteses que o determinam, examinadas nas seções seguintes.
 
 O lucro por cenário na potência ótima é apresentado na Tabela 4.2. O pior cenário é 2022, ano em que o PLD permaneceu próximo do piso regulatório, e o melhor, 2021, ano da crise hídrica. A diferença entre eles, de cerca de R\$ 8 milhões por ano, é pequena diante do ganho proporcionado pela participação no leilão.
 

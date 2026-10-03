@@ -169,15 +169,15 @@ R\$ 600 mil/MW·ano, H₂ a R\$ 35/kg, partida a R\$ 500 — provisórios).
 |---|---|---|
 | 0 MW | R\$ 45,0 mi | R\$ 43,2 mi |
 | 30 MW | R\$ 60,7 mi | R\$ 59,0 mi |
-| **53,4 MW (ótimo)** | **R\$ 68,1 mi** | **R\$ 65,4 mi** |
+| **54,4 MW (ótimo)** | **R\$ 68,1 mi** | **R\$ 65,4 mi** |
 | 60 MW | R\$ 67,0 mi | R\$ 63,6 mi |
 
-- O mesmo ponto (53,4 MW) é ótimo para β = 0; 0,5; 1 e 2 (*gap* ≤ 0,07%): **não há troca
+- O mesmo ponto é ótimo para β = 0; 0,5; 1 e 2 (53,4 MW com tolerância de 0,1%, *gap* ≤ 0,07%; 54,4 MW com 0,01%): **não há troca
   entre risco e retorno** nesta configuração — a potência que maximiza o lucro médio também
   maximiza o do pior ano.
 - O pior ano é 2022 (PLD no piso o ano todo) e o melhor, 2021 (crise hídrica); a diferença
   entre eles é de cerca de R\$ 8 mi/ano, pequena perto do ganho de contratar no LRCAP.
-- O ótimo estocástico (53,4 MW) fica próximo do determinístico de 2025 (54,4 MW).
+- O ótimo estocástico (54,4 MW) coincide com o determinístico de 2025 (54,4 MW).
 
 #### VSS e EVPI (β = 0)
 
