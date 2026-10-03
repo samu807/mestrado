@@ -42,6 +42,7 @@ scripts/
   anual_benders.py         ano completo por decomposição de Benders (blocos semanais em paralelo)
   estocastico.py           programa estocástico com CVaR (anos históricos como cenários)
   vss_evpi.py              VSS e EVPI do programa estocástico
+  curva_oferta.py          curva de oferta no LRCAP (contrato de H₂, importação, frequência de despacho)
 tests/                     testes (modelo, importação de dados, decomposição)
 ```
 
@@ -189,6 +190,51 @@ R\$ 600 mil/MW·ano, H₂ a R\$ 35/kg, partida a R\$ 500 — provisórios).
 - Com estes cenários, a incerteza de PLD e de FV **não muda** a potência a contratar. A
   incerteza que pesa na decisão é a dos parâmetros econômicos (receita fixa e preço do H₂;
   ver mapa de sensibilidade).
+
+### Curva de oferta no LRCAP: contrato de H₂, importação e frequência de despacho
+
+`python scripts/curva_oferta.py` (~1h30 em 4 núcleos). Para cada caso, o lucro operacional
+esperado nos 5 anos sem a receita fixa, Q(P), numa grade de 2,5 MW; o custo de oportunidade de
+contratar mais um MW é −dQ/dP e a potência ótima para cada receita fixa R é argmax R·P + Q(P).
+Contrato de H₂: volume diário firme (mínimo = máximo), multa de R\$ 35/kg não entregue
+(provisória).
+
+![Curva de oferta](docs/figuras/curva_oferta.png)
+
+| Caso | Ótimo (R\$ 600 mil/MW·ano) | Lucro esperado | Receita mínima para entrar | Custo do último MW |
+|---|---|---|---|---|
+| H₂ ilimitado, sem importação | 55 MW | R\$ 68,1 mi | R\$ 76 mil/MW·ano | R\$ 895 mil |
+| Contrato 2 t/dia | 60 MW | R\$ 61,3 mi | R\$ 84 mil | R\$ 228 mil |
+| Contrato 3 t/dia | 55 MW | R\$ 64,3 mi | R\$ 91 mil | R\$ 1,75 mi |
+| H₂ ilimitado, com importação | 60 MW | R\$ 88,5 mi | R\$ 96 mil | R\$ 474 mil |
+| Contrato 3 t/dia, com importação | 60 MW | R\$ 68,8 mi | R\$ 84 mil | R\$ 367 mil |
+
+- Os primeiros 35–40 MW custam R\$ 80–100 mil/MW·ano em todos os casos: participar é robusto;
+  o que depende das hipóteses são os últimos 15–20 MW.
+- Contrato de 2 t/dia: o H₂ excedente não tem comprador, a exportação ao MCP dobra (19 → 37 GWh)
+  e a bateria vale pouco fora do LRCAP. Com 3 t/dia, a bateria garante a entrega noturna
+  (ainda há déficit de ~6%, 61 t/ano) e os últimos MW ficam caros.
+- Importar da rede (fim do "H₂ verde estrito") leva o eletrolisador a FC 0,92 e o lucro a
+  +R\$ 20 mi/ano; a bateria deixa de ser necessária ao H₂. É a hipótese que mais pesa.
+- A troca LRCAP × MCP do título só aparece com demanda de H₂ limitada; sem limite, a troca é
+  LRCAP × H₂.
+
+**Frequência do despacho do ONS** (`lrcap.despacho_ons.ciclos_ano`; casos `ciclos_50`,
+`ciclos_150`, `ciclos_365`, H₂ ilimitado):
+
+![Curva de oferta por frequência de despacho](docs/figuras/curva_oferta_ciclos.png)
+
+| Despachos/ano | Ótimo | Lucro esperado | Receita mínima para entrar |
+|---|---|---|---|
+| 50 | 55 MW | R\$ 71,6 mi | R\$ 13 mil/MW·ano |
+| 150 | 55 MW | R\$ 70,5 mi | R\$ 33 mil |
+| 365 | 55 MW | R\$ 68,1 mi | R\$ 76 mil |
+
+- A frequência só desloca a curva de custo marginal em paralelo, exatamente pelo custo de
+  degradação do módulo LRCAP: c_deg × 4 h × (365 − N) = R\$ 63 mil/MW·ano entre 50 e 365.
+  A operação mercantil (MCP, H₂) é idêntica nos três casos, e o ótimo não muda.
+- Esse custo pode ser calculado à parte, sem simulação; a frequência importa para o limiar de
+  entrada, não para a potência ótima.
 
 ## Próximos passos sugeridos
 
