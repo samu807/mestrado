@@ -103,7 +103,7 @@ Tabela 3.1 – Parâmetros do modelo e valores do caso de referência
 | $\pi^{def}$ | Multa por kg de H₂ não entregue | R\$/kg | 35 |
 | $\bar P^{exp}, \bar P^{imp}$ | Limites de exportação e importação no ponto de conexão | MW | 80 |
 | $c^{imp}$ | Custo adicional sobre a energia importada | R\$/MWh | 250 |
-| $R^{cap}$ | Receita fixa do LRCAP | R\$/(MW·ano) | 600.000 |
+| $R^{cap}$ | Receita fixa do LRCAP | R\$/(MW·ano) | 600.000 (sensibilidade: 330.000 a 2.334.000) |
 | $\underline P^{cap}$ | Disponibilidade mínima para participação no LRCAP | MW | 30 |
 | $H^{cap}$ | Duração do ciclo completo exigida | h | 4 |
 | $\rho$ | Energia instalada no módulo LRCAP por MW contratado | MWh/MW | 4,8 |
@@ -275,7 +275,7 @@ O modelo resultante, composto pela função objetivo da Equação {eq:fo} e pela
 
 ## 3.5 Dados de entrada
 
-**Preço de Liquidação das Diferenças.** Utiliza-se a série horária do PLD de 2025 para o submercado Sudeste/Centro-Oeste, no qual se localiza o município de Itajubá (MG), obtida no portal de dados abertos da Câmara de Comercialização de Energia Elétrica (CCEE, 2026). A série apresenta média de R\$ 224,31/MWh, com mínimo de R\$ 58,60/MWh — valor do PLD mínimo, observado em 2.030 horas, concentradas no período úmido — e máximo de R\$ 1.421,87/MWh. A Figura 3.2(a) evidencia o perfil diário característico do período recente: preços reduzidos nas horas de maior geração solar e elevados na rampa noturna, com maior amplitude no período seco.
+**Preço de Liquidação das Diferenças.** Utiliza-se a série horária do PLD de 2025 para o submercado Sudeste/Centro-Oeste, no qual se localiza o município de Itajubá (MG), obtida no portal de dados abertos da Câmara de Comercialização de Energia Elétrica (CCEE, 2026a). A série apresenta média de R\$ 224,31/MWh, com mínimo de R\$ 58,60/MWh — valor do PLD mínimo, observado em 2.030 horas, concentradas no período úmido — e máximo de R\$ 1.421,87/MWh. A Figura 3.2(a) evidencia o perfil diário característico do período recente: preços reduzidos nas horas de maior geração solar e elevados na rampa noturna, com maior amplitude no período seco.
 
 **Geração fotovoltaica.** A disponibilidade de geração FV foi obtida na plataforma *Photovoltaic Geographical Information System* (PVGIS), mantida pelo Centro Comum de Investigação da Comissão Europeia (HULD; MÜLLER; GAMBARDELLA, 2012), a partir da base de reanálise ERA5 (HERSBACH *et al.*, 2020), para as coordenadas de Itajubá (latitude −22,425°; longitude −45,457°; altitude de 848 m). Considerou-se um sistema de silício cristalino de 1 kWp, com perdas de 14% e inclinação e azimute ótimos (25° e −165°, respectivamente), no ano de 2023, o mais recente disponível. A potência horária foi convertida em fator de capacidade, deslocada do tempo universal coordenado para o horário oficial de Brasília (UTC−3) e reposicionada no calendário de 2025, preservando mês, dia e hora, para compatibilização com a série de preços. O fator de capacidade médio resultante é de 16,9%, equivalente a 1.478 kWh/kWp por ano (Figura 3.2(b)). A série é multiplicada pela potência instalada da usina para obter $\bar P^{pv}_t$.
 
@@ -288,12 +288,14 @@ Figura 3.2 – Perfis horários médios dos dados de entrada: (a) PLD do submerc
 :::
 
 ::: {custom-style="Fonte"}
-Fonte: elaborado pelo autor com dados de CCEE (2026) e do PVGIS.
+Fonte: elaborado pelo autor com dados de CCEE (2026a) e do PVGIS.
 :::
 
 **Despacho do ONS.** Na ausência de histórico de despacho de sistemas de armazenamento contratados no LRCAP, adota-se um perfil diário sintético: descarga na potência contratada entre 18 h e 22 h, horário de maior demanda líquida, e recarga entre 10 h e 15 h, até a restauração completa do estado de carga, limitada à potência nominal. O perfil é coerente com a diretriz de que a programação da recarga busque minimizar o custo total de operação do SIN (BRASIL, 2026, art. 4º, § 14), o que tende a deslocá-la para as horas de excedente de geração solar. O perfil resulta em um ciclo completo por dia (365 no ano), dentro dos limites regulatórios. Trata-se da hipótese mais intensa de uso do módulo LRCAP; o efeito de despachos menos frequentes é avaliado na Seção 3.8.2.
 
-**Parâmetros técnico-econômicos.** Os parâmetros do eletrolisador foram definidos a partir da faixa típica da tecnologia PEM, cujo consumo específico de energia situa-se entre 4,3 e 5,2 kWh/Nm³, ou aproximadamente 48 a 58 kWh/kg, até que os dados do fabricante do equipamento da UNIFEI sejam incorporados. A receita fixa do LRCAP e o preço do hidrogênio não possuem, até o momento, referências de mercado consolidadas no Brasil e são, por isso, objeto de análise de sensibilidade. O mesmo se aplica aos termos do contrato de fornecimento de hidrogênio — volume diário e multa por déficit —, avaliados em cenários alternativos ao caso sem contrato.
+**Parâmetros técnico-econômicos.** Os parâmetros do eletrolisador foram definidos a partir da faixa típica da tecnologia PEM, cujo consumo específico de energia situa-se entre 4,3 e 5,2 kWh/Nm³, ou aproximadamente 48 a 58 kWh/kg, até que os dados do fabricante do equipamento da UNIFEI sejam incorporados. O preço do hidrogênio não possui, até o momento, referência de mercado consolidada no Brasil e é, por isso, objeto de análise de sensibilidade. O mesmo se aplica aos termos do contrato de fornecimento de hidrogênio — volume diário e multa por déficit —, avaliados em cenários alternativos ao caso sem contrato.
+
+**Receita fixa do LRCAP.** Como ainda não houve leilão de armazenamento em baterias no Brasil, a receita fixa foi delimitada por quatro referências. A inferior é o primeiro leilão do mecanismo italiano de contratação de capacidade de armazenamento (MACSE), realizado em setembro de 2025 com contratos de 15 anos e desenho semelhante ao do LRCAP, cujo preço médio de € 12.959/(MWh·ano) (TERNA, 2025) corresponde, para um sistema de 4 h e com a taxa de câmbio PTAX de 30/09/2025 (R\$ 6,2396/€), a cerca de R\$ 323 mil/(MW·ano). No LRCAP de março de 2026, que contratou o mesmo produto — potência disponível ao ONS —, termelétricas existentes a óleo e biodiesel obtiveram preço médio de R\$ 831 mil/(MW·ano) (CCEE, 2026c), e o conjunto de termelétricas a gás natural, biometano e carvão e de ampliações de hidrelétricas, novas e existentes, R\$ 2,334 milhões/(MW·ano) (CCEE, 2026b). Por fim, o custo de investimento de referência de sistemas de baterias, de R\$ 5.000 a R\$ 6.000/kW (BRASIL; EPE, 2025), corresponde, anualizado a 10% ao ano em 15 anos, a R\$ 657 mil a R\$ 789 mil/(MW·ano), sem considerar operação e manutenção, encargos e reposição de módulos. Com base nessas referências, a análise de sensibilidade abrange receitas fixas de R\$ 330 mil a R\$ 2,33 milhões/(MW·ano). O valor de R\$ 600 mil/(MW·ano) adotado no caso de referência situa-se no extremo inferior dessa faixa, abaixo do preço obtido por usinas existentes e do custo anualizado de investimento em baterias, e constitui, portanto, uma hipótese conservadora quanto à atratividade do leilão.
 
 ## 3.6 Método de solução
 
@@ -393,7 +395,7 @@ em que $\zeta$ é uma variável auxiliar cujo valor ótimo corresponde ao valor 
 
 Os cenários correspondem aos cinco anos históricos de 2021 a 2025, considerados equiprováveis ($\pi_s = 1/5$). Cada cenário reúne:
 
-a) a série horária do PLD do submercado SE/CO do respectivo ano (CCEE, 2026), corrigida para valores de dezembro de 2025 pelo IPCA (IBGE, 2026), por meio do fator $f_s = \prod_{a = a_s + 1}^{2025} (1 + \mathrm{IPCA}_a)$, em que $a_s$ é o ano do cenário. Com variações anuais do IPCA de 5,79% (2022), 4,62% (2023), 4,83% (2024) e 4,26% (2025), obtêm-se fatores de 1,2097, 1,1435, 1,0930, 1,0426 e 1,0000 para os cenários de 2021 a 2025, respectivamente;
+a) a série horária do PLD do submercado SE/CO do respectivo ano (CCEE, 2026a), corrigida para valores de dezembro de 2025 pelo IPCA (IBGE, 2026), por meio do fator $f_s = \prod_{a = a_s + 1}^{2025} (1 + \mathrm{IPCA}_a)$, em que $a_s$ é o ano do cenário. Com variações anuais do IPCA de 5,79% (2022), 4,62% (2023), 4,83% (2024) e 4,26% (2025), obtêm-se fatores de 1,2097, 1,1435, 1,0930, 1,0426 e 1,0000 para os cenários de 2021 a 2025, respectivamente;
 
 b) a série de fator de capacidade FV obtida no PVGIS a partir da base de satélite SARAH-3, para as mesmas coordenadas e configuração descritas na Seção 3.5. Como a base cobre apenas o período até 2023, os cenários de 2024 e 2025 utilizam a série de 2023;
 
@@ -599,11 +601,23 @@ BRASIL. Ministério de Minas e Energia. Portaria Normativa MME nº 136, de 1º d
 :::
 
 ::: {custom-style="Referencia"}
+BRASIL. Ministério de Minas e Energia; EPE – EMPRESA DE PESQUISA ENERGÉTICA. **Caderno de parâmetros de custos**: geração e transmissão – PDE 2035. Brasília: MME/EPE, nov. 2025.
+:::
+
+::: {custom-style="Referencia"}
 BYNUM, M. L. *et al.* **Pyomo**: optimization modeling in Python. 3. ed. Cham: Springer, 2021.
 :::
 
 ::: {custom-style="Referencia"}
-CCEE – CÂMARA DE COMERCIALIZAÇÃO DE ENERGIA ELÉTRICA. **PLD horário**. Portal de Dados Abertos da CCEE. Disponível em: https://dadosabertos.ccee.org.br. Acesso em: 27 set. 2026.
+CCEE – CÂMARA DE COMERCIALIZAÇÃO DE ENERGIA ELÉTRICA. **PLD horário**. Portal de Dados Abertos da CCEE. 2026a. Disponível em: https://dadosabertos.ccee.org.br. Acesso em: 27 set. 2026.
+:::
+
+::: {custom-style="Referencia"}
+CCEE – CÂMARA DE COMERCIALIZAÇÃO DE ENERGIA ELÉTRICA. **InfoLeilão Expresso**: 04º LRCAP 2026 – Leilão nº 2/2026-ANEEL. São Paulo: CCEE, mar. 2026b. Disponível em: https://www.ccee.org.br. Acesso em: 3 out. 2026.
+:::
+
+::: {custom-style="Referencia"}
+CCEE – CÂMARA DE COMERCIALIZAÇÃO DE ENERGIA ELÉTRICA. **InfoLeilão Expresso**: 05º LRCAP 2026 – Leilão nº 3/2026-ANEEL. São Paulo: CCEE, mar. 2026c. Disponível em: https://www.ccee.org.br. Acesso em: 3 out. 2026.
 :::
 
 ::: {custom-style="Referencia"}
@@ -636,6 +650,10 @@ HULD, T.; MÜLLER, R.; GAMBARDELLA, A. A new solar radiation database for estima
 
 ::: {custom-style="Referencia"}
 ROCKAFELLAR, R. T.; URYASEV, S. Optimization of conditional value-at-risk. **Journal of Risk**, v. 2, n. 3, p. 21–41, 2000.
+:::
+
+::: {custom-style="Referencia"}
+TERNA. **Terna completes first MACSE auction**: 10 GWh of energy storage capacity awarded. Roma: Terna S.p.A., 1 out. 2025. Comunicado de imprensa. Disponível em: https://www.terna.it. Acesso em: 3 out. 2026.
 :::
 
 ::: {custom-style="Referencia"}
