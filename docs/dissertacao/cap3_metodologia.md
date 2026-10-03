@@ -1,6 +1,6 @@
 # 3 METODOLOGIA
 
-Este capítulo descreve o modelo de otimização desenvolvido para apoiar a decisão de um empreendedor que opera um sistema híbrido composto por usina fotovoltaica (FV), sistema de armazenamento de energia em baterias (*Battery Energy Storage System*, BESS) e eletrolisador para produção de hidrogênio verde, diante da possibilidade de comercializar parte da capacidade de armazenamento no Leilão de Reserva de Capacidade na forma de Potência (LRCAP) e o restante no Mercado de Curto Prazo (MCP). A Seção 3.1 apresenta o problema e o escopo do estudo; a Seção 3.2 discute o enquadramento regulatório que orienta a modelagem; a Seção 3.3 descreve o sistema; a Seção 3.4 apresenta a formulação matemática; a Seção 3.5 trata dos dados de entrada; a Seção 3.6 descreve o método de solução; a Seção 3.7 apresenta a extensão estocástica do modelo e os indicadores de valor da informação; a Seção 3.8 resume a implementação computacional; e a Seção 3.9 consolida as hipóteses e limitações.
+Este capítulo descreve o modelo de otimização desenvolvido para apoiar a decisão de um empreendedor que opera um sistema híbrido composto por usina fotovoltaica (FV), sistema de armazenamento de energia em baterias (*Battery Energy Storage System*, BESS) e eletrolisador para produção de hidrogênio verde, diante da possibilidade de comercializar parte da capacidade de armazenamento no Leilão de Reserva de Capacidade na forma de Potência (LRCAP) e o restante no Mercado de Curto Prazo (MCP). A Seção 3.1 apresenta o problema e o escopo do estudo; a Seção 3.2 discute o enquadramento regulatório que orienta a modelagem; a Seção 3.3 descreve o sistema; a Seção 3.4 apresenta a formulação matemática; a Seção 3.5 trata dos dados de entrada; a Seção 3.6 descreve o método de solução; a Seção 3.7 apresenta a extensão estocástica do modelo e os indicadores de valor da informação; a Seção 3.8 descreve a construção da curva de oferta no leilão e as análises de sensibilidade; a Seção 3.9 resume a implementação computacional; e a Seção 3.10 consolida as hipóteses e limitações.
 
 ## 3.1 Definição do problema e escopo
 
@@ -109,6 +109,7 @@ Tabela 3.1 – Parâmetros do modelo e valores do caso de referência
 | $\rho$ | Energia instalada no módulo LRCAP por MW contratado | MWh/MW | 4,8 |
 | $\mathrm{RTE}^{ref}$ | Eficiência de referência para custeio da recarga | – | 0,85 |
 | $\delta_t, r_t$ | Despacho do ONS: descarga e recarga do módulo LRCAP (p.u. de $P^{cap}$) | – | perfil (Seção 3.5) |
+| $N^{ons}$ | Número de despachos do ONS por ano | – | 365 (sensibilidade: 50; 150) |
 
 ::: {custom-style="Fonte"}
 Fonte: elaborado pelo autor.
@@ -290,7 +291,7 @@ Figura 3.2 – Perfis horários médios dos dados de entrada: (a) PLD do submerc
 Fonte: elaborado pelo autor com dados de CCEE (2026) e do PVGIS.
 :::
 
-**Despacho do ONS.** Na ausência de histórico de despacho de sistemas de armazenamento contratados no LRCAP, adota-se um perfil diário sintético: descarga na potência contratada entre 18 h e 22 h, horário de maior demanda líquida, e recarga entre 10 h e 15 h, até a restauração completa do estado de carga, limitada à potência nominal. O perfil é coerente com a diretriz de que a programação da recarga busque minimizar o custo total de operação do SIN (BRASIL, 2026, art. 4º, § 14), o que tende a deslocá-la para as horas de excedente de geração solar. O perfil resulta em um ciclo completo por dia (365 no ano), dentro dos limites regulatórios.
+**Despacho do ONS.** Na ausência de histórico de despacho de sistemas de armazenamento contratados no LRCAP, adota-se um perfil diário sintético: descarga na potência contratada entre 18 h e 22 h, horário de maior demanda líquida, e recarga entre 10 h e 15 h, até a restauração completa do estado de carga, limitada à potência nominal. O perfil é coerente com a diretriz de que a programação da recarga busque minimizar o custo total de operação do SIN (BRASIL, 2026, art. 4º, § 14), o que tende a deslocá-la para as horas de excedente de geração solar. O perfil resulta em um ciclo completo por dia (365 no ano), dentro dos limites regulatórios. Trata-se da hipótese mais intensa de uso do módulo LRCAP; o efeito de despachos menos frequentes é avaliado na Seção 3.8.2.
 
 **Parâmetros técnico-econômicos.** Os parâmetros do eletrolisador foram definidos a partir da faixa típica da tecnologia PEM, cujo consumo específico de energia situa-se entre 4,3 e 5,2 kWh/Nm³, ou aproximadamente 48 a 58 kWh/kg, até que os dados do fabricante do equipamento da UNIFEI sejam incorporados. A receita fixa do LRCAP e o preço do hidrogênio não possuem, até o momento, referências de mercado consolidadas no Brasil e são, por isso, objeto de análise de sensibilidade. O mesmo se aplica aos termos do contrato de fornecimento de hidrogênio — volume diário e multa por déficit —, avaliados em cenários alternativos ao caso sem contrato.
 
@@ -476,15 +477,86 @@ c) **EV e EEV:** resolve-se o problema anual com o cenário médio para obter $\
 
 Como RP e WS são obtidos com uma tolerância $\varepsilon$ de convergência, adotada como 0,01% nesta etapa, cada um é conhecido por um intervalo $[LB, UB]$. Os indicadores são, então, reportados com os respectivos limites: $\mathrm{EVPI} \in [\mathrm{WS}^{LB} - \mathrm{RP}^{UB},\; \mathrm{WS}^{UB} - \mathrm{RP}^{LB}]$ e $\mathrm{VSS} \in [\mathrm{RP}^{LB} - \mathrm{EEV},\; \mathrm{RP}^{UB} - \mathrm{EEV}]$. Diferenças inferiores à ordem de $\varepsilon \cdot \mathrm{RP}$ não são distinguíveis do erro de convergência e devem ser interpretadas como nulas.
 
-## 3.8 Implementação computacional
+## 3.8 Curva de oferta e análises de sensibilidade
 
-O modelo foi implementado na linguagem Python, com o uso da biblioteca de modelagem algébrica Pyomo (BYNUM *et al.*, 2021) e do *solver* HiGHS (HUANGFU; HALL, 2018). A estrutura do código separa: (i) a leitura e validação dos parâmetros, organizados em arquivos de configuração em formato YAML, com verificação automática dos requisitos regulatórios; (ii) a importação e o tratamento das séries de dados; (iii) a construção do modelo de otimização; (iv) a decomposição de Benders, nas versões determinística e estocástica; (v) o cálculo do VSS e do EVPI; e (vi) o pós-processamento dos resultados. Os subproblemas semanais são resolvidos em paralelo em processos independentes, cada qual restrito a uma linha de execução do *solver*, a fim de evitar a concorrência por núcleos de processamento. A consistência do modelo é verificada por um conjunto de testes automatizados que conferem, entre outros aspectos, o balanço de potência, os limites dos estados de carga, a exclusividade entre carga e descarga, o cumprimento do despacho do ONS, o limite do ponto de conexão e a validade dos cortes de Benders. O código e os dados são mantidos sob controle de versão, o que assegura a reprodutibilidade dos resultados.
+As Seções 3.4 a 3.7 tratam a receita fixa $R^{cap}$ como parâmetro e determinam a potência ótima correspondente. No leilão, contudo, $R^{cap}$ não é um dado: é o preço ofertado pelo próprio empreendedor, e a informação de que ele necessita é a relação entre esse preço e a potência que vale a pena comprometer. Esta seção apresenta o procedimento utilizado para obter essa relação — a curva de oferta — e os casos de sensibilidade avaliados com ele.
 
-## 3.9 Hipóteses e limitações
+### 3.8.1 Custo de oportunidade e curva de oferta
+
+Seja $Q(P)$ o lucro operacional esperado do empreendimento, sem a receita fixa do LRCAP, quando a potência contratada é $P$, dado pela Equação {eq:q} (na prática, calculado com $R^{cap} = 0$):
+
+$$
+Q(P) = \sum_{s \in \mathcal{S}} \pi_s\, \Pi_s(P) - R^{cap} P
+$$ {#eq:q}
+
+A diferença $Q(0) - Q(P)$ mede quanto lucro operacional o empreendedor deixa de obter — no MCP e na venda de hidrogênio — por comprometer $P$ MW com o leilão, isto é, o custo de oportunidade da contratação. Seu valor por MW adicional, $c^{op}(P) = -\mathrm{d}Q/\mathrm{d}P$, é o custo de oportunidade marginal. Como a decisão envolve uma única variável e o interesse está na curva inteira, e não apenas no seu máximo, $Q$ é avaliada numa grade $\mathcal{X}_h = \{0\} \cup \{\underline P^{cap}, \underline P^{cap} + h, \dots, \bar P^{cap}\}$, com $h = 2{,}5$ MW, resolvendo-se para cada ponto os subproblemas de todos os pares (cenário, bloco) com $P^{cap}$ fixo. O custo de oportunidade marginal é aproximado pelas diferenças finitas da Equação {eq:custo-op}:
+
+$$
+c^{op}_j = -\,\frac{Q(P_{j+1}) - Q(P_j)}{P_{j+1} - P_j}, \qquad P_j,\, P_{j+1} \in \mathcal{X}_h, \;\; P_j \geq \underline P^{cap}
+$$ {#eq:custo-op}
+
+Para uma receita fixa $R$, a potência ótima a ofertar é dada pela Equação {eq:oferta}, e o conjunto de pares $(R, P^*(R))$ constitui a curva de oferta do empreendedor:
+
+$$
+P^*(R) \in \arg\max_{P \in \mathcal{X}_h} \; R\, P + Q(P)
+$$ {#eq:oferta}
+
+Dois valores resumem a curva. A receita mínima de entrada, $R^{ent}$, é a menor receita fixa para a qual participar do leilão é preferível a não participar, conforme a Equação {eq:entrada}; a receita de oferta integral, $R^{int}$, é a menor receita para a qual ofertar a potência máxima supera qualquer alternativa, conforme a Equação {eq:integral}:
+
+$$
+R^{ent} = \min_{P \in \mathcal{X}_h,\, P > 0} \; \frac{Q(0) - Q(P)}{P}
+$$ {#eq:entrada}
+
+$$
+R^{int} = \max_{P \in \mathcal{X}_h,\, P < \bar P^{cap}} \; \frac{Q(P) - Q(\bar P^{cap})}{\bar P^{cap} - P}
+$$ {#eq:integral}
+
+A curva de oferta não depende do formato do leilão nem do comportamento dos demais proponentes: ela indica, para cada preço, quanta potência o empreendedor estaria disposto a comprometer. Ressalta-se que o investimento no BESS não entra em $Q(P)$, pois as capacidades instaladas são fixas. Esse custo não altera $P^*(R)$, mas deve ser coberto pela receita total para que o empreendimento seja viável; a análise de viabilidade econômica está fora do escopo desta etapa.
+
+### 3.8.2 Frequência do despacho do ONS
+
+A frequência com que o ONS acionará os sistemas de armazenamento contratados no LRCAP é desconhecida, e o perfil das Seções 3.5 e 3.7.2 adota a hipótese mais intensa, com um ciclo completo por dia. Para avaliar essa hipótese, o modelo admite um número $N^{ons}$ de despachos por ano. Na ausência de informação sobre o critério do ONS, adota-se como critério o próprio PLD, indicador de quão apertado está o sistema: em cada ano civil, são despachados apenas os $N^{ons}$ dias com maior PLD médio no período de descarga — o bloco de $H^{cap}$ horas de maior preço após o período solar, no perfil baseado em preço, ou as horas de descarga fixas, no perfil fixo. A seleção é feita sobre o ano inteiro, de modo que a decomposição em blocos semanais não a altera. Dias com PLD igual, situação frequente em anos com o PLD no piso, são selecionados por uma sequência de baixa discrepância sobre o dia do ano, o que os distribui uniformemente ao longo do ano em vez de concentrá-los nos primeiros dias. Nos dias sem despacho, o módulo LRCAP permanece carregado e não há recarga.
+
+Como a receita fixa independe da energia despachada e, com os parâmetros da Tabela 3.1, $\kappa = 0$, o despacho afeta o lucro do empreendedor apenas por meio do custo de degradação do módulo LRCAP e do limite do ponto de conexão compartilhado. Se o efeito sobre a conexão for desprezível, o custo associado ao despacho é linear em $P^{cap}$, conforme a Equação {eq:custo-ons}:
+
+$$
+C^{ons}(P^{cap}) \approx c^{deg}\, H^{cap}\, N^{ons}\, P^{cap}
+$$ {#eq:custo-ons}
+
+e uma variação de $N^{ons}$ desloca o custo de oportunidade marginal de um valor constante, sem alterar a operação do lado mercantil. As simulações com diferentes valores de $N^{ons}$ permitem verificar essa aproximação.
+
+### 3.8.3 Casos avaliados
+
+A curva de oferta é construída para os cenários anuais da Seção 3.7.2, com o lucro esperado ($\beta = 0$), nos casos do Quadro 3.2. Os casos variam as três hipóteses que a análise do caso de referência indicou como determinantes para o custo de oportunidade: a existência de um limite de demanda de hidrogênio (Seção 3.4.5), a vedação à importação de energia da rede e a frequência do despacho do ONS.
+
+::: {custom-style="Legenda"}
+Quadro 3.2 – Casos avaliados na construção da curva de oferta
+:::
+
+| Caso | Contrato de H₂ | Importação da rede | Despachos do ONS por ano |
+|------------------------|------------------------------|----------------------|------------------------|
+| Referência | Sem limite de volume | Vedada | 365 |
+| Contrato 2 t/dia | $D^{h2} = \bar D^{h2} = 2.000$ kg/dia | Vedada | 365 |
+| Contrato 3 t/dia | $D^{h2} = \bar D^{h2} = 3.000$ kg/dia | Vedada | 365 |
+| Importação | Sem limite de volume | Permitida | 365 |
+| Importação e contrato 3 t/dia | $D^{h2} = \bar D^{h2} = 3.000$ kg/dia | Permitida | 365 |
+| Frequência do despacho | Sem limite de volume | Vedada | 50; 150; 365 |
+
+::: {custom-style="Fonte"}
+Fonte: elaborado pelo autor.
+:::
+
+Nos casos com importação, o eletrolisador e o BESS mercantil podem ser supridos pela rede ao PLD acrescido de $c^{imp}$. Essa configuração corresponde a um critério de qualificação do hidrogênio baseado na intensidade de emissões, e não na origem física da energia, e é avaliada como alternativa à hipótese de suprimento exclusivamente fotovoltaico. Para cada caso, além da curva de oferta, registram-se a potência ótima e a operação média nos cenários para a receita fixa de referência, de R\$ 600 mil/(MW·ano).
+
+## 3.9 Implementação computacional
+
+O modelo foi implementado na linguagem Python, com o uso da biblioteca de modelagem algébrica Pyomo (BYNUM *et al.*, 2021) e do *solver* HiGHS (HUANGFU; HALL, 2018). A estrutura do código separa: (i) a leitura e validação dos parâmetros, organizados em arquivos de configuração em formato YAML, com verificação automática dos requisitos regulatórios; (ii) a importação e o tratamento das séries de dados; (iii) a construção do modelo de otimização; (iv) a decomposição de Benders, nas versões determinística e estocástica; (v) o cálculo do VSS e do EVPI; (vi) a construção da curva de oferta; e (vii) o pós-processamento dos resultados. Os subproblemas semanais são resolvidos em paralelo em processos independentes, cada qual restrito a uma linha de execução do *solver*, a fim de evitar a concorrência por núcleos de processamento. A consistência do modelo é verificada por um conjunto de testes automatizados que conferem, entre outros aspectos, o balanço de potência, os limites dos estados de carga, a exclusividade entre carga e descarga, o cumprimento do despacho do ONS e a seleção dos dias de despacho, o limite do ponto de conexão, as entregas do contrato de hidrogênio e a validade dos cortes de Benders. O código e os dados são mantidos sob controle de versão, o que assegura a reprodutibilidade dos resultados.
+
+## 3.10 Hipóteses e limitações
 
 As principais hipóteses adotadas, e as respectivas implicações, são as seguintes:
 
-a) **previsão perfeita dentro de cada ano:** mesmo na extensão estocástica, a operação de cada cenário é otimizada com conhecimento antecipado das séries daquele ano, o que tende a superestimar o lucro alcançável na operação real. A incerteza tratada pela Seção 3.7 é apenas a variação entre anos; a incerteza do despacho do ONS, cujo risco é alocado ao empreendedor pela Portaria, é representada somente pela regra de despacho baseada no PLD;
+a) **previsão perfeita dentro de cada ano:** mesmo na extensão estocástica, a operação de cada cenário é otimizada com conhecimento antecipado das séries daquele ano, o que tende a superestimar o lucro alcançável na operação real. A incerteza tratada pela Seção 3.7 é apenas a variação entre anos; a incerteza do despacho do ONS, cujo risco é alocado ao empreendedor pela Portaria, é representada somente pela regra de despacho baseada no PLD e pela sensibilidade ao número de despachos por ano (Seção 3.8.2), que supõe despachos completos, de $H^{cap}$ horas na potência contratada, nos dias de maior PLD;
 
 b) **agente tomador de preço:** a operação do sistema não altera o PLD;
 
@@ -504,7 +576,9 @@ i) **anos distintos:** no caso determinístico, a série de irradiância (2023) 
 
 j) **contrato de hidrogênio simplificado:** o contrato é representado por um volume diário fixo, a preço fixo e com multa linear por déficit. Não se consideram cláusulas de *take-or-pay* sobre volumes anuais, flexibilidade de entrega entre dias, reajuste de preço ou a venda do excedente a outros compradores, e a multa adotada é um valor de referência ainda não calibrado com contratos reais;
 
-k) **amostra de cenários:** os cinco anos históricos são tratados como equiprováveis e constituem uma amostra pequena; o VSS e o EVPI são, portanto, medidos dentro da amostra, e a avaliação da decisão fora da amostra é deixada para trabalhos futuros.
+k) **curva de oferta discreta:** a curva é obtida numa grade de 2,5 MW, de modo que a potência ótima e os custos marginais são conhecidos com essa resolução, e não inclui o investimento no BESS;
+
+l) **amostra de cenários:** os cinco anos históricos são tratados como equiprováveis e constituem uma amostra pequena; o VSS e o EVPI são, portanto, medidos dentro da amostra, e a avaliação da decisão fora da amostra é deixada para trabalhos futuros.
 
 ## REFERÊNCIAS
 
