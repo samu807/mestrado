@@ -1,6 +1,6 @@
 # 4 RESULTADOS E DISCUSSÃO
 
-Este capítulo apresenta os resultados do modelo descrito no Capítulo 3, aplicado ao caso de referência: a planta da UNIFEI escalonada para 50 MWp de geração FV e 17,5 MW de eletrolisador PEM, com BESS hipotético de 60 MW e 300 MWh, conectada ao submercado SE/CO. Salvo indicação em contrário, os resultados das Seções 4.2 a 4.6 correspondem ao lucro esperado nos cinco cenários anuais de 2021 a 2025 (Seção 3.7.2), em valores de dezembro de 2025; as Seções 4.1 e 4.7 utilizam o caso determinístico de 2025 (Seção 3.5). A Seção 4.1 apresenta o caso determinístico de 2025, que serve de referência para o desempenho do método de solução; a Seção 4.2, a decisão de contratação e a operação no modelo estocástico; a Seção 4.3, o valor da solução estocástica e da informação perfeita; a Seção 4.4, a curva de oferta no leilão; a Seção 4.5, o efeito do contrato de hidrogênio e da importação de energia; a Seção 4.6, o efeito da frequência do despacho do ONS; a Seção 4.7, a sensibilidade à receita fixa e ao preço do hidrogênio; e a Seção 4.8 sintetiza os resultados.
+Este capítulo apresenta os resultados do modelo descrito no Capítulo 3, aplicado ao caso de referência: a planta da UNIFEI escalonada para 50 MWp de geração FV e 17,5 MW de eletrolisador PEM, com BESS hipotético de 60 MW e 300 MWh, conectada ao submercado SE/CO. Salvo indicação em contrário, os resultados das Seções 4.2 a 4.6 e 4.8 correspondem ao lucro esperado nos cinco cenários anuais de 2021 a 2025 (Seção 3.7.2), em valores de dezembro de 2025; as Seções 4.1 e 4.7 e a análise da decomposição na Seção 4.8 utilizam o caso determinístico de 2025 (Seção 3.5). A Seção 4.1 apresenta o caso determinístico de 2025, que serve de referência para o desempenho do método de solução; a Seção 4.2, a decisão de contratação e a operação no modelo estocástico; a Seção 4.3, o valor da solução estocástica e da informação perfeita; a Seção 4.4, a curva de oferta no leilão; a Seção 4.5, o efeito do contrato de hidrogênio e da importação de energia; a Seção 4.6, o efeito da frequência do despacho do ONS; a Seção 4.7, a sensibilidade à receita fixa e ao preço do hidrogênio; a Seção 4.8, a robustez dos resultados ao custo de degradação, ao dimensionamento e à decomposição; e a Seção 4.9 sintetiza os resultados.
 
 Ressalta-se que parte dos parâmetros econômicos — em especial a receita fixa do LRCAP (R\$ 600 mil/(MW·ano)), o preço do hidrogênio (R\$ 35/kg), o custo de degradação do BESS (R\$ 50/MWh) e a multa contratual por déficit de hidrogênio — tem caráter provisório, conforme discutido na Seção 3.5. Por isso, a ênfase deste capítulo recai sobre as relações entre as decisões e as hipóteses, e não sobre os valores absolutos de lucro.
 
@@ -249,11 +249,79 @@ O arrependimento é nulo ou inferior a R\$ 0,4 milhão por ano na vizinhança do
 
 Os resultados das Figuras 4.5 e 4.6 são coerentes com a curva de oferta da Seção 4.4, obtida com o modelo estocástico: a potência ótima para R\$ 600 mil e hidrogênio a R\$ 35/kg (54,4 MW no caso determinístico) e a receita a partir da qual se oferta toda a potência (cerca de R\$ 900 mil, contra a fronteira entre R\$ 830 mil e R\$ 1,0 milhão no mapa) são compatíveis entre as duas análises.
 
-## 4.8 Síntese
+## 4.8 Robustez: degradação, dimensionamento e decomposição
+
+Esta seção avalia três hipóteses que poderiam alterar as conclusões anteriores: o custo de degradação do BESS, o dimensionamento do eletrolisador e do tanque de hidrogênio e as condições cíclicas impostas pela decomposição em blocos semanais.
+
+**Custo de degradação.** A Figura 4.7 e a Tabela 4.6 apresentam a curva de oferta para custos de degradação de R\$ 50, R\$ 100 e R\$ 200/MWh, os dois últimos próximos da faixa estimada a partir do custo de reposição dos módulos (Seção 3.5).
+
+::: {custom-style="Legenda"}
+Figura 4.7 – Curva de oferta no LRCAP para diferentes custos de degradação do BESS: (a) perda de lucro operacional esperado; (b) custo de oportunidade marginal; (c) potência ótima em função da receita fixa
+:::
+
+::: {custom-style="Figura"}
+![](figuras/curva_oferta_degradacao.png){width=16cm}
+:::
+
+::: {custom-style="Fonte"}
+Fonte: elaborado pelo autor.
+:::
+
+::: {custom-style="Legenda"}
+Tabela 4.6 – Efeito do custo de degradação do BESS (receita fixa de R\$ 600 mil/(MW·ano))
+:::
+
+| Custo de degradação (R\$/MWh) | Potência ótima (MW) | Lucro esperado (R\$ mi/ano) | Receita mínima de entrada (R\$ mil/MW·ano) | Custo marginal do último MW (R\$ mil/MW·ano) |
+|------------------|------------------|------------------|------------------|------------------|
+| 50 | 55 | 68,1 | 76 | 895 |
+| 100 | 55 | 63,7 | 149 | 881 |
+| 200 | 52,5 | 54,9 | 295 | 854 |
+
+::: {custom-style="Fonte"}
+Fonte: elaborado pelo autor.
+:::
+
+Quadruplicar o custo de degradação reduz o lucro em R\$ 13,2 milhões por ano e quase quadruplica a receita mínima de entrada, mas desloca a potência ótima em apenas 2,5 MW. A razão está na Figura 4.7(b): o custo maior eleva o custo de oportunidade na faixa inferior da curva, onde predomina o desgaste do módulo LRCAP, despachado diariamente; na faixa superior, porém, também torna mais caro o uso mercantil da bateria, que é justamente o uso perdido ao se contratar mais potência, e os dois efeitos praticamente se compensam. A decisão de quanto ofertar é, portanto, robusta ao custo de degradação, enquanto a decisão de participar e o lucro esperado são sensíveis a ele.
+
+**Tamanho do eletrolisador.** A Figura 4.8 e a Tabela 4.7 comparam eletrolisadores de 10, 17,5 e 25 MW, mantida a usina FV de 50 MWp.
+
+::: {custom-style="Legenda"}
+Figura 4.8 – Curva de oferta no LRCAP para diferentes potências do eletrolisador: (a) perda de lucro operacional esperado; (b) custo de oportunidade marginal; (c) potência ótima em função da receita fixa
+:::
+
+::: {custom-style="Figura"}
+![](figuras/curva_oferta_eletrolisador.png){width=16cm}
+:::
+
+::: {custom-style="Fonte"}
+Fonte: elaborado pelo autor.
+:::
+
+::: {custom-style="Legenda"}
+Tabela 4.7 – Efeito da potência do eletrolisador (receita fixa de R\$ 600 mil/(MW·ano))
+:::
+
+| Eletrolisador (MW) | Potência ótima (MW) | Lucro esperado (R\$ mi/ano) | H₂ vendido (t/ano) | Fator de capacidade do eletrolisador | Energia exportada (GWh/ano) |
+|------------------|------------------|------------------|------------------|------------------|------------------|
+| 10 | 50 | 60,4 | 850 | 0,53 | 28,4 |
+| 17,5 | 55 | 68,1 | 1.029 | 0,37 | 19,4 |
+| 25 | 57,5 | 73,5 | 1.175 | 0,30 | 11,9 |
+
+::: {custom-style="Fonte"}
+Fonte: elaborado pelo autor.
+:::
+
+O tamanho do eletrolisador altera a forma da curva de oferta. Com 25 MW, o eletrolisador absorve durante o dia a maior parte da geração FV, e o módulo mercantil tem pouco a deslocar para a noite: o custo de oportunidade permanece em torno de R\$ 77 mil/(MW·ano) até 45 MW, e o ótimo para a receita de referência sobe para 57,5 MW. Com 10 MW, a geração FV excedente ao meio-dia é muito maior, a bateria mercantil é valiosa desde o mínimo regulatório e o custo de oportunidade já parte de R\$ 330 mil/(MW·ano); o ótimo cai para 50 MW. A relação entre as potências do eletrolisador e da usina FV, herdada da planta da UNIFEI (0,35), é, portanto, uma hipótese de projeto com efeito relevante sobre a curva de oferta, e não apenas um parâmetro de escala.
+
+**Tamanho do tanque.** No caso com contrato de 3 t/dia, a ampliação do tanque de hidrogênio de 2 t para 10 t não alterou o resultado: o déficit anual de entrega permaneceu em 61 t e a curva de oferta foi idêntica. O déficit decorre da capacidade de produção, e não da armazenagem: a entrega de 3 t/dia exige cerca de 9,4 h diárias de operação na potência nominal, o que não é alcançado nos dias de baixa irradiância, mesmo com o tanque capaz de acumular a produção de dias anteriores.
+
+**Decomposição em blocos.** Para a potência de 54,44 MW, o lucro anual do caso determinístico de 2025 foi idêntico com blocos de 7, 14 e 28 dias (diferença relativa inferior a $10^{-11}$). Refeita a decomposição com blocos de 14 dias, o algoritmo de Benders convergiu para 55,5 MW e R\$ 67,53 milhões, contra 54,4 MW e R\$ 67,51 milhões com blocos semanais — diferença de 0,03%, inferior à tolerância de convergência e situada na região plana do ótimo. As condições cíclicas semanais, portanto, não restringem a operação de forma mensurável, o que é coerente com a operação em ciclos diários do módulo mercantil e do tanque, cujos estados de armazenamento tendem a retornar aos mesmos valores ao fim de cada semana.
+
+## 4.9 Síntese
 
 Os resultados permitem hierarquizar os fatores que determinam a decisão de contratação no LRCAP:
 
-a) **participar do leilão é robusto:** até cerca de 37,5 MW, o custo de oportunidade marginal situa-se entre R\$ 77 mil e R\$ 111 mil/(MW·ano) em todos os casos, e a receita mínima de entrada não ultrapassa R\$ 100 mil/(MW·ano);
+a) **participar do leilão é robusto:** nos casos de contrato de hidrogênio e de importação, o custo de oportunidade marginal situa-se entre R\$ 77 mil e R\$ 111 mil/(MW·ano) até cerca de 37,5 MW, e a receita mínima de entrada não ultrapassa R\$ 100 mil/(MW·ano); mesmo com custo de degradação de R\$ 200/MWh ou eletrolisador de 10 MW, ela permanece abaixo de R\$ 300 mil/(MW·ano), aquém de todas as referências de receita fixa do Quadro 4.1;
 
 b) **a quantidade a ofertar acima de 40 MW depende do hidrogênio:** o custo de oportunidade do último MW varia de R\$ 228 mil a R\$ 1,75 milhão/(MW·ano) conforme a existência e o volume de um contrato de fornecimento, porque o módulo mercantil do BESS tem como principal função abastecer o eletrolisador fora do período solar;
 
@@ -261,9 +329,13 @@ c) **a regra de suprimento do eletrolisador é a hipótese de maior efeito sobre
 
 d) **a receita fixa e o preço do hidrogênio definem a fronteira entre contratar parte ou toda a potência:** com receita igual ou superior a R\$ 1,5 milhão/(MW·ano) ou hidrogênio a até R\$ 20/kg, o ótimo é contratar toda a potência; o arrependimento de errar a contratação é assimétrico e favorece contratar mais;
 
-e) **as incertezas de preço, de geração e de despacho têm efeito pequeno sobre a decisão:** o modelo determinístico de 2025 e o estocástico conduzem à mesma potência ótima, a variação entre anos históricos resulta em VSS nulo e EVPI de 0,2% do lucro esperado, e a frequência do despacho do ONS desloca o custo de oportunidade de um valor constante, sem alterar a potência ótima.
+e) **o dimensionamento do eletrolisador molda a curva de oferta:** com 10 MW, o ótimo cai para 50 MW e o custo de oportunidade parte de R\$ 330 mil/(MW·ano); com 25 MW, sobe para 57,5 MW, com custo de cerca de R\$ 77 mil/(MW·ano) até 45 MW; o tamanho do tanque, por sua vez, não altera o resultado;
 
-Em conjunto, esses resultados sugerem que a decisão de contratação é determinada menos pelo comportamento do mercado de energia e mais pelas condições de comercialização do hidrogênio — volume, preço e critério de qualificação —, que são, portanto, as informações prioritárias para a definição do lance no leilão.
+f) **o custo de degradação afeta o lucro e o limiar de entrada, mas pouco a potência ótima:** quadruplicá-lo reduz o lucro em R\$ 13 milhões por ano e desloca o ótimo em 2,5 MW;
+
+g) **as incertezas de preço, de geração e de despacho e a aproximação da decomposição têm efeito pequeno sobre a decisão:** o modelo determinístico de 2025 e o estocástico conduzem à mesma potência ótima, a variação entre anos históricos resulta em VSS nulo e EVPI de 0,2% do lucro esperado, a frequência do despacho do ONS desloca o custo de oportunidade de um valor constante, sem alterar a potência ótima, e as condições cíclicas da decomposição semanal não restringem a operação de forma mensurável.
+
+Em conjunto, esses resultados sugerem que a decisão de contratação é determinada menos pelo comportamento do mercado de energia e mais pelas condições de produção e de comercialização do hidrogênio — dimensionamento do eletrolisador, volume, preço e critério de qualificação —, que são, portanto, as informações prioritárias para a definição do lance no leilão.
 
 ## REFERÊNCIAS
 

@@ -8,7 +8,7 @@ O problema consiste em determinar, sob a ótica de um agente privado tomador de 
 
 O estudo adota as seguintes delimitações de escopo:
 
-a) as capacidades instaladas da usina FV, do BESS e do eletrolisador são dados de entrada, e não variáveis de decisão — o dimensionamento ótimo dos equipamentos está fora do escopo desta etapa;
+a) as capacidades instaladas da usina FV, do BESS e do eletrolisador são dados de entrada, e não variáveis de decisão — o dimensionamento ótimo dos equipamentos está fora do escopo desta etapa, e o efeito do tamanho do eletrolisador e do tanque de hidrogênio é avaliado por análise de sensibilidade (Seção 3.8.3);
 
 b) o horizonte de análise é de um ano, com resolução horária, representativo da operação ao longo do contrato de 15 anos previsto para o LRCAP;
 
@@ -91,7 +91,7 @@ Tabela 3.1 – Parâmetros do modelo e valores do caso de referência
 | $\eta^{ch}, \eta^{dis}$ | Eficiências de carga e de descarga | – | 0,95 |
 | $\underline\sigma, \bar\sigma$ | Estados de carga mínimo e máximo (fração da energia do módulo) | – | 0,10; 1,00 |
 | $\sigma_0$ | Estado de carga inicial do módulo mercantil | – | 0,50 |
-| $c^{deg}$ | Custo de degradação por energia descarregada | R\$/MWh | 50 |
+| $c^{deg}$ | Custo de degradação por energia descarregada | R\$/MWh | 50 (sensibilidade: 100; 200) |
 | $\bar P^{el}$ | Potência nominal do eletrolisador | MW | 17,5 |
 | $\alpha^{el}$ | Carga mínima do eletrolisador (fração de $\bar P^{el}$) | – | 0,10 |
 | $k^{el}$ | Consumo específico de energia | kWh/kg | 55 |
@@ -295,6 +295,8 @@ Fonte: elaborado pelo autor com dados de CCEE (2026a) e do PVGIS.
 
 **Parâmetros técnico-econômicos.** Os parâmetros do eletrolisador foram definidos a partir da faixa típica da tecnologia PEM, cujo consumo específico de energia situa-se entre 4,3 e 5,2 kWh/Nm³, ou aproximadamente 48 a 58 kWh/kg, até que os dados do fabricante do equipamento da UNIFEI sejam incorporados. O preço do hidrogênio não possui, até o momento, referência de mercado consolidada no Brasil e é, por isso, objeto de análise de sensibilidade. O mesmo se aplica aos termos do contrato de fornecimento de hidrogênio — volume diário e multa por déficit —, avaliados em cenários alternativos ao caso sem contrato.
 
+**Custo de degradação do BESS.** O custo de degradação pode ser estimado como o custo de reposição dos módulos de bateria dividido pela energia que eles descarregam ao longo da vida útil. Com o preço médio de *packs* de baterias de íons de lítio para armazenamento estacionário de US\$ 70/kWh em 2025 (BNEF, 2025), convertido pela taxa PTAX de 09/12/2025 (R\$ 5,4025/US\$) e acrescido de 74% de tributos incidentes no Brasil (EPE, 2024), e com vida útil de 4.000 a 6.000 ciclos a 90% de profundidade de descarga, obtém-se entre R\$ 120 e R\$ 185 por MWh descarregado. O valor de R\$ 50/MWh adotado no caso de referência situa-se abaixo dessa faixa; por isso, o efeito de valores de R\$ 100 e R\$ 200/MWh é avaliado na Seção 3.8.3.
+
 **Receita fixa do LRCAP.** Como ainda não houve leilão de armazenamento em baterias no Brasil, a receita fixa foi delimitada por quatro referências. A inferior é o primeiro leilão do mecanismo italiano de contratação de capacidade de armazenamento (MACSE), realizado em setembro de 2025 com contratos de 15 anos e desenho semelhante ao do LRCAP, cujo preço médio de € 12.959/(MWh·ano) (TERNA, 2025) corresponde, para um sistema de 4 h e com a taxa de câmbio PTAX de 30/09/2025 (R\$ 6,2396/€), a cerca de R\$ 323 mil/(MW·ano). No LRCAP de março de 2026, que contratou o mesmo produto — potência disponível ao ONS —, termelétricas existentes a óleo e biodiesel obtiveram preço médio de R\$ 831 mil/(MW·ano) (CCEE, 2026c), e o conjunto de termelétricas a gás natural, biometano e carvão e de ampliações de hidrelétricas, novas e existentes, R\$ 2,334 milhões/(MW·ano) (CCEE, 2026b). Por fim, o custo de investimento de referência de sistemas de baterias, de R\$ 5.000 a R\$ 6.000/kW (BRASIL; EPE, 2025), corresponde, anualizado a 10% ao ano em 15 anos, a R\$ 657 mil a R\$ 789 mil/(MW·ano), sem considerar operação e manutenção, encargos e reposição de módulos. Com base nessas referências, a análise de sensibilidade abrange receitas fixas de R\$ 330 mil a R\$ 2,33 milhões/(MW·ano). O valor de R\$ 600 mil/(MW·ano) adotado no caso de referência situa-se no extremo inferior dessa faixa, abaixo do preço obtido por usinas existentes e do custo anualizado de investimento em baterias, e constitui, portanto, uma hipótese conservadora quanto à atratividade do leilão.
 
 ## 3.6 Método de solução
@@ -305,7 +307,7 @@ Problemas MILP são usualmente resolvidos por algoritmos de ramificação e limi
 
 ### 3.6.2 Decomposição de Benders
 
-A estrutura do problema favorece a decomposição: a potência contratada $P^{cap}$ é a única variável que acopla todo o horizonte, enquanto as variáveis operacionais de um período se relacionam com as dos períodos vizinhos apenas pelos estados de armazenamento. Dividindo-se o ano em blocos semanais $w \in \mathcal{W}$ e impondo-se condições de contorno cíclicas em cada bloco, o problema anual pode ser reescrito conforme a Equação {eq:benders}:
+A estrutura do problema favorece a decomposição: a potência contratada $P^{cap}$ é a única variável que acopla todo o horizonte, enquanto as variáveis operacionais de um período se relacionam com as dos períodos vizinhos apenas pelos estados de armazenamento. Dividindo-se o ano em blocos semanais $w \in \mathcal{W}$ e impondo-se condições de contorno cíclicas em cada bloco — aproximação cujo efeito é avaliado ao final desta seção —, o problema anual pode ser reescrito conforme a Equação {eq:benders}:
 
 $$
 \max_{P^{cap} \in \{0\} \cup [\underline P^{cap},\, \bar P^{cap}]} \; R^{cap}\, \frac{H}{8760}\, P^{cap} + \sum_{w \in \mathcal{W}} Q_w\!\left(P^{cap}\right)
@@ -334,6 +336,8 @@ $$
 $$ {#eq:mestre}
 
 em que $k$ indexa os cortes acumulados ao longo das iterações.
+
+As condições de contorno cíclicas restringem o problema anual, pois impedem transferências de energia e de hidrogênio entre blocos; o valor obtido com blocos semanais é, portanto, um limite inferior do valor do problema anual. Como a solução direta do problema anual não foi obtida, o efeito dessa restrição é estimado comparando-se o lucro anual, para uma mesma potência contratada, com blocos de 7, 14 e 28 dias, e refazendo-se a decomposição com blocos de 14 dias. Se o lucro não aumentar com o tamanho do bloco, a restrição pode ser considerada inativa.
 
 ### 3.6.3 Algoritmo e critério de convergência
 
@@ -529,20 +533,23 @@ e uma variação de $N^{ons}$ desloca o custo de oportunidade marginal de um val
 
 ### 3.8.3 Casos avaliados
 
-A curva de oferta é construída para os cenários anuais da Seção 3.7.2, com o lucro esperado ($\beta = 0$), nos casos do Quadro 3.2. Os casos variam as três hipóteses que a análise do caso de referência indicou como determinantes para o custo de oportunidade: a existência de um limite de demanda de hidrogênio (Seção 3.4.5), a vedação à importação de energia da rede e a frequência do despacho do ONS.
+A curva de oferta é construída para os cenários anuais da Seção 3.7.2, com o lucro esperado ($\beta = 0$), nos casos do Quadro 3.2. Os casos variam as hipóteses que a análise do caso de referência indicou como determinantes para o custo de oportunidade: a existência de um limite de demanda de hidrogênio (Seção 3.4.5), a vedação à importação de energia da rede, a frequência do despacho do ONS, o custo de degradação do BESS e o dimensionamento do eletrolisador e do tanque de hidrogênio.
 
 ::: {custom-style="Legenda"}
 Quadro 3.2 – Casos avaliados na construção da curva de oferta
 :::
 
-| Caso | Contrato de H₂ | Importação da rede | Despachos do ONS por ano |
+| Caso | Contrato de H₂ | Importação da rede | Outras alterações em relação à referência |
 |------------------------|------------------------------|----------------------|------------------------|
-| Referência | Sem limite de volume | Vedada | 365 |
-| Contrato 2 t/dia | $D^{h2} = \bar D^{h2} = 2.000$ kg/dia | Vedada | 365 |
-| Contrato 3 t/dia | $D^{h2} = \bar D^{h2} = 3.000$ kg/dia | Vedada | 365 |
-| Importação | Sem limite de volume | Permitida | 365 |
-| Importação e contrato 3 t/dia | $D^{h2} = \bar D^{h2} = 3.000$ kg/dia | Permitida | 365 |
-| Frequência do despacho | Sem limite de volume | Vedada | 50; 150; 365 |
+| Referência | Sem limite de volume | Vedada | – (365 despachos/ano; $c^{deg}$ de R\$ 50/MWh; eletrolisador de 17,5 MW; tanque de 2 t) |
+| Contrato 2 t/dia | $D^{h2} = \bar D^{h2} = 2.000$ kg/dia | Vedada | – |
+| Contrato 3 t/dia | $D^{h2} = \bar D^{h2} = 3.000$ kg/dia | Vedada | – |
+| Importação | Sem limite de volume | Permitida | – |
+| Importação e contrato 3 t/dia | $D^{h2} = \bar D^{h2} = 3.000$ kg/dia | Permitida | – |
+| Frequência do despacho | Sem limite de volume | Vedada | 50; 150 ou 365 despachos/ano |
+| Degradação | Sem limite de volume | Vedada | $c^{deg}$ de R\$ 100 ou 200/MWh |
+| Eletrolisador | Sem limite de volume | Vedada | Eletrolisador de 10 ou 25 MW |
+| Tanque | $D^{h2} = \bar D^{h2} = 3.000$ kg/dia | Vedada | Tanque de 10 t |
 
 ::: {custom-style="Fonte"}
 Fonte: elaborado pelo autor.
@@ -568,11 +575,11 @@ d) **disponibilidade integral:** o módulo LRCAP atende a 100% do despacho, sem 
 
 e) **eletrolisador simplificado:** eficiência constante em toda a faixa de operação, com custo de partida apenas na extensão estocástica e sem tempos mínimos de operação e de parada, estado de espera (*standby*) ou limites de rampa;
 
-f) **degradação linear:** o custo de degradação do BESS é proporcional à energia descarregada, sem dependência da profundidade de descarga;
+f) **degradação linear:** o custo de degradação do BESS é proporcional à energia descarregada, sem dependência da profundidade de descarga, e seu valor de referência (R\$ 50/MWh) é inferior à estimativa baseada no custo de reposição dos módulos, o que é tratado por análise de sensibilidade;
 
 g) **divisão contínua do BESS:** a alocação entre os módulos é tratada como contínua, embora na prática seja discreta, em função da modularidade dos contêineres e conversores;
 
-h) **condições cíclicas semanais:** a decomposição impõe que os estados de armazenamento retornem ao valor inicial ao final de cada semana, impedindo transferências de energia ou de hidrogênio entre semanas;
+h) **condições cíclicas semanais:** a decomposição impõe que os estados de armazenamento retornem ao valor inicial ao final de cada semana, impedindo transferências de energia ou de hidrogênio entre semanas; o efeito dessa restrição é verificado com blocos de até 28 dias (Seção 3.6.2);
 
 i) **anos distintos:** no caso determinístico, a série de irradiância (2023) e a de preços (2025) referem-se a anos diferentes; no caso estocástico, o mesmo ocorre nos cenários de 2024 e 2025, que utilizam a irradiância de 2023. Para uma usina de pequeno porte em relação ao SIN, a correlação horária entre a geração local e o PLD tende a ser fraca, mas a hipótese deve ser considerada na interpretação dos resultados;
 
@@ -594,6 +601,10 @@ BIRGE, J. R. The value of the stochastic solution in stochastic linear programs 
 
 ::: {custom-style="Referencia"}
 BIRGE, J. R.; LOUVEAUX, F. **Introduction to stochastic programming**. 2. ed. New York: Springer, 2011.
+:::
+
+::: {custom-style="Referencia"}
+BNEF – BLOOMBERGNEF. **Lithium-ion battery pack prices fall to \$108 per kilowatt-hour, despite rising metal prices**. Londres: BloombergNEF, 9 dez. 2025. Disponível em: https://about.bnef.com. Acesso em: 3 out. 2026.
 :::
 
 ::: {custom-style="Referencia"}
@@ -626,6 +637,10 @@ CONEJO, A. J. *et al.* **Decomposition techniques in mathematical programming**:
 
 ::: {custom-style="Referencia"}
 CONEJO, A. J.; CARRIÓN, M.; MORALES, J. M. **Decision making under uncertainty in electricity markets**. New York: Springer, 2010.
+:::
+
+::: {custom-style="Referencia"}
+EPE – EMPRESA DE PESQUISA ENERGÉTICA. **Plano Decenal de Expansão de Energia 2034**: caderno de micro e minigeração distribuída e baterias. Rio de Janeiro: EPE, 2024.
 :::
 
 ::: {custom-style="Referencia"}
