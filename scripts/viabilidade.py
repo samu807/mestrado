@@ -115,6 +115,79 @@ def grafico(res, curva, q_sem, eco, base, saida):
     plt.close(fig)
 
 
+def oferta_com_investimento(curva, q_sem, custo_anual_bess, receitas):
+    """Curva de oferta quando a bateria ainda será construída.
+
+    Para cada receita fixa R, o proponente compara não construir o BESS (lucro q_sem, oferta 0)
+    com construí-lo e contratar a melhor potência: max_P {R P + Q(P)} - custo anual do BESS.
+    """
+    P, Q = curva.p_cap_mw.to_numpy(), curva.q_rs.to_numpy()
+    linhas = []
+    for r in receitas:
+        v = r * P + Q
+        k = int(np.argmax(v))
+        constroi = v[k] - custo_anual_bess > q_sem
+        linhas.append({"receita_fixa_rs_mw_ano": r, "p_cap_mw": P[k] if constroi else 0.0,
+                       "constroi_bess": constroi, "lucro_liquido_rs": max(v[k] - custo_anual_bess, q_sem)})
+    return pd.DataFrame(linhas)
+
+
+def grafico_oferta(curva, q_sem, eco, base, saida):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    n = eco["vida_anos"]
+    rs = np.arange(0, 1.5e6 + 1, 5e3)
+    P, Q = curva.p_cap_mw.to_numpy(), curva.q_rs.to_numpy()
+    op = [P[np.argmax(r * P + Q)] for r in rs]
+    fig, ax = plt.subplots(1, 2, figsize=(13, 5.6))
+    ax[0].step(rs / 1e3, op, where="post", color="#9a9a9a", lw=1.5, ls="--", label="Bateria existente (só custo de oportunidade)")
+    linhas = []
+    for taxa, cor in [(0.08, "#256abf"), (0.1211, "#d9731a")]:
+        for nivel in NIVEIS:
+            c = capex_om(base, eco, nivel)
+            custo = c["bess"] / fator_anuidade(taxa, n) + c["om_bess"]
+            o = oferta_com_investimento(curva, q_sem, custo, rs)
+            r_min = o[o.constroi_bess].receita_fixa_rs_mw_ano.min()
+            linhas.append({"taxa": taxa, "capex_nivel": nivel, "custo_anual_bess_rs": custo,
+                           "custo_anual_bess_rs_mw": custo / max(base.bess.potencia_descarga_mw, 1e-9),
+                           "lance_minimo_rs_mw_ano": r_min,
+                           "p_cap_no_lance_minimo_mw": o[o.constroi_bess].p_cap_mw.iloc[0]})
+            if nivel == "central":
+                ax[0].step(rs / 1e3, o.p_cap_mw, where="post", color=cor, lw=2,
+                           label=f"Bateria a construir, taxa de {taxa:.1%} (CAPEX central)".replace(".", ","))
+    lm = pd.DataFrame(linhas)
+    lm.to_csv(saida / "lance_minimo.csv", index=False)
+    for v, rot in [(600, "referência"), (831, "LRCAP 3/2026")]:
+        ax[0].axvline(v, color="#9a9a9a", lw=0.8, ls=":")
+        ax[0].annotate(rot, (v, 2), xytext=(3, 0), textcoords="offset points", fontsize=8, color="#555555")
+    ax[0].set_xlabel("Receita fixa do LRCAP [R$ mil/MW·ano]")
+    ax[0].set_ylabel("Potência ótima a ofertar [MW]")
+    ax[0].set_title("(a) Curva de oferta com e sem o investimento no BESS", fontsize=10)
+    ax[0].legend(frameon=False, fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.14))
+
+    x = np.arange(len(NIVEIS))
+    for j, (taxa, cor) in enumerate([(0.08, "#256abf"), (0.1211, "#d9731a")]):
+        v = lm[lm.taxa == taxa].set_index("capex_nivel").loc[NIVEIS].lance_minimo_rs_mw_ano / 1e3
+        b = ax[1].bar(x + (j - 0.5) * 0.38, v, width=0.36, color=cor, label=f"taxa de {taxa:.1%}".replace(".", ","))
+        ax[1].bar_label(b, fmt="%.0f", fontsize=8)
+    ax[1].axhline(600, color="#555555", lw=0.9, ls=":", label="R$ 600 mil (caso de referência)")
+    ax[1].axhline(831, color="#555555", lw=0.9, ls="--", label="R$ 831 mil (LRCAP 3/2026, térmicas existentes)")
+    ax[1].set_xticks(x, ["CAPEX baixo\n(R$ 5.000/kW)", "CAPEX central\n(R$ 5.500/kW)", "CAPEX alto\n(R$ 6.000/kW)"])
+    ax[1].set_ylabel("Lance mínimo [R$ mil/MW·ano]")
+    ax[1].set_title("(b) Menor receita fixa que justifica construir o BESS", fontsize=10)
+    ax[1].legend(frameon=False, fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=2)
+    ax[1].set_ylim(0, 1300)
+    for a in ax:
+        a.grid(alpha=0.25, lw=0.6)
+        a.spines[["top", "right"]].set_visible(False)
+    fig.tight_layout()
+    fig.savefig(saida / "curva_oferta_investimento.png", dpi=150)
+    plt.close(fig)
+    return lm
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("config", nargs="?", default=str(RAIZ / "config" / "estocastico_unifei.yaml"))
@@ -184,6 +257,7 @@ def main():
     bat = pd.DataFrame(bat)
     bat.to_csv(saida / "valor_bateria.csv", index=False)
     grafico(res, curva, q_sem, eco, base, saida)
+    lm = grafico_oferta(curva, q_sem, eco, base, saida)
 
     pd.set_option("display.width", 250)
     pd.set_option("display.float_format", lambda v: f"{v:,.3f}")
@@ -194,6 +268,8 @@ def main():
     print(t.to_string())
     print("\nValor da bateria (caso de referência):")
     print(bat.assign(**{c: bat[c] / 1e6 for c in ["custo_anual_bess_rs", "ganho_bess_ref_rs", "vpl_bess_ref_rs"]}).to_string(index=False))
+    print("\nLance mínimo com investimento no BESS:")
+    print(lm.to_string(index=False))
     print(f"\nResultados salvos em {saida}")
 
 

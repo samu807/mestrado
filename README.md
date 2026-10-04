@@ -326,6 +326,24 @@ O lucro operacional é antes de impostos, o que torna os VPLs otimistas.
 - Sem a receita do LRCAP, a bateria agrega só R\$ 9,7 mi/ano (uso no H₂ e no MCP): o leilão é o que
   pode viabilizá-la.
 
+**Curva de oferta com o investimento no BESS.** Se a bateria ainda vai ser construída, para cada
+receita fixa R o proponente compara não construí-la (lucro sem BESS, oferta 0) com construí-la e
+contratar a melhor potência: max_P {R·P + Q(P)} − custo anual do BESS.
+
+![Curva de oferta com investimento](docs/figuras/curva_oferta_investimento.png)
+
+| Taxa | CAPEX baixo (R\$ 5.000/kW) | central (R\$ 5.500/kW) | alto (R\$ 6.000/kW) |
+|---|---|---|---|
+| 8,0% | R\$ 780 mil (57,5 MW) | **R\$ 855 mil (57,5 MW)** | R\$ 925 mil (60 MW) |
+| 12,1% | R\$ 940 mil (60 MW) | R\$ 1,03 mi (60 MW) | R\$ 1,11 mi (60 MW) |
+
+- A oferta vira "tudo ou nada": zero abaixo do lance mínimo e 57,5–60 MW acima dele. A curva
+  escalonada (35 → 60 MW) só vale para uma bateria já existente.
+- O lance mínimo ≈ custo anualizado do BESS por MW (R\$ 780 mil a 8%, CAPEX central) + degradação
+  do despacho diário (R\$ 73 mil) = R\$ 853 mil: o uso mercantil da bateria quase não reduz o lance.
+- O lance mínimo central (R\$ 855 mil) fica próximo dos R\$ 831 mil obtidos por térmicas
+  existentes no LRCAP 3/2026, e muito abaixo dos R\$ 2,33 mi do LRCAP 2/2026.
+
 ## Próximos passos sugeridos
 
 1. Quando o edital da ANEEL sair: incluir penalidades e abatimento da receita fixa por
