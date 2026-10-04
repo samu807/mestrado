@@ -1,20 +1,22 @@
 # 3 METODOLOGIA
 
-Este capítulo descreve o modelo de otimização desenvolvido para apoiar a decisão de um empreendedor que opera um sistema híbrido composto por usina fotovoltaica (FV), sistema de armazenamento de energia em baterias (*Battery Energy Storage System*, BESS) e eletrolisador para produção de hidrogênio verde, diante da possibilidade de comercializar parte da capacidade de armazenamento no Leilão de Reserva de Capacidade na forma de Potência (LRCAP) e o restante no Mercado de Curto Prazo (MCP). A Seção 3.1 apresenta o problema e o escopo do estudo; a Seção 3.2 discute o enquadramento regulatório que orienta a modelagem; a Seção 3.3 descreve o sistema; a Seção 3.4 apresenta a formulação matemática; a Seção 3.5 trata dos dados de entrada; a Seção 3.6 descreve o método de solução; a Seção 3.7 apresenta a extensão estocástica do modelo e os indicadores de valor da informação; a Seção 3.8 descreve a construção da curva de oferta no leilão e as análises de sensibilidade; a Seção 3.9 resume a implementação computacional; e a Seção 3.10 consolida as hipóteses e limitações.
+Este capítulo descreve o modelo de otimização desenvolvido para apoiar a decisão de um empreendedor que opera um sistema híbrido composto por usina fotovoltaica (FV), sistema de armazenamento de energia em baterias (*Battery Energy Storage System*, BESS) e eletrolisador para produção de hidrogênio verde, diante da possibilidade de comercializar parte da capacidade de armazenamento no Leilão de Reserva de Capacidade na forma de Potência (LRCAP) e o restante no Mercado de Curto Prazo (MCP). A Seção 3.1 apresenta o problema e o escopo do estudo; a Seção 3.2 discute o enquadramento regulatório que orienta a modelagem; a Seção 3.3 descreve o sistema; a Seção 3.4 apresenta a formulação matemática; a Seção 3.5 trata dos dados de entrada; a Seção 3.6 descreve o método de solução; a Seção 3.7 apresenta a extensão estocástica do modelo e os indicadores de valor da informação; a Seção 3.8 descreve a decisão de oferta no leilão — a curva de oferta, a viabilidade econômica e o lance mínimo — e as análises de sensibilidade; a Seção 3.9 resume a implementação computacional; e a Seção 3.10 consolida as hipóteses e limitações.
 
 ## 3.1 Definição do problema e escopo
 
 O problema consiste em determinar, sob a ótica de um agente privado tomador de preço (*price-taker*), a potência a ser contratada no LRCAP e a operação horária ótima do sistema híbrido ao longo de um horizonte anual, de modo a maximizar o lucro operacional do empreendimento. As duas decisões são interdependentes: a potência comprometida com o leilão reduz a capacidade de armazenamento disponível para a operação mercantil, que por sua vez determina quanto da energia fotovoltaica pode ser deslocada no tempo para abastecer o eletrolisador ou para ser comercializada nas horas de maior preço.
 
+Quando o BESS ainda será construído — situação prevista na Portaria, que trata da contratação de novos sistemas de armazenamento —, essas decisões são precedidas pela decisão de investimento: construir ou não a bateria e, portanto, qual a menor receita fixa, ou lance mínimo, que justifica a construção. O trabalho considera as duas situações: a de um proponente que precisa construir o BESS, foco principal da análise, e a de um proponente que já dispõe dele, para o qual se determina quanto da capacidade contratar no leilão.
+
 O estudo adota as seguintes delimitações de escopo:
 
-a) as capacidades instaladas da usina FV, do BESS e do eletrolisador são dados de entrada, e não variáveis de decisão — o dimensionamento ótimo dos equipamentos está fora do escopo desta etapa, e o efeito do tamanho do eletrolisador e do tanque de hidrogênio é avaliado por análise de sensibilidade (Seção 3.8.3);
+a) as capacidades instaladas da usina FV, do BESS e do eletrolisador são dados de entrada, e não variáveis de decisão — o dimensionamento ótimo dos equipamentos está fora do escopo desta etapa, e o efeito do tamanho do eletrolisador e do tanque de hidrogênio é avaliado por análise de sensibilidade (Seção 3.8.4);
 
 b) o horizonte de análise é de um ano, com resolução horária, representativo da operação ao longo do contrato de 15 anos previsto para o LRCAP;
 
 c) na formulação básica, a abordagem é determinística, com conhecimento perfeito das séries de preço, de geração e de despacho do Operador Nacional do Sistema Elétrico (ONS); a incerteza entre anos é tratada pela extensão estocástica da Seção 3.7;
 
-d) a função objetivo considera receitas e custos operacionais; os custos de investimento não entram na otimização, uma vez que as capacidades são fixas, e são considerados a posteriori na análise de viabilidade econômica e do lance mínimo (Seção 3.8.4).
+d) a função objetivo considera receitas e custos operacionais; os custos de investimento não entram na otimização, uma vez que as capacidades são fixas, e são considerados a posteriori na análise de viabilidade econômica e do lance mínimo (Seção 3.8.2).
 
 ## 3.2 Enquadramento regulatório
 
@@ -291,11 +293,11 @@ Figura 3.2 – Perfis horários médios dos dados de entrada: (a) PLD do submerc
 Fonte: elaborado pelo autor com dados de CCEE (2026a) e do PVGIS.
 :::
 
-**Despacho do ONS.** Na ausência de histórico de despacho de sistemas de armazenamento contratados no LRCAP, adota-se um perfil diário sintético: descarga na potência contratada entre 18 h e 22 h, horário de maior demanda líquida, e recarga entre 10 h e 15 h, até a restauração completa do estado de carga, limitada à potência nominal. O perfil é coerente com a diretriz de que a programação da recarga busque minimizar o custo total de operação do SIN (BRASIL, 2026, art. 4º, § 14), o que tende a deslocá-la para as horas de excedente de geração solar. O perfil resulta em um ciclo completo por dia (365 no ano), dentro dos limites regulatórios. Trata-se da hipótese mais intensa de uso do módulo LRCAP; o efeito de despachos menos frequentes é avaliado na Seção 3.8.2.
+**Despacho do ONS.** Na ausência de histórico de despacho de sistemas de armazenamento contratados no LRCAP, adota-se um perfil diário sintético: descarga na potência contratada entre 18 h e 22 h, horário de maior demanda líquida, e recarga entre 10 h e 15 h, até a restauração completa do estado de carga, limitada à potência nominal. O perfil é coerente com a diretriz de que a programação da recarga busque minimizar o custo total de operação do SIN (BRASIL, 2026, art. 4º, § 14), o que tende a deslocá-la para as horas de excedente de geração solar. O perfil resulta em um ciclo completo por dia (365 no ano), dentro dos limites regulatórios. Trata-se da hipótese mais intensa de uso do módulo LRCAP; o efeito de despachos menos frequentes é avaliado na Seção 3.8.3.
 
 **Parâmetros técnico-econômicos.** Os parâmetros do eletrolisador foram definidos a partir da faixa típica da tecnologia PEM, cujo consumo específico de energia situa-se entre 4,3 e 5,2 kWh/Nm³, ou aproximadamente 48 a 58 kWh/kg, até que os dados do fabricante do equipamento da UNIFEI sejam incorporados. O preço do hidrogênio não possui, até o momento, referência de mercado consolidada no Brasil e é, por isso, objeto de análise de sensibilidade. O mesmo se aplica aos termos do contrato de fornecimento de hidrogênio — volume diário e multa por déficit —, avaliados em cenários alternativos ao caso sem contrato.
 
-**Custo de degradação do BESS.** O custo de degradação pode ser estimado como o custo de reposição dos módulos de bateria dividido pela energia que eles descarregam ao longo da vida útil. Com o preço médio de *packs* de baterias de íons de lítio para armazenamento estacionário de US\$ 70/kWh em 2025 (BNEF, 2025), convertido pela taxa PTAX de 09/12/2025 (R\$ 5,4025/US\$) e acrescido de 74% de tributos incidentes no Brasil (EPE, 2024), e com vida útil de 4.000 a 6.000 ciclos a 90% de profundidade de descarga, obtém-se entre R\$ 120 e R\$ 185 por MWh descarregado. O valor de R\$ 50/MWh adotado no caso de referência situa-se abaixo dessa faixa; por isso, o efeito de valores de R\$ 100 e R\$ 200/MWh é avaliado na Seção 3.8.3.
+**Custo de degradação do BESS.** O custo de degradação pode ser estimado como o custo de reposição dos módulos de bateria dividido pela energia que eles descarregam ao longo da vida útil. Com o preço médio de *packs* de baterias de íons de lítio para armazenamento estacionário de US\$ 70/kWh em 2025 (BNEF, 2025), convertido pela taxa PTAX de 09/12/2025 (R\$ 5,4025/US\$) e acrescido de 74% de tributos incidentes no Brasil (EPE, 2024), e com vida útil de 4.000 a 6.000 ciclos a 90% de profundidade de descarga, obtém-se entre R\$ 120 e R\$ 185 por MWh descarregado. O valor de R\$ 50/MWh adotado no caso de referência situa-se abaixo dessa faixa; por isso, o efeito de valores de R\$ 100 e R\$ 200/MWh é avaliado na Seção 3.8.4.
 
 **Receita fixa do LRCAP.** Como ainda não houve leilão de armazenamento em baterias no Brasil, a receita fixa foi delimitada por quatro referências. A inferior é o primeiro leilão do mecanismo italiano de contratação de capacidade de armazenamento (MACSE), realizado em setembro de 2025 com contratos de 15 anos e desenho semelhante ao do LRCAP, cujo preço médio de € 12.959/(MWh·ano) (TERNA, 2025) corresponde, para um sistema de 4 h e com a taxa de câmbio PTAX de 30/09/2025 (R\$ 6,2396/€), a cerca de R\$ 323 mil/(MW·ano). No LRCAP de março de 2026, que contratou o mesmo produto — potência disponível ao ONS —, termelétricas existentes a óleo e biodiesel obtiveram preço médio de R\$ 831 mil/(MW·ano) (CCEE, 2026c), e o conjunto de termelétricas a gás natural, biometano e carvão e de ampliações de hidrelétricas, novas e existentes, R\$ 2,334 milhões/(MW·ano) (CCEE, 2026b). Por fim, o custo de investimento de referência de sistemas de baterias, de R\$ 5.000 a R\$ 6.000/kW (BRASIL; EPE, 2025), corresponde, anualizado a 10% ao ano em 15 anos, a R\$ 657 mil a R\$ 789 mil/(MW·ano), sem considerar operação e manutenção, encargos e reposição de módulos. Com base nessas referências, a análise de sensibilidade abrange receitas fixas de R\$ 330 mil a R\$ 2,33 milhões/(MW·ano). O valor de R\$ 600 mil/(MW·ano) adotado no caso de referência situa-se no extremo inferior dessa faixa, abaixo do preço obtido por usinas existentes e do custo anualizado de investimento em baterias, e constitui, portanto, uma hipótese conservadora quanto à atratividade do leilão.
 
@@ -483,9 +485,9 @@ c) **EV e EEV:** resolve-se o problema anual com o cenário médio para obter $\
 
 Como RP e WS são obtidos com uma tolerância $\varepsilon$ de convergência, adotada como 0,01% nesta etapa, cada um é conhecido por um intervalo $[LB, UB]$. Os indicadores são, então, reportados com os respectivos limites: $\mathrm{EVPI} \in [\mathrm{WS}^{LB} - \mathrm{RP}^{UB},\; \mathrm{WS}^{UB} - \mathrm{RP}^{LB}]$ e $\mathrm{VSS} \in [\mathrm{RP}^{LB} - \mathrm{EEV},\; \mathrm{RP}^{UB} - \mathrm{EEV}]$. Diferenças inferiores à ordem de $\varepsilon \cdot \mathrm{RP}$ não são distinguíveis do erro de convergência e devem ser interpretadas como nulas.
 
-## 3.8 Curva de oferta e análises de sensibilidade
+## 3.8 Decisão de oferta no leilão e análises de sensibilidade
 
-As Seções 3.4 a 3.7 tratam a receita fixa $R^{cap}$ como parâmetro e determinam a potência ótima correspondente. No leilão, contudo, $R^{cap}$ não é um dado: é o preço ofertado pelo próprio empreendedor, e a informação de que ele necessita é a relação entre esse preço e a potência que vale a pena comprometer. Esta seção apresenta o procedimento utilizado para obter essa relação — a curva de oferta — e os casos de sensibilidade avaliados com ele.
+As Seções 3.4 a 3.7 tratam a receita fixa $R^{cap}$ como parâmetro e determinam a potência ótima correspondente. No leilão, contudo, $R^{cap}$ não é um dado: é o preço ofertado pelo próprio empreendedor, e a informação de que ele necessita é a relação entre esse preço e a potência que vale a pena comprometer. Esta seção apresenta os procedimentos utilizados para obter essa relação nas duas situações consideradas: a curva de oferta de um BESS disponível (Seção 3.8.1) e, para um BESS a construir, a análise de viabilidade e o lance mínimo (Seção 3.8.2), que constitui o resultado principal do trabalho. Em seguida, trata-se do efeito da frequência do despacho do ONS (Seção 3.8.3) e dos casos de sensibilidade avaliados (Seção 3.8.4).
 
 ### 3.8.1 Custo de oportunidade e curva de oferta
 
@@ -517,47 +519,9 @@ $$
 R^{int} = \max_{P \in \mathcal{X}_h,\, P < \bar P^{cap}} \; \frac{Q(P) - Q(\bar P^{cap})}{\bar P^{cap} - P}
 $$ {#eq:integral}
 
-A curva de oferta não depende do formato do leilão nem do comportamento dos demais proponentes: ela indica, para cada preço, quanta potência o empreendedor estaria disposto a comprometer. Ressalta-se que o investimento no BESS não entra em $Q(P)$, pois as capacidades instaladas são fixas. Esse custo não altera $P^*(R)$ quando o BESS já existe, mas altera a decisão quando ele ainda será construído, situação tratada na Seção 3.8.4.
+A curva de oferta não depende do formato do leilão nem do comportamento dos demais proponentes: ela indica, para cada preço, quanta potência o empreendedor estaria disposto a comprometer. Ressalta-se que o investimento no BESS não entra em $Q(P)$, pois as capacidades instaladas são fixas. Esse custo não altera $P^*(R)$ quando o BESS já existe, mas altera a decisão quando ele ainda será construído, situação tratada na Seção 3.8.2.
 
-### 3.8.2 Frequência do despacho do ONS
-
-A frequência com que o ONS acionará os sistemas de armazenamento contratados no LRCAP é desconhecida, e o perfil das Seções 3.5 e 3.7.2 adota a hipótese mais intensa, com um ciclo completo por dia. Para avaliar essa hipótese, o modelo admite um número $N^{ons}$ de despachos por ano. Na ausência de informação sobre o critério do ONS, adota-se como critério o próprio PLD, indicador de quão apertado está o sistema: em cada ano civil, são despachados apenas os $N^{ons}$ dias com maior PLD médio no período de descarga — o bloco de $H^{cap}$ horas de maior preço após o período solar, no perfil baseado em preço, ou as horas de descarga fixas, no perfil fixo. A seleção é feita sobre o ano inteiro, de modo que a decomposição em blocos semanais não a altera. Dias com PLD igual, situação frequente em anos com o PLD no piso, são selecionados por uma sequência de baixa discrepância sobre o dia do ano, o que os distribui uniformemente ao longo do ano em vez de concentrá-los nos primeiros dias. Nos dias sem despacho, o módulo LRCAP permanece carregado e não há recarga.
-
-Como a receita fixa independe da energia despachada e, com os parâmetros da Tabela 3.1, $\kappa = 0$, o despacho afeta o lucro do empreendedor apenas por meio do custo de degradação do módulo LRCAP e do limite do ponto de conexão compartilhado. Se o efeito sobre a conexão for desprezível, o custo associado ao despacho é linear em $P^{cap}$, conforme a Equação {eq:custo-ons}:
-
-$$
-C^{ons}(P^{cap}) \approx c^{deg}\, H^{cap}\, N^{ons}\, P^{cap}
-$$ {#eq:custo-ons}
-
-e uma variação de $N^{ons}$ desloca o custo de oportunidade marginal de um valor constante, sem alterar a operação do lado mercantil. As simulações com diferentes valores de $N^{ons}$ permitem verificar essa aproximação.
-
-### 3.8.3 Casos avaliados
-
-A curva de oferta é construída para os cenários anuais da Seção 3.7.2, com o lucro esperado ($\beta = 0$), nos casos do Quadro 3.2. Os casos variam as hipóteses que a análise do caso de referência indicou como determinantes para o custo de oportunidade: a existência de um limite de demanda de hidrogênio (Seção 3.4.5), a vedação à importação de energia da rede, a frequência do despacho do ONS, o custo de degradação do BESS e o dimensionamento do eletrolisador e do tanque de hidrogênio.
-
-::: {custom-style="Legenda"}
-Quadro 3.2 – Casos avaliados na construção da curva de oferta
-:::
-
-| Caso | Contrato de H₂ | Importação da rede | Outras alterações em relação à referência |
-|------------------------|------------------------------|----------------------|------------------------|
-| Referência | Sem limite de volume | Vedada | – (365 despachos/ano; $c^{deg}$ de R\$ 50/MWh; eletrolisador de 17,5 MW; tanque de 2 t) |
-| Contrato 2 t/dia | $D^{h2} = \bar D^{h2} = 2.000$ kg/dia | Vedada | – |
-| Contrato 3 t/dia | $D^{h2} = \bar D^{h2} = 3.000$ kg/dia | Vedada | – |
-| Importação | Sem limite de volume | Permitida | – |
-| Importação e contrato 3 t/dia | $D^{h2} = \bar D^{h2} = 3.000$ kg/dia | Permitida | – |
-| Frequência do despacho | Sem limite de volume | Vedada | 50; 150 ou 365 despachos/ano |
-| Degradação | Sem limite de volume | Vedada | $c^{deg}$ de R\$ 100 ou 200/MWh |
-| Eletrolisador | Sem limite de volume | Vedada | Eletrolisador de 10 ou 25 MW |
-| Tanque | $D^{h2} = \bar D^{h2} = 3.000$ kg/dia | Vedada | Tanque de 10 t |
-
-::: {custom-style="Fonte"}
-Fonte: elaborado pelo autor.
-:::
-
-Nos casos com importação, o eletrolisador e o BESS mercantil podem ser supridos pela rede ao PLD acrescido de $c^{imp}$. Essa configuração corresponde a um critério de qualificação do hidrogênio baseado na intensidade de emissões, e não na origem física da energia, e é avaliada como alternativa à hipótese de suprimento exclusivamente fotovoltaico. Para cada caso, além da curva de oferta, registram-se a potência ótima e a operação média nos cenários para a receita fixa de referência, de R\$ 600 mil/(MW·ano).
-
-### 3.8.4 Viabilidade econômica e lance mínimo
+### 3.8.2 Viabilidade econômica e lance mínimo
 
 A viabilidade do empreendimento é avaliada pelo valor presente líquido (VPL) de um fluxo de caixa anual constante, em termos reais, ao longo do prazo do contrato do LRCAP ($n = 15$ anos), sem valor residual, conforme a Equação {eq:vpl}:
 
@@ -594,6 +558,52 @@ $$ {#eq:oferta-inv}
 
 O lance mínimo, $R^{min}$, é a menor receita fixa para a qual a construção do BESS é vantajosa, isto é, o menor $R$ para o qual $P^{*}_{inv}(R) > 0$. Ele é calculado para as três faixas de investimento e para as duas taxas de desconto do Quadro 3.3.
 
+### 3.8.3 Frequência do despacho do ONS
+
+A frequência com que o ONS acionará os sistemas de armazenamento contratados no LRCAP é desconhecida, e o perfil das Seções 3.5 e 3.7.2 adota a hipótese mais intensa, com um ciclo completo por dia. Para avaliar essa hipótese, o modelo admite um número $N^{ons}$ de despachos por ano. Na ausência de informação sobre o critério do ONS, adota-se como critério o próprio PLD, indicador de quão apertado está o sistema: em cada ano civil, são despachados apenas os $N^{ons}$ dias com maior PLD médio no período de descarga — o bloco de $H^{cap}$ horas de maior preço após o período solar, no perfil baseado em preço, ou as horas de descarga fixas, no perfil fixo. A seleção é feita sobre o ano inteiro, de modo que a decomposição em blocos semanais não a altera. Dias com PLD igual, situação frequente em anos com o PLD no piso, são selecionados por uma sequência de baixa discrepância sobre o dia do ano, o que os distribui uniformemente ao longo do ano em vez de concentrá-los nos primeiros dias. Nos dias sem despacho, o módulo LRCAP permanece carregado e não há recarga.
+
+Como a receita fixa independe da energia despachada e, com os parâmetros da Tabela 3.1, $\kappa = 0$, o despacho afeta o lucro do empreendedor apenas por meio do custo de degradação do módulo LRCAP e do limite do ponto de conexão compartilhado. Se o efeito sobre a conexão for desprezível, o custo associado ao despacho é linear em $P^{cap}$, conforme a Equação {eq:custo-ons}:
+
+$$
+C^{ons}(P^{cap}) \approx c^{deg}\, H^{cap}\, N^{ons}\, P^{cap}
+$$ {#eq:custo-ons}
+
+e uma variação de $N^{ons}$ desloca o custo de oportunidade marginal de um valor constante, sem alterar a operação do lado mercantil. As simulações com diferentes valores de $N^{ons}$ permitem verificar essa aproximação.
+
+Essa relação permite também aproximar o lance mínimo da Seção 3.8.2. No lance mínimo, a potência ofertada tende à potência total do BESS ($P \approx \bar P^{dis}$), de modo que o módulo mercantil se anula e a operação do lado mercantil se aproxima da operação sem BESS. Nessa condição, $Q(\bar P^{dis}) \approx \Pi^{0} - \left(c^{deg} H^{cap} N^{ons} + \kappa\right) \bar P^{dis}$, e a condição de indiferença $R\, \bar P^{dis} + Q(\bar P^{dis}) - C^{bess} = \Pi^{0}$ resulta na Equação {eq:lance-aprox}:
+
+$$
+R^{min} \approx \frac{C^{bess}}{\bar P^{dis}} + c^{deg}\, H^{cap}\, N^{ons} + \kappa
+$$ {#eq:lance-aprox}
+
+isto é, o lance mínimo de um BESS a construir corresponde aproximadamente ao seu custo anual equivalente por MW, acrescido do custo de degradação imposto pelo despacho do ONS e do custo da recarga excedente. A aproximação desconsidera o valor residual do uso mercantil da bateria e é verificada no Capítulo 4.
+
+### 3.8.4 Casos avaliados
+
+A curva de oferta é construída para os cenários anuais da Seção 3.7.2, com o lucro esperado ($\beta = 0$), nos casos do Quadro 3.2. Os casos variam as hipóteses que a análise do caso de referência indicou como determinantes para o custo de oportunidade: a existência de um limite de demanda de hidrogênio (Seção 3.4.5), a vedação à importação de energia da rede, a frequência do despacho do ONS, o custo de degradação do BESS e o dimensionamento do eletrolisador e do tanque de hidrogênio.
+
+::: {custom-style="Legenda"}
+Quadro 3.2 – Casos avaliados na construção da curva de oferta
+:::
+
+| Caso | Contrato de H₂ | Importação da rede | Outras alterações em relação à referência |
+|------------------------|------------------------------|----------------------|------------------------|
+| Referência | Sem limite de volume | Vedada | – (365 despachos/ano; $c^{deg}$ de R\$ 50/MWh; eletrolisador de 17,5 MW; tanque de 2 t) |
+| Contrato 2 t/dia | $D^{h2} = \bar D^{h2} = 2.000$ kg/dia | Vedada | – |
+| Contrato 3 t/dia | $D^{h2} = \bar D^{h2} = 3.000$ kg/dia | Vedada | – |
+| Importação | Sem limite de volume | Permitida | – |
+| Importação e contrato 3 t/dia | $D^{h2} = \bar D^{h2} = 3.000$ kg/dia | Permitida | – |
+| Frequência do despacho | Sem limite de volume | Vedada | 50; 150 ou 365 despachos/ano |
+| Degradação | Sem limite de volume | Vedada | $c^{deg}$ de R\$ 100 ou 200/MWh |
+| Eletrolisador | Sem limite de volume | Vedada | Eletrolisador de 10 ou 25 MW |
+| Tanque | $D^{h2} = \bar D^{h2} = 3.000$ kg/dia | Vedada | Tanque de 10 t |
+
+::: {custom-style="Fonte"}
+Fonte: elaborado pelo autor.
+:::
+
+Nos casos com importação, o eletrolisador e o BESS mercantil podem ser supridos pela rede ao PLD acrescido de $c^{imp}$. Essa configuração corresponde a um critério de qualificação do hidrogênio baseado na intensidade de emissões, e não na origem física da energia, e é avaliada como alternativa à hipótese de suprimento exclusivamente fotovoltaico. Para cada caso, além da curva de oferta, registram-se a potência ótima e a operação média nos cenários para a receita fixa de referência, de R\$ 600 mil/(MW·ano), e calcula-se o lance mínimo para a construção do BESS (Seção 3.8.2), com o lucro sem BESS recalculado nos casos que alteram o contrato de hidrogênio, a importação ou o eletrolisador.
+
 ## 3.9 Implementação computacional
 
 O modelo foi implementado na linguagem Python, com o uso da biblioteca de modelagem algébrica Pyomo (BYNUM *et al.*, 2021) e do *solver* HiGHS (HUANGFU; HALL, 2018). A estrutura do código separa: (i) a leitura e validação dos parâmetros, organizados em arquivos de configuração em formato YAML, com verificação automática dos requisitos regulatórios; (ii) a importação e o tratamento das séries de dados; (iii) a construção do modelo de otimização; (iv) a decomposição de Benders, nas versões determinística e estocástica; (v) o cálculo do VSS e do EVPI; (vi) a construção da curva de oferta; (vii) a análise de viabilidade econômica e do lance mínimo; e (viii) o pós-processamento dos resultados. Os subproblemas semanais são resolvidos em paralelo em processos independentes, cada qual restrito a uma linha de execução do *solver*, a fim de evitar a concorrência por núcleos de processamento. A consistência do modelo é verificada por um conjunto de testes automatizados que conferem, entre outros aspectos, o balanço de potência, os limites dos estados de carga, a exclusividade entre carga e descarga, o cumprimento do despacho do ONS e a seleção dos dias de despacho, o limite do ponto de conexão, as entregas do contrato de hidrogênio e a validade dos cortes de Benders. O código e os dados são mantidos sob controle de versão, o que assegura a reprodutibilidade dos resultados.
@@ -602,7 +612,7 @@ O modelo foi implementado na linguagem Python, com o uso da biblioteca de modela
 
 As principais hipóteses adotadas, e as respectivas implicações, são as seguintes:
 
-a) **previsão perfeita dentro de cada ano:** mesmo na extensão estocástica, a operação de cada cenário é otimizada com conhecimento antecipado das séries daquele ano, o que tende a superestimar o lucro alcançável na operação real. A incerteza tratada pela Seção 3.7 é apenas a variação entre anos; a incerteza do despacho do ONS, cujo risco é alocado ao empreendedor pela Portaria, é representada somente pela regra de despacho baseada no PLD e pela sensibilidade ao número de despachos por ano (Seção 3.8.2), que supõe despachos completos, de $H^{cap}$ horas na potência contratada, nos dias de maior PLD;
+a) **previsão perfeita dentro de cada ano:** mesmo na extensão estocástica, a operação de cada cenário é otimizada com conhecimento antecipado das séries daquele ano, o que tende a superestimar o lucro alcançável na operação real. A incerteza tratada pela Seção 3.7 é apenas a variação entre anos; a incerteza do despacho do ONS, cujo risco é alocado ao empreendedor pela Portaria, é representada somente pela regra de despacho baseada no PLD e pela sensibilidade ao número de despachos por ano (Seção 3.8.3), que supõe despachos completos, de $H^{cap}$ horas na potência contratada, nos dias de maior PLD;
 
 b) **agente tomador de preço:** a operação do sistema não altera o PLD;
 
