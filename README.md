@@ -1,6 +1,10 @@
-# Otimização da Operação de um Sistema Híbrido PV-BESS com Produção de Hidrogênio Verde
+# Lance mínimo e custo de oportunidade de baterias no Leilão de Reserva de Capacidade
 
-**Arbitragem entre o Leilão de Reserva de Capacidade (LRCAP) e o Mercado de Curto Prazo (MCP)**
+**O papel da produção de hidrogênio verde em sistemas híbridos fotovoltaicos**
+
+Pergunta de pesquisa: qual a menor receita fixa que viabiliza a construção de um BESS para o
+LRCAP em um sistema híbrido PV-H₂, e como a produção de hidrogênio altera a quantidade a contratar
+quando a bateria já existe?
 
 Repositório do modelo de otimização da dissertação de mestrado. O modelo é um MILP
 implementado em Python/[Pyomo](https://www.pyomo.org/) e resolvido com o

@@ -1,8 +1,7 @@
 # Formulação matemática — versão 0.2 (determinística)
 
-**Título de trabalho:** Otimização da Operação de um Sistema Híbrido PV-BESS com
-Produção de Hidrogênio Verde: arbitragem entre o Leilão de Reserva de Capacidade
-(LRCAP) e o Mercado de Curto Prazo (MCP).
+**Título de trabalho:** Lance mínimo e custo de oportunidade de baterias no Leilão de Reserva de Capacidade:
+o papel da produção de hidrogênio verde em sistemas híbridos fotovoltaicos.
 
 Modelo de **Programação Linear Inteira Mista (MILP)**, horizonte discreto horário,
 visão de um agente tomador de preço (*price-taker*). As regras do LRCAP seguem a
