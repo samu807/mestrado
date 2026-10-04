@@ -1,0 +1,18 @@
+# Parâmetros econômicos para a análise de viabilidade (valores reais de dez/2025).
+# Cada item: [baixo, central, alto].
+capex:
+  pv_rs_kw: [3000, 4250, 5500]        # EPE/MME, Caderno de Parâmetros de Custos – PDE 2035 (nov/2025)
+  bess_rs_kw: [5000, 5500, 6000]      # idem; duração (h) associada a confirmar no caderno
+  # IEA, Global Hydrogen Review 2025: sistemas fora da China US$ 1.900–2.500/kW; chineses US$ 500–1.100/kW.
+  # Convertido pela PTAX de 09/12/2025 (R$ 5,4025/US$), sem tributos de importação.
+  eletrolisador_usd_kw: [1100, 2000, 2500]
+cambio_rs_usd: 5.4025
+# O&M fixo anual, em fração do CAPEX (hipótese do autor; o O&M variável do eletrolisador e a
+# degradação do BESS já estão no modelo de operação).
+om_fixo_frac:
+  pv: 0.015
+  bess: 0.025
+  eletrolisador: 0.03
+# ANEEL, WACC regulatório 2026 (geração): 8,00% real após impostos; 12,11% real antes de impostos.
+taxas_desconto: [0.08, 0.1211]
+vida_anos: 15                          # prazo do contrato do LRCAP; sem valor residual (conservador)

@@ -26,6 +26,7 @@ gerar receita no MCP (art. 9º §5º, IV e §6º). Por isso a arbitragem é mode
 ```
 config/caso_base.yaml      parâmetros do caso (valores PLACEHOLDER — substituir por dados reais)
 config/itajuba_2025.yaml   mesmo caso com PLD SE/CO e PV de Itajubá (requer data/ gerado pelo importador)
+config/economia.yaml       custos de investimento, O&M fixo e taxas de desconto (viabilidade)
 config/unifei_escalonada.yaml  planta da UNIFEI (1 MWp + PEM 350 kW) escalonada a 50 MWp + 17,5 MW
 docs/formulacao.md         formulação matemática completa (conjuntos, parâmetros, variáveis, restrições)
 src/pvbess_h2/
@@ -44,6 +45,7 @@ scripts/
   vss_evpi.py              VSS e EVPI do programa estocástico
   curva_oferta.py          curva de oferta no LRCAP (contrato de H₂, importação, despacho, degradação, dimensionamento)
   erro_decomposicao.py     efeito do tamanho do bloco da decomposição (7, 14, 28 dias)
+  viabilidade.py           VPL, TIR, valor da bateria e preço de equilíbrio do H₂ (config/economia.yaml)
 tests/                     testes (modelo, importação de dados, decomposição)
 ```
 
@@ -291,6 +293,38 @@ não a armazenagem de H₂.
 em 54,44 MW): lucro idêntico com blocos de 7, 14 e 28 dias (diferença < 10⁻¹¹). Benders com
 blocos de 14 dias: 55,5 MW e R\$ 67,53 mi (contra 54,4 MW e R\$ 67,51 mi com 7 dias), diferença
 de 0,03%, dentro da região plana do ótimo. A condição cíclica semanal não restringe a operação.
+
+### Viabilidade econômica
+
+`python scripts/viabilidade.py` (usa os resultados da curva de oferta; `--sem-bess` refaz o caso
+sem bateria, ~1 min). Parâmetros em `config/economia.yaml`: CAPEX de FV R\$ 3.000–5.500/kW e de
+BESS R\$ 5.000–6.000/kW (EPE/MME, Caderno de Parâmetros de Custos – PDE 2035), eletrolisador
+US\$ 1.100–2.500/kW (IEA, Global Hydrogen Review 2025; PTAX R\$ 5,4025), O&M fixo de 1,5% (FV),
+2,5% (BESS) e 3% (eletrolisador) do CAPEX ao ano (hipótese), taxa real de 8,0% (WACC regulatório
+ANEEL 2026, geração, após impostos) e 12,1% (antes de impostos), 15 anos sem valor residual.
+O lucro operacional é antes de impostos, o que torna os VPLs otimistas.
+
+![Viabilidade](docs/figuras/viabilidade.png)
+
+| Caso (CAPEX central) | CAPEX | Lucro operacional | VPL (8%) | TIR real | H₂ de equilíbrio (8%) |
+|---|---|---|---|---|---|
+| Referência (55 MW no LRCAP) | R\$ 732 mi | R\$ 68,1 mi/ano | **−R\$ 295 mi** | 0,6% | R\$ 68/kg |
+| Contrato 3 t/dia | R\$ 732 mi | R\$ 64,3 mi/ano | −R\$ 327 mi | −0,4% | R\$ 72/kg |
+| Importação da rede | R\$ 732 mi | R\$ 88,5 mi/ano | −R\$ 120 mi | 5,2% | R\$ 41/kg |
+| Eletrolisador 10 MW | R\$ 651 mi | R\$ 60,4 mi/ano | −R\$ 259 mi | 0,7% | R\$ 71/kg |
+| Eletrolisador 25 MW | R\$ 813 mi | R\$ 73,5 mi/ano | −R\$ 351 mi | 0,0% | R\$ 70/kg |
+
+- **Com os parâmetros atuais, nenhum caso se paga.** Só a importação com CAPEX baixo (equipamento
+  chinês, FV e BESS no piso da EPE) tem VPL positivo (+R\$ 94 mi a 8%).
+- O preço de equilíbrio do H₂ (operação mantida fixa, aproximação conservadora) é R\$ 68/kg no
+  caso de referência, quase o dobro dos R\$ 35/kg adotados e acima da faixa de preços considerada.
+- **Valor da bateria:** lucro sem BESS = R\$ 35,4 mi/ano; com BESS e 55 MW no LRCAP a R\$ 600 mil,
+  R\$ 68,1 mi. O ganho de R\$ 32,8 mi/ano não cobre o custo anual do BESS (R\$ 46,8 mi a 8%, CAPEX
+  central). A bateria só se paga com receita fixa de **R\$ 852 mil/MW·ano** (faixa de R\$ 778 mil a
+  R\$ 1,11 mi conforme CAPEX e taxa), contratando 57,5–60 MW. Esse valor é próximo do preço das
+  térmicas existentes no LRCAP 3/2026 (R\$ 831 mil).
+- Sem a receita do LRCAP, a bateria agrega só R\$ 9,7 mi/ano (uso no H₂ e no MCP): o leilão é o que
+  pode viabilizá-la.
 
 ## Próximos passos sugeridos
 
