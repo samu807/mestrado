@@ -188,6 +188,41 @@ def grafico_oferta(curva, q_sem, eco, base, saida):
     return lm
 
 
+# Casos cujo lucro sem bateria é igual ao do caso base (só alteram o BESS ou o LRCAP)
+SEM_BESS_IGUAL_BASE = ("deg_", "ciclos_")
+
+
+def lance_minimo_por_caso(base, eco, saida, processos):
+    """Lance mínimo (BESS a construir) para cada caso da curva de oferta."""
+    dirc = RAIZ / "resultados" / "curva_oferta"
+    n = eco["vida_anos"]
+    rs = np.arange(0, 2.5e6 + 1, 5e3)
+    cache = saida / "sem_bess_casos.csv"
+    sem = pd.read_csv(cache, index_col=0)["lucro_sem_bess_rs"].to_dict() if cache.exists() else {}
+    linhas = []
+    for caso, (desc, ajustes) in CASOS.items():
+        if not (dirc / f"{caso}.csv").exists():
+            continue
+        chave = "base" if caso.startswith(SEM_BESS_IGUAL_BASE) else caso
+        if chave not in sem:
+            print(f"Resolvendo {chave} sem bateria...", flush=True)
+            sem[chave] = lucro_sem_bess(aplicar(base, CASOS[chave][1]), processos)
+            pd.Series(sem, name="lucro_sem_bess_rs").to_csv(cache)
+        p = aplicar(base, ajustes)
+        curva = pd.read_csv(dirc / f"{caso}.csv")
+        for taxa in eco["taxas_desconto"]:
+            c = capex_om(p, eco, "central")
+            custo = c["bess"] / fator_anuidade(taxa, n) + c["om_bess"]
+            o = oferta_com_investimento(curva, sem[chave], custo, rs)
+            ok = o[o.constroi_bess]
+            linhas.append({"caso": caso, "descricao": desc, "taxa": taxa, "lucro_sem_bess_rs": sem[chave],
+                           "lance_minimo_rs_mw_ano": ok.receita_fixa_rs_mw_ano.min() if len(ok) else np.nan,
+                           "p_cap_mw": ok.p_cap_mw.iloc[0] if len(ok) else np.nan})
+    df = pd.DataFrame(linhas)
+    df.to_csv(saida / "lance_minimo_casos.csv", index=False)
+    return df
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("config", nargs="?", default=str(RAIZ / "config" / "estocastico_unifei.yaml"))
@@ -258,6 +293,7 @@ def main():
     bat.to_csv(saida / "valor_bateria.csv", index=False)
     grafico(res, curva, q_sem, eco, base, saida)
     lm = grafico_oferta(curva, q_sem, eco, base, saida)
+    lmc = lance_minimo_por_caso(base, eco, saida, args.processos)
 
     pd.set_option("display.width", 250)
     pd.set_option("display.float_format", lambda v: f"{v:,.3f}")
@@ -270,6 +306,8 @@ def main():
     print(bat.assign(**{c: bat[c] / 1e6 for c in ["custo_anual_bess_rs", "ganho_bess_ref_rs", "vpl_bess_ref_rs"]}).to_string(index=False))
     print("\nLance mínimo com investimento no BESS:")
     print(lm.to_string(index=False))
+    print("\nLance mínimo por caso (CAPEX central):")
+    print(lmc.pivot_table(index="caso", columns="taxa", values=["lance_minimo_rs_mw_ano", "p_cap_mw"]).to_string())
     print(f"\nResultados salvos em {saida}")
 
 
