@@ -1,6 +1,6 @@
 # 4 RESULTADOS E DISCUSSÃO
 
-Este capítulo apresenta os resultados do modelo descrito no Capítulo 3, aplicado ao caso de referência: a planta da UNIFEI escalonada para 50 MWp de geração FV e 17,5 MW de eletrolisador PEM, com BESS hipotético de 60 MW e 300 MWh, conectada ao submercado SE/CO. Salvo indicação em contrário, os resultados das Seções 4.2 a 4.6 e 4.8 correspondem ao lucro esperado nos cinco cenários anuais de 2021 a 2025 (Seção 3.7.2), em valores de dezembro de 2025; as Seções 4.1 e 4.7 e a análise da decomposição na Seção 4.8 utilizam o caso determinístico de 2025 (Seção 3.5). A Seção 4.1 apresenta o caso determinístico de 2025, que serve de referência para o desempenho do método de solução; a Seção 4.2, a decisão de contratação e a operação no modelo estocástico; a Seção 4.3, o valor da solução estocástica e da informação perfeita; a Seção 4.4, a curva de oferta no leilão; a Seção 4.5, o efeito do contrato de hidrogênio e da importação de energia; a Seção 4.6, o efeito da frequência do despacho do ONS; a Seção 4.7, a sensibilidade à receita fixa e ao preço do hidrogênio; a Seção 4.8, a robustez dos resultados ao custo de degradação, ao dimensionamento e à decomposição; e a Seção 4.9 sintetiza os resultados.
+Este capítulo apresenta os resultados do modelo descrito no Capítulo 3, aplicado ao caso de referência: a planta da UNIFEI escalonada para 50 MWp de geração FV e 17,5 MW de eletrolisador PEM, com BESS hipotético de 60 MW e 300 MWh, conectada ao submercado SE/CO. Salvo indicação em contrário, os resultados das Seções 4.2 a 4.6 e 4.8 correspondem ao lucro esperado nos cinco cenários anuais de 2021 a 2025 (Seção 3.7.2), em valores de dezembro de 2025; as Seções 4.1 e 4.7 e a análise da decomposição na Seção 4.8 utilizam o caso determinístico de 2025 (Seção 3.5). A Seção 4.1 apresenta o caso determinístico de 2025, que serve de referência para o desempenho do método de solução; a Seção 4.2, a decisão de contratação e a operação no modelo estocástico; a Seção 4.3, o valor da solução estocástica e da informação perfeita; a Seção 4.4, a curva de oferta no leilão; a Seção 4.5, o efeito do contrato de hidrogênio e da importação de energia; a Seção 4.6, o efeito da frequência do despacho do ONS; a Seção 4.7, a sensibilidade à receita fixa e ao preço do hidrogênio; a Seção 4.8, a robustez dos resultados ao custo de degradação, ao dimensionamento e à decomposição; a Seção 4.9, a viabilidade econômica e o lance mínimo; e a Seção 4.10 sintetiza os resultados.
 
 Ressalta-se que parte dos parâmetros econômicos — em especial a receita fixa do LRCAP (R\$ 600 mil/(MW·ano)), o preço do hidrogênio (R\$ 35/kg), o custo de degradação do BESS (R\$ 50/MWh) e a multa contratual por déficit de hidrogênio — tem caráter provisório, conforme discutido na Seção 3.5. Por isso, a ênfase deste capítulo recai sobre as relações entre as decisões e as hipóteses, e não sobre os valores absolutos de lucro.
 
@@ -317,7 +317,75 @@ O tamanho do eletrolisador altera a forma da curva de oferta. Com 25 MW, o eletr
 
 **Decomposição em blocos.** Para a potência de 54,44 MW, o lucro anual do caso determinístico de 2025 foi idêntico com blocos de 7, 14 e 28 dias (diferença relativa inferior a $10^{-11}$). Refeita a decomposição com blocos de 14 dias, o algoritmo de Benders convergiu para 55,5 MW e R\$ 67,53 milhões, contra 54,4 MW e R\$ 67,51 milhões com blocos semanais — diferença de 0,03%, inferior à tolerância de convergência e situada na região plana do ótimo. As condições cíclicas semanais, portanto, não restringem a operação de forma mensurável, o que é coerente com a operação em ciclos diários do módulo mercantil e do tanque, cujos estados de armazenamento tendem a retornar aos mesmos valores ao fim de cada semana.
 
-## 4.9 Síntese
+## 4.9 Viabilidade econômica e lance mínimo
+
+As seções anteriores analisaram o lucro operacional, sem os custos de investimento. Esta seção avalia se o empreendimento se paga e qual receita fixa justificaria construir o BESS, segundo o procedimento da Seção 3.8.4. Os resultados são apresentados na Tabela 4.8 e na Figura 4.9.
+
+::: {custom-style="Legenda"}
+Tabela 4.8 – Viabilidade econômica em 15 anos (receita fixa de R\$ 600 mil/(MW·ano))
+:::
+
+| Caso | Invest. (R\$ mi) | Lucro op. (R\$ mi/ano) | VPL a 8,0% (R\$ mi) | VPL a 12,1% (R\$ mi) | TIR real | H₂ eq. (R\$/kg) |
+|----------------------|----------|----------|----------------------|----------|--------|-----------|
+| Referência | 732 | 68,1 | −295 (−461 a −81) | −386 | 0,6% | 68 |
+| Contrato 2 t/dia | 732 | 61,3 | −353 (−520 a −140) | −432 | −1,2% | 92 |
+| Contrato 3 t/dia | 732 | 64,3 | −327 (−494 a −113) | −412 | −0,4% | 72 |
+| Importação | 732 | 88,5 | −120 (−287 a +94) | −248 | 5,2% | 41 |
+| Importação e contrato 3 t/dia | 732 | 68,8 | −289 (−455 a −75) | −382 | 0,7% | 66 |
+| Eletrolisador 10 MW | 651 | 60,4 | −259 (−400 a −91) | −341 | 0,7% | 71 |
+| Eletrolisador 25 MW | 813 | 73,5 | −351 (−542 a −91) | −447 | 0,0% | 70 |
+| Degradação R\$ 200/MWh | 732 | 54,9 | −408 (−574 a −194) | −475 | −3,0% | 79 |
+
+::: {custom-style="Fonte"}
+Fonte: elaborado pelo autor. Investimento, TIR e preço de equilíbrio do H₂ (H₂ eq., à taxa de 8,0%) com investimento central; entre parênteses, VPL com investimento alto e baixo.
+:::
+
+Com os parâmetros adotados, nenhum caso é economicamente viável com investimento central. No caso de referência, o investimento de R\$ 732 milhões — R\$ 213 milhões na usina FV, R\$ 330 milhões no BESS e R\$ 189 milhões no eletrolisador — gera fluxo anual de R\$ 51 milhões, após R\$ 17 milhões de O&M fixo, e a TIR real é de apenas 0,6%. O preço do hidrogênio que tornaria o VPL nulo à taxa de 8% é de cerca de R\$ 68/kg, praticamente o dobro do valor adotado. O único caso com VPL positivo é o de importação de energia com investimentos no limite inferior das faixas (R\$ 94 milhões), o que reforça a importância da regra de suprimento do eletrolisador identificada na Seção 4.5.
+
+::: {custom-style="Legenda"}
+Figura 4.9 – Viabilidade econômica: (a) VPL do projeto por caso; (b) ganho anual proporcionado pelo BESS em função da receita fixa, comparado com o seu custo anual equivalente
+:::
+
+::: {custom-style="Figura"}
+![](figuras/viabilidade.png){width=16cm}
+:::
+
+::: {custom-style="Fonte"}
+Fonte: elaborado pelo autor.
+:::
+
+**Valor do BESS.** Sem a bateria, e portanto sem o leilão, o lucro operacional esperado é de R\$ 35,4 milhões por ano. Com o BESS e a contratação de 55 MW à receita de R\$ 600 mil/(MW·ano), passa a R\$ 68,1 milhões. O ganho de R\$ 32,8 milhões por ano não cobre o custo anual equivalente do BESS, de R\$ 46,8 milhões à taxa de 8% com investimento central (Figura 4.9(b)). Sem a receita do leilão, a bateria agrega apenas R\$ 9,7 milhões por ano, provenientes do suprimento noturno do eletrolisador e da arbitragem no MCP; é, portanto, a receita fixa do LRCAP que pode viabilizá-la.
+
+**Lance mínimo.** A Figura 4.10 compara a curva de oferta de um BESS já existente, obtida na Seção 4.4, com a de um BESS a construir, e a Tabela 4.9 apresenta o lance mínimo para cada faixa de investimento e taxa de desconto.
+
+::: {custom-style="Legenda"}
+Figura 4.10 – Curva de oferta com o investimento no BESS: (a) potência ótima a ofertar com BESS existente e a construir; (b) lance mínimo por faixa de investimento e taxa de desconto
+:::
+
+::: {custom-style="Figura"}
+![](figuras/curva_oferta_investimento.png){width=16cm}
+:::
+
+::: {custom-style="Fonte"}
+Fonte: elaborado pelo autor.
+:::
+
+::: {custom-style="Legenda"}
+Tabela 4.9 – Lance mínimo para a construção do BESS, em R\$ mil/(MW·ano), e potência ofertada nesse lance
+:::
+
+| Taxa de desconto | Investimento baixo (R\$ 5.000/kW) | Investimento central (R\$ 5.500/kW) | Investimento alto (R\$ 6.000/kW) |
+|------------------|------------------|------------------|------------------|
+| 8,0% | 780 (57,5 MW) | 855 (57,5 MW) | 925 (60 MW) |
+| 12,1% | 940 (60 MW) | 1.025 (60 MW) | 1.110 (60 MW) |
+
+::: {custom-style="Fonte"}
+Fonte: elaborado pelo autor.
+:::
+
+Quando o BESS ainda será construído, a curva de oferta deixa de ser escalonada e passa a ser do tipo "tudo ou nada": abaixo do lance mínimo, o proponente não constrói a bateria e não oferta potência; acima dele, oferta entre 57,5 e 60 MW. A curva escalonada das Seções 4.4 a 4.8 descreve, portanto, a decisão de um proponente que já dispõe do BESS. O lance mínimo no caso central, de R\$ 855 mil/(MW·ano), é praticamente igual à soma do custo anual equivalente do BESS por MW (R\$ 780 mil) com o custo de degradação do despacho diário do módulo LRCAP (R\$ 73 mil), o que indica que o uso mercantil da bateria pouco reduz o lance quando ela é construída para o leilão. Esse valor é próximo do preço médio obtido por termelétricas existentes no LRCAP de março de 2026 (R\$ 831 mil/(MW·ano)) e muito inferior ao das termelétricas e hidrelétricas do leilão anterior (R\$ 2,33 milhões/(MW·ano)), o que sugere que o armazenamento em baterias é competitivo frente à expansão térmica, mas não frente às usinas existentes. A receita de R\$ 600 mil/(MW·ano) adotada no caso de referência é inferior ao lance mínimo em todas as combinações avaliadas: com ela, um proponente racional não construiria o BESS.
+
+## 4.10 Síntese
 
 Os resultados permitem hierarquizar os fatores que determinam a decisão de contratação no LRCAP:
 
@@ -333,9 +401,11 @@ e) **o dimensionamento do eletrolisador molda a curva de oferta:** com 10 MW, o 
 
 f) **o custo de degradação afeta o lucro e o limiar de entrada, mas pouco a potência ótima:** quadruplicá-lo reduz o lucro em R\$ 13 milhões por ano e desloca o ótimo em 2,5 MW;
 
-g) **as incertezas de preço, de geração e de despacho e a aproximação da decomposição têm efeito pequeno sobre a decisão:** o modelo determinístico de 2025 e o estocástico conduzem à mesma potência ótima, a variação entre anos históricos resulta em VSS nulo e EVPI de 0,2% do lucro esperado, a frequência do despacho do ONS desloca o custo de oportunidade de um valor constante, sem alterar a potência ótima, e as condições cíclicas da decomposição semanal não restringem a operação de forma mensurável.
+g) **as incertezas de preço, de geração e de despacho e a aproximação da decomposição têm efeito pequeno sobre a decisão:** o modelo determinístico de 2025 e o estocástico conduzem à mesma potência ótima, a variação entre anos históricos resulta em VSS nulo e EVPI de 0,2% do lucro esperado, a frequência do despacho do ONS desloca o custo de oportunidade de um valor constante, sem alterar a potência ótima, e as condições cíclicas da decomposição semanal não restringem a operação de forma mensurável;
 
-Em conjunto, esses resultados sugerem que a decisão de contratação é determinada menos pelo comportamento do mercado de energia e mais pelas condições de produção e de comercialização do hidrogênio — dimensionamento do eletrolisador, volume, preço e critério de qualificação —, que são, portanto, as informações prioritárias para a definição do lance no leilão.
+h) **com os parâmetros adotados, o empreendimento não se paga, e o lance mínimo para construir o BESS é de cerca de R\$ 850 mil/(MW·ano):** a TIR real do caso de referência é de 0,6%, o preço de equilíbrio do hidrogênio é de cerca de R\$ 68/kg, e o lance mínimo varia de R\$ 780 mil a R\$ 1,11 milhão/(MW·ano) conforme o investimento e a taxa de desconto, acima da receita de referência; para um BESS a construir, a oferta é do tipo "tudo ou nada", com 57,5 a 60 MW.
+
+Em conjunto, esses resultados indicam duas situações distintas. Para um proponente que já dispõe do BESS, a quantidade a ofertar é determinada menos pelo comportamento do mercado de energia e mais pelas condições de produção e de comercialização do hidrogênio — dimensionamento do eletrolisador, volume, preço e critério de qualificação. Para um proponente que precisa construir o BESS, situação prevista no edital para sistemas novos, a decisão é essencialmente a de participar ou não, e o lance mínimo é determinado pelo custo de investimento da bateria e pela taxa de desconto; nesse caso, o hidrogênio influencia a viabilidade do empreendimento como um todo, mas pouco a oferta no leilão.
 
 ## REFERÊNCIAS
 

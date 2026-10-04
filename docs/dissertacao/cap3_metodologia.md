@@ -14,7 +14,7 @@ b) o horizonte de análise é de um ano, com resolução horária, representativ
 
 c) na formulação básica, a abordagem é determinística, com conhecimento perfeito das séries de preço, de geração e de despacho do Operador Nacional do Sistema Elétrico (ONS); a incerteza entre anos é tratada pela extensão estocástica da Seção 3.7;
 
-d) a função objetivo considera receitas e custos operacionais; custos de investimento não são incluídos, uma vez que as capacidades são fixas.
+d) a função objetivo considera receitas e custos operacionais; os custos de investimento não entram na otimização, uma vez que as capacidades são fixas, e são considerados a posteriori na análise de viabilidade econômica e do lance mínimo (Seção 3.8.4).
 
 ## 3.2 Enquadramento regulatório
 
@@ -517,7 +517,7 @@ $$
 R^{int} = \max_{P \in \mathcal{X}_h,\, P < \bar P^{cap}} \; \frac{Q(P) - Q(\bar P^{cap})}{\bar P^{cap} - P}
 $$ {#eq:integral}
 
-A curva de oferta não depende do formato do leilão nem do comportamento dos demais proponentes: ela indica, para cada preço, quanta potência o empreendedor estaria disposto a comprometer. Ressalta-se que o investimento no BESS não entra em $Q(P)$, pois as capacidades instaladas são fixas. Esse custo não altera $P^*(R)$, mas deve ser coberto pela receita total para que o empreendimento seja viável; a análise de viabilidade econômica está fora do escopo desta etapa.
+A curva de oferta não depende do formato do leilão nem do comportamento dos demais proponentes: ela indica, para cada preço, quanta potência o empreendedor estaria disposto a comprometer. Ressalta-se que o investimento no BESS não entra em $Q(P)$, pois as capacidades instaladas são fixas. Esse custo não altera $P^*(R)$ quando o BESS já existe, mas altera a decisão quando ele ainda será construído, situação tratada na Seção 3.8.4.
 
 ### 3.8.2 Frequência do despacho do ONS
 
@@ -557,9 +557,46 @@ Fonte: elaborado pelo autor.
 
 Nos casos com importação, o eletrolisador e o BESS mercantil podem ser supridos pela rede ao PLD acrescido de $c^{imp}$. Essa configuração corresponde a um critério de qualificação do hidrogênio baseado na intensidade de emissões, e não na origem física da energia, e é avaliada como alternativa à hipótese de suprimento exclusivamente fotovoltaico. Para cada caso, além da curva de oferta, registram-se a potência ótima e a operação média nos cenários para a receita fixa de referência, de R\$ 600 mil/(MW·ano).
 
+### 3.8.4 Viabilidade econômica e lance mínimo
+
+A viabilidade do empreendimento é avaliada pelo valor presente líquido (VPL) de um fluxo de caixa anual constante, em termos reais, ao longo do prazo do contrato do LRCAP ($n = 15$ anos), sem valor residual, conforme a Equação {eq:vpl}:
+
+$$
+\mathrm{VPL} = -I + F(i, n)\,\left(\Pi - C^{om}\right), \qquad F(i, n) = \frac{1 - (1 + i)^{-n}}{i}
+$$ {#eq:vpl}
+
+em que $I$ é o investimento total na usina FV, no BESS e no eletrolisador, $\Pi$ é o lucro operacional esperado na potência ótima para a receita fixa considerada (Seção 3.8.1), $C^{om}$ é o custo anual de operação e manutenção fixo e $F(i, n)$ é o fator de valor presente de uma série uniforme à taxa real $i$. A taxa interna de retorno (TIR) é a taxa para a qual o VPL é nulo. Os parâmetros adotados são apresentados no Quadro 3.3.
+
+::: {custom-style="Legenda"}
+Quadro 3.3 – Parâmetros da análise de viabilidade econômica
+:::
+
+| Parâmetro | Valores (baixo; central; alto) | Referência |
+|------------------------|------------------------------|------------------------------------|
+| Investimento na usina FV | R\$ 3.000; 4.250; 5.500/kW | BRASIL; EPE (2025) |
+| Investimento no BESS | R\$ 5.000; 5.500; 6.000/kW | BRASIL; EPE (2025) |
+| Investimento no eletrolisador | US\$ 1.100; 2.000; 2.500/kW | IEA (2025): sistemas chineses de US\$ 500 a 1.100/kW e demais de US\$ 1.900 a 2.500/kW; convertidos pela PTAX de 09/12/2025 (R\$ 5,4025/US\$) |
+| O&M fixo anual | 1,5% (FV), 2,5% (BESS) e 3% (eletrolisador) do investimento | Hipótese do autor; o O&M variável do eletrolisador e a degradação do BESS já estão no modelo de operação |
+| Taxa de desconto real | 8,0% e 12,1% ao ano | ANEEL (2026): custo de capital regulatório da geração, após e antes de impostos |
+| Horizonte | 15 anos, sem valor residual | Prazo do contrato do LRCAP |
+
+::: {custom-style="Fonte"}
+Fonte: elaborado pelo autor.
+:::
+
+Como o lucro operacional não considera tributos sobre a renda, o VPL calculado com a taxa após impostos é otimista; a taxa antes de impostos fornece uma avaliação mais conservadora. A partir do VPL, calcula-se ainda o preço de equilíbrio do hidrogênio, $\pi^{h2,eq} = \pi^{h2} - \mathrm{VPL} / (F(i, n)\, V)$, em que $V$ é a quantidade anual de hidrogênio vendida. Essa expressão mantém a operação fixa e, portanto, superestima ligeiramente o preço de equilíbrio, pois um preço maior levaria a uma produção maior.
+
+Para isolar a contribuição da bateria, o modelo é resolvido também sem o BESS e, consequentemente, sem participação no leilão, o que fornece o lucro operacional $\Pi^{0}$ da usina FV com o eletrolisador. Quando o BESS ainda será construído, o proponente compara, para cada receita fixa $R$, a alternativa de não construí-lo com a de construí-lo e contratar a melhor potência, deduzido o custo anual equivalente do BESS, $C^{bess} = I^{bess} / F(i, n) + C^{om,bess}$. A potência ofertada passa a ser dada pela Equação {eq:oferta-inv}:
+
+$$
+P^{*}_{inv}(R) = \begin{cases} \arg\max_{P \in \mathcal{X}_h} \left\{ R P + Q(P) \right\}, & \text{se } \max_{P \in \mathcal{X}_h} \left\{ R P + Q(P) \right\} - C^{bess} > \Pi^{0} \\ 0, & \text{caso contrário} \end{cases}
+$$ {#eq:oferta-inv}
+
+O lance mínimo, $R^{min}$, é a menor receita fixa para a qual a construção do BESS é vantajosa, isto é, o menor $R$ para o qual $P^{*}_{inv}(R) > 0$. Ele é calculado para as três faixas de investimento e para as duas taxas de desconto do Quadro 3.3.
+
 ## 3.9 Implementação computacional
 
-O modelo foi implementado na linguagem Python, com o uso da biblioteca de modelagem algébrica Pyomo (BYNUM *et al.*, 2021) e do *solver* HiGHS (HUANGFU; HALL, 2018). A estrutura do código separa: (i) a leitura e validação dos parâmetros, organizados em arquivos de configuração em formato YAML, com verificação automática dos requisitos regulatórios; (ii) a importação e o tratamento das séries de dados; (iii) a construção do modelo de otimização; (iv) a decomposição de Benders, nas versões determinística e estocástica; (v) o cálculo do VSS e do EVPI; (vi) a construção da curva de oferta; e (vii) o pós-processamento dos resultados. Os subproblemas semanais são resolvidos em paralelo em processos independentes, cada qual restrito a uma linha de execução do *solver*, a fim de evitar a concorrência por núcleos de processamento. A consistência do modelo é verificada por um conjunto de testes automatizados que conferem, entre outros aspectos, o balanço de potência, os limites dos estados de carga, a exclusividade entre carga e descarga, o cumprimento do despacho do ONS e a seleção dos dias de despacho, o limite do ponto de conexão, as entregas do contrato de hidrogênio e a validade dos cortes de Benders. O código e os dados são mantidos sob controle de versão, o que assegura a reprodutibilidade dos resultados.
+O modelo foi implementado na linguagem Python, com o uso da biblioteca de modelagem algébrica Pyomo (BYNUM *et al.*, 2021) e do *solver* HiGHS (HUANGFU; HALL, 2018). A estrutura do código separa: (i) a leitura e validação dos parâmetros, organizados em arquivos de configuração em formato YAML, com verificação automática dos requisitos regulatórios; (ii) a importação e o tratamento das séries de dados; (iii) a construção do modelo de otimização; (iv) a decomposição de Benders, nas versões determinística e estocástica; (v) o cálculo do VSS e do EVPI; (vi) a construção da curva de oferta; (vii) a análise de viabilidade econômica e do lance mínimo; e (viii) o pós-processamento dos resultados. Os subproblemas semanais são resolvidos em paralelo em processos independentes, cada qual restrito a uma linha de execução do *solver*, a fim de evitar a concorrência por núcleos de processamento. A consistência do modelo é verificada por um conjunto de testes automatizados que conferem, entre outros aspectos, o balanço de potência, os limites dos estados de carga, a exclusividade entre carga e descarga, o cumprimento do despacho do ONS e a seleção dos dias de despacho, o limite do ponto de conexão, as entregas do contrato de hidrogênio e a validade dos cortes de Benders. O código e os dados são mantidos sob controle de versão, o que assegura a reprodutibilidade dos resultados.
 
 ## 3.10 Hipóteses e limitações
 
@@ -587,9 +624,15 @@ j) **contrato de hidrogênio simplificado:** o contrato é representado por um v
 
 k) **curva de oferta discreta:** a curva é obtida numa grade de 2,5 MW, de modo que a potência ótima e os custos marginais são conhecidos com essa resolução, e não inclui o investimento no BESS;
 
-l) **amostra de cenários:** os cinco anos históricos são tratados como equiprováveis e constituem uma amostra pequena; o VSS e o EVPI são, portanto, medidos dentro da amostra, e a avaliação da decisão fora da amostra é deixada para trabalhos futuros.
+l) **viabilidade simplificada:** a análise de viabilidade considera fluxo de caixa constante em termos reais, sem tributos sobre a renda, sem financiamento, sem valor residual e com custo de O&M fixo hipotético, e utiliza o lucro operacional calculado com os parâmetros provisórios de operação;
+
+m) **amostra de cenários:** os cinco anos históricos são tratados como equiprováveis e constituem uma amostra pequena; o VSS e o EVPI são, portanto, medidos dentro da amostra, e a avaliação da decisão fora da amostra é deixada para trabalhos futuros.
 
 ## REFERÊNCIAS
+
+::: {custom-style="Referencia"}
+ANEEL – AGÊNCIA NACIONAL DE ENERGIA ELÉTRICA. **Atualização das taxas regulatórias de remuneração do capital (WACC) dos segmentos de geração, transmissão e distribuição**. Brasília: ANEEL, mar. 2026.
+:::
 
 ::: {custom-style="Referencia"}
 BENDERS, J. F. Partitioning procedures for solving mixed-variables programming problems. **Numerische Mathematik**, v. 4, n. 1, p. 238–252, 1962.
@@ -649,6 +692,10 @@ FENG, L. *et al.* Optimization analysis of energy storage application based on e
 
 ::: {custom-style="Referencia"}
 HERSBACH, H. *et al.* The ERA5 global reanalysis. **Quarterly Journal of the Royal Meteorological Society**, v. 146, n. 730, p. 1999–2049, 2020.
+:::
+
+::: {custom-style="Referencia"}
+IEA – INTERNATIONAL ENERGY AGENCY. **Global Hydrogen Review 2025**. Paris: IEA, out. 2025.
 :::
 
 ::: {custom-style="Referencia"}
