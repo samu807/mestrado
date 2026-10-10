@@ -185,7 +185,7 @@ $$
 p^{dis,lr}_t = \delta_t\, P^{cap}, \qquad p^{ch,lr}_t = r_t\, P^{cap} \qquad \forall t \in \mathcal{T}
 $$ {#eq:ons}
 
-Como o perfil é exógeno, o estado de carga do módulo LRCAP é proporcional a $P^{cap}$ e pode ser verificado previamente à otimização. Define-se o estado de carga por MW contratado, $\varepsilon_t$, pela recursão da Equação {eq:epsilon}, com $\varepsilon_{-1} = \bar\sigma\rho$ (módulo inicialmente carregado):
+Como o perfil é exógeno, o estado de carga do módulo LRCAP é proporcional a $P^{cap}$ e pode ser verificado previamente à otimização. Define-se o estado de carga por MW contratado, $\varepsilon_t$, pela recursão da Equação {eq:epsilon}. O perfil é calculado uma única vez para o ano civil inteiro, com condição cíclica no ano — $\varepsilon_{-1}$ igual ao estado ao fim do ano —, e cada bloco da decomposição da Seção 3.6 recebe o trecho correspondente. Desse modo, o módulo inicia cada bloco no estado deixado pelo dia anterior, e a energia de recarga repõe exatamente a energia descarregada dividida pela eficiência do ciclo:
 
 $$
 \varepsilon_t = \varepsilon_{t-1} + \left(\eta^{ch} r_t - \frac{\delta_t}{\eta^{dis}}\right) \Delta t, \qquad \underline\sigma\rho \leq \varepsilon_t \leq \bar\sigma\rho
@@ -339,7 +339,9 @@ $$ {#eq:mestre}
 
 em que $k$ indexa os cortes acumulados ao longo das iterações.
 
-As condições de contorno cíclicas restringem o problema anual, pois impedem transferências de energia e de hidrogênio entre blocos; o valor obtido com blocos semanais é, portanto, um limite inferior do valor do problema anual. Como a solução direta do problema anual não foi obtida, o efeito dessa restrição é estimado comparando-se o lucro anual, para uma mesma potência contratada, com blocos de 7, 14 e 28 dias, e refazendo-se a decomposição com blocos de 14 dias. Se o lucro não aumentar com o tamanho do bloco, a restrição pode ser considerada inativa.
+As condições de contorno cíclicas restringem o problema anual, pois impedem transferências de energia e de hidrogênio entre blocos: cada semana começa com o módulo mercantil em $\sigma_0 E^{m}$ e o tanque em $S_0$ e precisa terminar nesses níveis. O valor obtido com blocos semanais é, portanto, um limite inferior do valor do problema anual. Como a solução direta do problema anual não foi obtida, o efeito dessa restrição é estimado comparando-se o lucro anual, para uma mesma potência contratada, com blocos de 7, 14 e 28 dias, e refazendo-se a decomposição com blocos de 14 dias. Se o lucro não aumentar com o tamanho do bloco, a restrição pode ser considerada inativa.
+
+Quando a potência contratada é fixada — caso das avaliações da curva de oferta e da viabilidade econômica (Seção 3.8) —, a restrição pode ser removida quase integralmente por um procedimento em duas etapas. Primeiro, resolve-se a relaxação linear do problema do ano inteiro, isto é, com as variáveis binárias tratadas como contínuas, e com condição cíclica no ano e nível inicial livre. Sem variáveis binárias, esse problema é resolvido em menos de um minuto, e seu valor ótimo é um limite superior $\bar Q$ do lucro operacional do ano. Em seguida, os estados de armazenamento da relaxação no início e no fim de cada semana — o estado de carga do módulo mercantil, em fração de $E^{m}$, e o estoque de hidrogênio — substituem $\sigma_0$ e $S_0$ como condições de contorno dos blocos MILP. Os blocos continuam independentes e são resolvidos em paralelo, e a concatenação de suas soluções é uma operação viável do ano inteiro, cujo lucro $\underline Q$ é um limite inferior do ótimo anual. A diferença relativa $(\bar Q - \underline Q)/\bar Q$ certifica, assim, a qualidade da aproximação. Para que $\underline Q$ seja de fato viável, admite-se, nesses blocos, o eletrolisador desligado antes da primeira hora, o que pode acrescentar uma partida por semana. O procedimento não se aplica ao algoritmo de Benders, porque os estados de fronteira dependeriam do ponto $\hat x$ em que a relaxação foi resolvida, e o conjunto viável $X_w$ da Equação {eq:lagr} deixaria de ser o mesmo entre iterações.
 
 ### 3.6.3 Algoritmo e critério de convergência
 
@@ -497,7 +499,7 @@ $$
 Q(P) = \sum_{s \in \mathcal{S}} \pi_s\, \Pi_s(P) - R^{cap} P
 $$ {#eq:q}
 
-A diferença $Q(0) - Q(P)$ mede quanto lucro operacional o empreendedor deixa de obter — no MCP e na venda de hidrogênio — por comprometer $P$ MW com o leilão, isto é, o custo de oportunidade da contratação. Seu valor por MW adicional, $c^{op}(P) = -\mathrm{d}Q/\mathrm{d}P$, é o custo de oportunidade marginal. Como a decisão envolve uma única variável e o interesse está na curva inteira, e não apenas no seu máximo, $Q$ é avaliada numa grade $\mathcal{X}_h = \{0\} \cup \{\underline P^{cap}, \underline P^{cap} + h, \dots, \bar P^{cap}\}$, com $h = 2{,}5$ MW, resolvendo-se para cada ponto os subproblemas de todos os pares (cenário, bloco) com $P^{cap}$ fixo. O custo de oportunidade marginal é aproximado pelas diferenças finitas da Equação {eq:custo-op}:
+A diferença $Q(0) - Q(P)$ mede quanto lucro operacional o empreendedor deixa de obter — no MCP e na venda de hidrogênio — por comprometer $P$ MW com o leilão, isto é, o custo de oportunidade da contratação. Seu valor por MW adicional, $c^{op}(P) = -\mathrm{d}Q/\mathrm{d}P$, é o custo de oportunidade marginal. Como a decisão envolve uma única variável e o interesse está na curva inteira, e não apenas no seu máximo, $Q$ é avaliada numa grade $\mathcal{X}_h = \{0\} \cup \{\underline P^{cap}, \underline P^{cap} + h, \dots, \bar P^{cap}\}$, com $h = 2{,}5$ MW, resolvendo-se para cada ponto os subproblemas de todos os pares (cenário, bloco) com $P^{cap}$ fixo e com os estados de fronteira dos blocos dados pela relaxação linear de cada ano (Seção 3.6.2). O custo de oportunidade marginal é aproximado pelas diferenças finitas da Equação {eq:custo-op}:
 
 $$
 c^{op}_j = -\,\frac{Q(P_{j+1}) - Q(P_j)}{P_{j+1} - P_j}, \qquad P_j,\, P_{j+1} \in \mathcal{X}_h, \;\; P_j \geq \underline P^{cap}
@@ -626,7 +628,7 @@ f) **degradação linear:** o custo de degradação do BESS é proporcional à e
 
 g) **divisão contínua do BESS:** a alocação entre os módulos é tratada como contínua, embora na prática seja discreta, em função da modularidade dos contêineres e conversores;
 
-h) **condições cíclicas semanais:** a decomposição impõe que os estados de armazenamento retornem ao valor inicial ao final de cada semana, impedindo transferências de energia ou de hidrogênio entre semanas; o efeito dessa restrição é verificado com blocos de até 28 dias (Seção 3.6.2);
+h) **fronteira entre blocos semanais:** no algoritmo de Benders, os estados de armazenamento retornam ao valor inicial ao final de cada semana, o que impede transferências de energia ou de hidrogênio entre semanas; nas avaliações com potência fixa (Seção 3.8), esses estados seguem a relaxação linear do ano inteiro, e a perda em relação ao ótimo anual é limitada pela diferença entre os limites inferior e superior (Seção 3.6.2);
 
 i) **anos distintos:** no caso determinístico, a série de irradiância (2023) e a de preços (2025) referem-se a anos diferentes; no caso estocástico, o mesmo ocorre nos cenários de 2024 e 2025, que utilizam a irradiância de 2023. Para uma usina de pequeno porte em relação ao SIN, a correlação horária entre a geração local e o PLD tende a ser fraca, mas a hipótese deve ser considerada na interpretação dos resultados;
 
