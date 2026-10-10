@@ -45,7 +45,9 @@ Fonte: elaborado pelo autor. Valores do modelo estocástico obtidos na grade de 
 
 As duas abordagens conduzem à mesma potência ótima. As diferenças de composição decorrem principalmente do preço. Embora a série ERA5 de 2025 apresente fator de capacidade FV ligeiramente inferior ao da média dos cenários SARAH-3 (16,9% contra 17,5%), o caso determinístico produz mais hidrogênio. No modelo estocástico, os picos de PLD do cenário de 2021, que superam o valor da energia no eletrolisador, tornam a exportação ao MCP mais vantajosa em parte das horas, o que eleva a receita média no mercado de curto prazo e reduz a produção de hidrogênio. A coincidência das potências ótimas antecipa o resultado da Subseção 4.3.2: a variação entre anos pouco altera a decisão de contratação.
 
-**Decomposição em blocos.** Para a potência de 54,44 MW, o lucro anual do caso determinístico de 2025 foi idêntico com blocos de 7, 14 e 28 dias (diferença relativa inferior a $10^{-11}$). Refeita a decomposição com blocos de 14 dias, o algoritmo de Benders convergiu para 55,5 MW e R\$ 67,53 milhões, contra 54,4 MW e R\$ 67,51 milhões com blocos semanais — diferença de 0,03%, inferior à tolerância de convergência e situada na região plana do ótimo. As condições cíclicas semanais, portanto, não restringem a operação de forma mensurável, o que é coerente com a operação em ciclos diários do módulo mercantil e do tanque, cujos estados de armazenamento tendem a retornar aos mesmos valores ao fim de cada semana.
+**Decomposição em blocos.** Para a potência de 54,44 MW, o lucro anual do caso determinístico de 2025 foi idêntico com blocos de 7, 14 e 28 dias (diferença relativa inferior a $10^{-11}$). Refeita a decomposição com blocos de 14 dias, o algoritmo de Benders convergiu para 55,5 MW e R\$ 67,53 milhões, contra 54,4 MW e R\$ 67,51 milhões com blocos semanais — diferença de 0,03%, inferior à tolerância de convergência e situada na região plana do ótimo. Sem contrato de hidrogênio, as condições cíclicas semanais, portanto, não restringem a operação de forma mensurável, o que é coerente com a operação em ciclos diários do módulo mercantil e do tanque, cujos estados de armazenamento tendem a retornar aos mesmos valores ao fim de cada semana.
+
+O mesmo não vale quando há contrato de fornecimento de hidrogênio. Com entrega diária firme, guardar energia e hidrogênio de dias ensolarados para dias nublados tem valor, e a condição cíclica semanal — que obriga cada semana a começar com o módulo mercantil em 50% da carga e o tanque vazio — passa a restringir a operação. No contrato de 3 t/dia, o lucro operacional esperado com blocos cíclicos ficou entre 2,3% e 3,8% abaixo do obtido com os estados de fronteira da relaxação linear do ano (Seção 3.6.2), para potências de até 55 MW, e o déficit anual de entrega com 55 MW contratados caiu de 61 t para 40 t. Com o tanque de 10 t, a diferença chegou a 9%, pois a condição cíclica esvaziava o tanque no início de cada semana. Com a fronteira da relaxação, a diferença entre os limites inferior e superior do lucro foi inferior a 0,1% em todos os pontos das curvas de oferta dos casos com contrato até 55 MW, de até 0,33% com 57,5 MW e de até 1,6% com 60 MW. Nesse último ponto, o módulo mercantil fica sem potência e a relaxação linear, que admite o eletrolisador abaixo da carga mínima, é menos justa. No caso sem contrato, os dois tratamentos diferem em 0,01% (ano de 2021, 57,5 MW). Por isso, os casos com contrato de hidrogênio, apresentados nas Subseções 4.2.3, 4.3.4 e 4.3.6, foram calculados com a fronteira da relaxação.
 
 ## 4.2 BESS a construir: viabilidade e lance mínimo
 
@@ -62,10 +64,10 @@ Tabela 4.2 – Viabilidade econômica em 15 anos (receita fixa de R\$ 600 mil/(M
 | Caso | Invest. (R\$ mi) | Lucro op. (R\$ mi/ano) | VPL a 8,0% (R\$ mi) | VPL a 12,1% (R\$ mi) | TIR real | H₂ eq. (R\$/kg) |
 |----------------------|----------|----------|----------------------|----------|--------|-----------|
 | Referência | 732 | 68,1 | −295 (−461 a −81) | −386 | 0,6% | 68 |
-| Contrato 2 t/dia | 732 | 61,3 | −353 (−520 a −140) | −432 | −1,2% | 92 |
-| Contrato 3 t/dia | 732 | 64,3 | −327 (−494 a −113) | −412 | −0,4% | 72 |
+| Contrato 2 t/dia | 732 | 61,8 | −349 (−515 a −135) | −429 | −1,1% | 91 |
+| Contrato 3 t/dia | 732 | 65,5 | −317 (−483 a −103) | −404 | −0,1% | 70 |
 | Importação | 732 | 88,5 | −120 (−287 a +94) | −248 | 5,2% | 41 |
-| Importação e contrato 3 t/dia | 732 | 68,8 | −289 (−455 a −75) | −382 | 0,7% | 66 |
+| Importação e contrato 3 t/dia | 732 | 68,9 | −288 (−455 a −74) | −381 | 0,8% | 66 |
 | Eletrolisador 10 MW | 651 | 60,4 | −259 (−400 a −91) | −341 | 0,7% | 71 |
 | Eletrolisador 25 MW | 813 | 73,5 | −351 (−542 a −91) | −447 | 0,0% | 70 |
 | Degradação R\$ 200/MWh | 732 | 54,9 | −408 (−574 a −194) | −475 | −3,0% | 79 |
@@ -133,7 +135,8 @@ Tabela 4.4 – Lance mínimo para a construção do BESS por caso, em R\$ mil/(M
 |------------------------------|------------------|------------------|
 | Referência | 855 (57,5 MW) | 1.025 (60 MW) |
 | Contrato 2 t/dia | 855 (60 MW) | 1.025 (60 MW) |
-| Contrato 3 t/dia | 815 (55 MW) | 995 (57,5 MW) |
+| Contrato 3 t/dia | 795 (55 MW) | 980 (55 MW) |
+| Contrato 3 t/dia, tanque 10 t | 765 (55 MW) | 950 (55 MW) |
 | Importação | 855 (60 MW) | 1.025 (60 MW) |
 | Importação e contrato 3 t/dia | 855 (60 MW) | 1.025 (60 MW) |
 | Eletrolisador 10 MW | 845 (57,5 MW) | 1.020 (57,5 MW) |
@@ -147,7 +150,7 @@ Tabela 4.4 – Lance mínimo para a construção do BESS por caso, em R\$ mil/(M
 Fonte: elaborado pelo autor.
 :::
 
-As hipóteses relativas ao hidrogênio, que determinam a quantidade a ofertar com um BESS disponível (Seção 4.3), praticamente não alteram o lance mínimo: nos casos de contrato, de importação e de tamanho do eletrolisador, ele varia entre R\$ 815 mil e R\$ 855 mil/(MW·ano) à taxa de 8%, uma variação inferior a 5%. O único efeito perceptível ocorre com o contrato de 3 t/dia, em que o BESS também reduz o déficit de entrega e, por isso, o lance cai R\$ 40 mil/(MW·ano). Isso ocorre porque, no lance mínimo, quase toda a bateria é destinada ao leilão, e o uso mercantil — o canal pelo qual o hidrogênio afeta a decisão — tem pouco peso.
+As hipóteses relativas ao hidrogênio, que determinam a quantidade a ofertar com um BESS disponível (Seção 4.3), alteram pouco o lance mínimo na maior parte dos casos: com o contrato de 2 t/dia, a importação e os dois tamanhos de eletrolisador, ele varia entre R\$ 845 mil e R\$ 855 mil/(MW·ano) à taxa de 8%. Isso ocorre porque, no lance mínimo, quase toda a bateria é destinada ao leilão, e o uso mercantil — o canal pelo qual o hidrogênio afeta a decisão — tem pouco peso. A exceção é o contrato firme de 3 t/dia sem importação. Nele, o proponente oferta 55 MW, e os 5 MW e 36 MWh restantes do BESS reduzem o déficit de entrega e a multa correspondente. Esse uso mercantil reduz o lance para R\$ 795 mil/(MW·ano) com o tanque de 2 t e para R\$ 765 mil com o tanque de 10 t, quedas de 7% e de 11% em relação ao caso de referência.
 
 Por outro lado, o custo de degradação e a frequência do despacho deslocam o lance mínimo quase exatamente pelo custo de degradação do módulo LRCAP, $c^{deg} H^{cap} N^{ons}$ (Equação (3.43)): de R\$ 855 mil para R\$ 930 mil e R\$ 1,08 milhão com degradação de R\$ 100 e R\$ 200/MWh (acréscimos de R\$ 75 mil e R\$ 220 mil, contra R\$ 73 mil e R\$ 219 mil previstos), e para R\$ 790 mil com 50 despachos por ano (redução de R\$ 65 mil, contra R\$ 63 mil prevista). Esses resultados confirmam a aproximação da Equação (3.44): o lance mínimo de um BESS a construir corresponde ao custo anual equivalente do BESS por MW acrescido do custo de degradação imposto pelo despacho do ONS, com $\kappa = 0$ nos casos avaliados. Com os valores avaliados, o lance mínimo situa-se entre R\$ 780 mil e R\$ 1,25 milhão/(MW·ano), e sua incerteza decorre principalmente do custo de investimento, da taxa de desconto e da degradação da bateria.
 
@@ -244,29 +247,29 @@ Tabela 4.7 – Potência ótima, lucro e operação média nos casos de contrato
 | Indicador | Referência | Contrato 2 t/dia | Contrato 3 t/dia | Importação | Importação e contrato 3 t/dia |
 |------------------------------|------------|------------|------------|------------|------------|
 | Potência ótima (MW) | 55 | 60 | 55 | 60 | 60 |
-| Lucro esperado (R\$ mi/ano) | 68,1 | 61,3 | 64,3 | 88,5 | 68,8 |
-| Receita no MCP (R\$ mi/ano) | 5,1 | 6,2 | 3,2 | 6,1 | 4,1 |
-| Receita de H₂ (R\$ mi/ano) | 36,0 | 25,1 | 36,2 | 89,4 | 38,3 |
-| Custo de importação (R\$ mi/ano) | – | – | – | 34,7 | 3,5 |
-| Energia exportada (GWh/ano) | 19,4 | 37,4 | 19,4 | 28,2 | 25,5 |
-| Energia importada (GWh/ano) | – | – | – | 91,8 | 8,9 |
-| H₂ vendido (t/ano) | 1.029 | 719 | 1.035 | 2.553 | 1.096 |
-| Déficit contratual de H₂ (t/ano) | – | 11,9 | 61,0 | – | 0 |
-| Fator de capacidade do eletrolisador | 0,37 | 0,26 | 0,37 | 0,92 | 0,39 |
-| Receita mínima de entrada (R\$ mil/MW·ano) | 76 | 84 | 91 | 96 | 84 |
-| Custo marginal do último MW (R\$ mil/MW·ano) | 895 | 228 | 1.753 | 474 | 367 |
+| Lucro esperado (R\$ mi/ano) | 68,1 | 61,8 | 65,5 | 88,5 | 68,9 |
+| Receita no MCP (R\$ mi/ano) | 5,1 | 6,2 | 3,0 | 6,1 | 4,0 |
+| Receita de H₂ (R\$ mi/ano) | 36,0 | 25,4 | 37,0 | 89,4 | 38,3 |
+| Custo de importação (R\$ mi/ano) | – | – | – | 34,7 | 3,4 |
+| Energia exportada (GWh/ano) | 19,4 | 36,9 | 18,1 | 28,2 | 25,4 |
+| Energia importada (GWh/ano) | – | – | – | 91,8 | 8,7 |
+| H₂ vendido (t/ano) | 1.029 | 727 | 1.056 | 2.553 | 1.096 |
+| Déficit contratual de H₂ (t/ano) | – | 3,6 | 39,6 | – | 0 |
+| Fator de capacidade do eletrolisador | 0,37 | 0,26 | 0,38 | 0,92 | 0,39 |
+| Receita mínima de entrada (R\$ mil/MW·ano) | 76 | 84 | 95 | 96 | 86 |
+| Custo marginal do último MW (R\$ mil/MW·ano) | 895 | 172 | 2.037 | 474 | 406 |
 
 ::: {custom-style="Fonte"}
 Fonte: elaborado pelo autor.
 :::
 
-**Contrato de 2 t/dia.** Com um volume diário inferior à produção do caso de referência, o hidrogênio excedente não encontra comprador e a energia correspondente é exportada ao MCP, cuja energia praticamente dobra (de 19,4 para 37,4 GWh). O módulo mercantil perde a função de abastecer o eletrolisador à noite, e seu valor passa a ser o da arbitragem de preços no MCP, muito inferior. O custo de oportunidade do último MW cai de R\$ 895 mil para R\$ 228 mil/(MW·ano), e o ótimo passa a ser contratar toda a potência. O lucro diminui R\$ 6,8 milhões por ano em relação ao caso de referência, refletindo a menor venda de hidrogênio.
+**Contrato de 2 t/dia.** Com um volume diário inferior à produção do caso de referência, o hidrogênio excedente não encontra comprador e a energia correspondente é exportada ao MCP, cuja energia praticamente dobra (de 19,4 para 36,9 GWh). O módulo mercantil perde a função de abastecer o eletrolisador à noite, e seu valor passa a ser o da arbitragem de preços no MCP, muito inferior. O custo de oportunidade do último MW cai de R\$ 895 mil para R\$ 172 mil/(MW·ano), e o ótimo passa a ser contratar toda a potência. O lucro diminui R\$ 6,3 milhões por ano em relação ao caso de referência, refletindo a menor venda de hidrogênio.
 
-**Contrato de 3 t/dia.** Com um volume próximo da produção média do caso de referência, porém firme em todos os dias, o BESS passa a garantir a entrega nos dias e nas horas de menor geração. Mesmo assim, há um déficit de 61 t por ano (5,6% do volume contratado), concentrado nos períodos de menor irradiância, e a multa correspondente, de R\$ 2,1 milhões por ano, explica a maior parte da redução do lucro. A curva de custo de oportunidade torna-se ainda mais íngreme no extremo superior: o último MW custa R\$ 1,75 milhão/(MW·ano), pois sua contratação aumentaria o déficit. A potência ótima permanece em 55 MW.
+**Contrato de 3 t/dia.** Com um volume próximo da produção média do caso de referência, porém firme em todos os dias, o BESS passa a garantir a entrega nos dias e nas horas de menor geração. Mesmo assim, há um déficit de 40 t por ano (3,6% do volume contratado), concentrado nos períodos de menor irradiância, e a multa correspondente, de R\$ 1,4 milhão por ano, responde por cerca de metade da redução do lucro em relação ao caso de referência (R\$ 2,6 milhões por ano). A curva de custo de oportunidade torna-se ainda mais íngreme no extremo superior: o último MW custa cerca de R\$ 2,0 milhões/(MW·ano) — entre R\$ 1,9 milhão e R\$ 2,1 milhões, considerados os limites inferior e superior do lucro (Subseção 4.1) —, pois sua contratação eliminaria a potência do módulo mercantil e aumentaria o déficit. A potência ótima permanece em 55 MW.
 
 **Importação de energia.** Quando a importação é permitida, o eletrolisador é suprido pela rede nas horas de PLD baixo, inclusive à noite, e seu fator de capacidade sobe de 0,37 para 0,92. A produção de hidrogênio mais que dobra e o lucro aumenta R\$ 20,4 milhões por ano, mesmo com o custo adicional de R\$ 250/MWh sobre a energia importada. Como a rede substitui o BESS no suprimento noturno do eletrolisador, o módulo mercantil perde valor e o ótimo passa a ser contratar toda a potência. Cerca de 65% da energia consumida pelo eletrolisador provém da rede nesse caso, o que torna a qualificação do hidrogênio dependente do critério regulatório adotado — de intensidade de emissões ou de origem física da energia.
 
-**Importação com contrato de 3 t/dia.** A combinação das duas hipóteses mostra que o ganho da importação depende da existência de demanda: com o volume limitado pelo contrato, a importação restringe-se a 8,9 GWh por ano, usados para eliminar o déficit de entrega, e o lucro supera o do caso de referência em apenas R\$ 0,7 milhão por ano.
+**Importação com contrato de 3 t/dia.** A combinação das duas hipóteses mostra que o ganho da importação depende da existência de demanda: com o volume limitado pelo contrato, a importação restringe-se a 8,7 GWh por ano, usados para eliminar o déficit de entrega, e o lucro supera o do caso de referência em apenas R\$ 0,8 milhão por ano.
 
 Esses resultados indicam que a troca entre o LRCAP e o MCP só se manifesta plenamente quando a demanda de hidrogênio é limitada. Sem limite de volume, a troca relevante é entre o LRCAP e a produção de hidrogênio, mediada pelo módulo mercantil do BESS; a regra de suprimento do eletrolisador é, entre as hipóteses avaliadas, a de maior efeito sobre o lucro.
 
@@ -368,7 +371,7 @@ Fonte: elaborado pelo autor.
 
 O tamanho do eletrolisador altera a forma da curva de oferta. Com 25 MW, o eletrolisador absorve durante o dia a maior parte da geração FV, e o módulo mercantil tem pouco a deslocar para a noite: o custo de oportunidade permanece em torno de R\$ 77 mil/(MW·ano) até 45 MW, e o ótimo para a receita de referência sobe para 57,5 MW. Com 10 MW, a geração FV excedente ao meio-dia é muito maior, a bateria mercantil é valiosa desde o mínimo regulatório e o custo de oportunidade já parte de R\$ 330 mil/(MW·ano); o ótimo cai para 50 MW. A relação entre as potências do eletrolisador e da usina FV, herdada da planta da UNIFEI (0,35), é, portanto, uma hipótese de projeto com efeito relevante sobre a curva de oferta, e não apenas um parâmetro de escala.
 
-**Tamanho do tanque.** No caso com contrato de 3 t/dia, a ampliação do tanque de hidrogênio de 2 t para 10 t não alterou o resultado: o déficit anual de entrega permaneceu em 61 t e a curva de oferta foi idêntica. O déficit decorre da capacidade de produção, e não da armazenagem: a entrega de 3 t/dia exige cerca de 9,4 h diárias de operação na potência nominal, o que não é alcançado nos dias de baixa irradiância, mesmo com o tanque capaz de acumular a produção de dias anteriores.
+**Tamanho do tanque.** No caso com contrato de 3 t/dia, a ampliação do tanque de hidrogênio de 2 t para 10 t reduz o déficit anual de entrega, com 55 MW contratados, de 40 t para 11 t, e eleva o lucro operacional esperado em R\$ 1,6 milhão por ano. O tanque maior guarda o hidrogênio produzido nos dias de alta irradiância para os dias nublados, função que, com o tanque de 2 t, cabia ao módulo mercantil do BESS. Por isso, o custo de oportunidade marginal entre 30 e 50 MW cai de R\$ 100–169 mil para R\$ 85–126 mil/(MW·ano), e o lance mínimo para construir o BESS cai de R\$ 795 mil para R\$ 765 mil/(MW·ano) (Tabela 4.4). A potência ótima para a receita de referência permanece em 55 MW. Com 60 MW contratados, porém, os dois tanques produzem o mesmo resultado: sem o módulo mercantil, o eletrolisador opera apenas nas horas de sol, a entrega de 3 t/dia exige cerca de 9,4 h diárias na potência nominal, e raramente sobra hidrogênio para guardar. Esse efeito do tanque só aparece com a fronteira da relaxação linear (Subseção 4.1): com a condição cíclica semanal, o tanque era esvaziado no início de cada semana e sua ampliação não tinha efeito.
 
 ### 4.3.7 Sensibilidade à receita fixa e ao preço do hidrogênio
 
@@ -435,7 +438,7 @@ a) **a oferta é do tipo "tudo ou nada":** abaixo do lance mínimo, o BESS não 
 
 b) **o lance mínimo é de cerca de R\$ 855 mil/(MW·ano) no caso central** e varia de R\$ 780 mil a R\$ 1,25 milhão/(MW·ano) conforme o custo de investimento, a taxa de desconto e a degradação; ele é bem aproximado pelo custo anual equivalente do BESS por MW acrescido do custo de degradação imposto pelo despacho do ONS (Equação (3.44)) e é próximo do preço obtido por termelétricas existentes no LRCAP de 2026;
 
-c) **as hipóteses sobre o hidrogênio quase não afetam o lance mínimo** (variação inferior a 5%), mas determinam a viabilidade do empreendimento como um todo: com os parâmetros adotados, nenhum caso se paga com investimento central, e o preço de equilíbrio do hidrogênio no caso de referência é de cerca de R\$ 68/kg;
+c) **as hipóteses sobre o hidrogênio alteram pouco o lance mínimo** (de R\$ 765 mil a R\$ 855 mil/(MW·ano); a maior redução ocorre com o contrato firme de 3 t/dia, em que a bateria mercantil restante reduz o déficit de entrega), mas determinam a viabilidade do empreendimento como um todo: com os parâmetros adotados, nenhum caso se paga com investimento central, e o preço de equilíbrio do hidrogênio no caso de referência é de cerca de R\$ 68/kg;
 
 d) **sem a receita do leilão, o BESS agrega pouco** (R\$ 9,7 milhões por ano, contra custo anual equivalente de R\$ 46,8 milhões): é o LRCAP que pode viabilizar a bateria, e a receita de referência de R\$ 600 mil/(MW·ano) é insuficiente para isso.
 
@@ -443,7 +446,7 @@ d) **sem a receita do leilão, o BESS agrega pouco** (R\$ 9,7 milhões por ano, 
 
 e) **participar do leilão é robusto:** até cerca de 37,5 MW, o custo de oportunidade marginal situa-se entre R\$ 77 mil e R\$ 111 mil/(MW·ano) nos casos de contrato de hidrogênio e de importação, e a receita mínima de entrada permanece abaixo de R\$ 300 mil/(MW·ano) em todos os casos;
 
-f) **a quantidade a ofertar acima de cerca de 40 MW depende do hidrogênio e do dimensionamento:** o custo de oportunidade do último MW varia de R\$ 228 mil a R\$ 1,75 milhão/(MW·ano) conforme o contrato de fornecimento, e a potência ótima varia de 50 a 57,5 MW com o tamanho do eletrolisador, porque o módulo mercantil do BESS tem como principal função abastecer o eletrolisador fora do período solar;
+f) **a quantidade a ofertar acima de cerca de 40 MW depende do hidrogênio e do dimensionamento:** o custo de oportunidade do último MW varia de R\$ 172 mil a cerca de R\$ 2,0 milhões/(MW·ano) conforme o contrato de fornecimento, e a potência ótima varia de 50 a 57,5 MW com o tamanho do eletrolisador, porque o módulo mercantil do BESS tem como principal função abastecer o eletrolisador fora do período solar;
 
 g) **a regra de suprimento do eletrolisador é a hipótese de maior efeito sobre o lucro:** permitir a importação de energia eleva o lucro em cerca de 30% e torna o BESS desnecessário para a produção de hidrogênio;
 
@@ -451,7 +454,7 @@ h) **o custo de degradação e a frequência do despacho afetam o lucro e o limi
 
 **Método e incertezas:**
 
-i) **a variação histórica de preço e de geração e a aproximação da decomposição têm efeito pequeno sobre a decisão:** os modelos determinístico e estocástico conduzem à mesma potência ótima, o VSS é nulo, o EVPI é de 0,2% do lucro esperado, e as condições cíclicas semanais não restringem a operação de forma mensurável.
+i) **a variação histórica de preço e de geração e a aproximação da decomposição têm efeito pequeno sobre a decisão:** os modelos determinístico e estocástico conduzem à mesma potência ótima, o VSS é nulo e o EVPI é de 0,2% do lucro esperado. A condição cíclica semanal da decomposição é inofensiva sem contrato de hidrogênio, mas, com contrato firme, subestima o lucro em até 4% (9% com o tanque de 10 t); com os estados de fronteira da relaxação linear do ano, a decomposição fica, na maior parte das avaliações, a menos de 0,1% do ótimo anual.
 
 Em conjunto, os resultados indicam que, para um BESS novo, a arbitragem relevante não se dá entre o LRCAP e o mercado de curto prazo na operação, mas na decisão de investimento: a bateria é construída para o leilão, e o lance é determinado pelo seu custo. A produção de hidrogênio, por sua vez, define se o empreendimento híbrido como um todo é viável, e as condições de sua comercialização — preço, volume e critério de qualificação — são as informações prioritárias para essa avaliação.
 

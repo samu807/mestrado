@@ -225,16 +225,16 @@ Contrato de H₂: volume diário firme (mínimo = máximo), multa de R\$ 35/kg n
 | Caso | Ótimo (R\$ 600 mil/MW·ano) | Lucro esperado | Receita mínima para entrar | Custo do último MW |
 |---|---|---|---|---|
 | H₂ ilimitado, sem importação | 55 MW | R\$ 68,1 mi | R\$ 76 mil/MW·ano | R\$ 895 mil |
-| Contrato 2 t/dia | 60 MW | R\$ 61,3 mi | R\$ 84 mil | R\$ 228 mil |
-| Contrato 3 t/dia | 55 MW | R\$ 64,3 mi | R\$ 91 mil | R\$ 1,75 mi |
+| Contrato 2 t/dia | 60 MW | R\$ 61,8 mi | R\$ 84 mil | R\$ 172 mil |
+| Contrato 3 t/dia | 55 MW | R\$ 65,5 mi | R\$ 95 mil | ~R\$ 2,0 mi |
 | H₂ ilimitado, com importação | 60 MW | R\$ 88,5 mi | R\$ 96 mil | R\$ 474 mil |
-| Contrato 3 t/dia, com importação | 60 MW | R\$ 68,8 mi | R\$ 84 mil | R\$ 367 mil |
+| Contrato 3 t/dia, com importação | 60 MW | R\$ 68,9 mi | R\$ 86 mil | R\$ 406 mil |
 
 - Os primeiros 35–40 MW custam R\$ 80–100 mil/MW·ano em todos os casos: participar é robusto;
   o que depende das hipóteses são os últimos 15–20 MW.
 - Contrato de 2 t/dia: o H₂ excedente não tem comprador, a exportação ao MCP dobra (19 → 37 GWh)
   e a bateria vale pouco fora do LRCAP. Com 3 t/dia, a bateria garante a entrega noturna
-  (ainda há déficit de ~6%, 61 t/ano) e os últimos MW ficam caros.
+  (ainda há déficit de ~4%, 40 t/ano) e os últimos MW ficam caros.
 - Importar da rede (fim do "H₂ verde estrito") leva o eletrolisador a FC 0,92 e o lucro a
   +R\$ 20 mi/ano; a bateria deixa de ser necessária ao H₂. É a hipótese que mais pesa.
 - A troca LRCAP × MCP do título só aparece com demanda de H₂ limitada; sem limite, a troca é
@@ -289,14 +289,29 @@ energia descarregada na vida útil: pack estacionário de US\$ 70/kWh (BNEF, 202
   de contratar fica plano (~R\$ 77 mil/MW·ano) até 45 MW. Com 10 MW, a bateria é necessária
   desde o mínimo de 30 MW. A relação eletrolisador/FV (0,35, herdada da UNIFEI) molda a curva.
 
-**Tanque de H₂ no contrato de 3 t/dia** (2 t → 10 t): resultado idêntico (déficit de 61 t/ano,
-mesma curva). O gargalo é a capacidade do eletrolisador (3 t/dia exigem ~9,4 h a plena carga),
-não a armazenagem de H₂.
+**Tanque de H₂ no contrato de 3 t/dia** (2 t → 10 t, com 55 MW no LRCAP): déficit de 40 → 11 t/ano,
+lucro +R\$ 1,6 mi/ano, custo marginal entre 30 e 50 MW de R\$ 100–169 mil → R\$ 85–126 mil e lance
+mínimo de R\$ 795 → 765 mil/MW·ano. O tanque guarda o H₂ dos dias de sol para os nublados, papel
+que, com 2 t, cabia à bateria mercantil. Com 60 MW (sem bateria mercantil) os dois tanques dão o
+mesmo resultado: o eletrolisador só opera de dia e quase não sobra H₂ para guardar.
 
 **Erro da decomposição semanal** (`python scripts/erro_decomposicao.py`, caso 2025, P_cap fixo
 em 54,44 MW): lucro idêntico com blocos de 7, 14 e 28 dias (diferença < 10⁻¹¹). Benders com
 blocos de 14 dias: 55,5 MW e R\$ 67,53 mi (contra 54,4 MW e R\$ 67,51 mi com 7 dias), diferença
-de 0,03%, dentro da região plana do ótimo. A condição cíclica semanal não restringe a operação.
+de 0,03%, dentro da região plana do ótimo. Sem contrato de H₂, a condição cíclica semanal não
+restringe a operação.
+
+**Com contrato de H₂, a condição cíclica semanal restringe**: cada semana começava com o BESS
+mercantil em 50% e o tanque vazio, o que impede guardar energia e H₂ de uma semana para outra.
+No contrato de 3 t/dia, o lucro ficava 2,3–3,8% abaixo (9% com tanque de 10 t). Correção
+(`estocastico.fronteira_blocos: lp`, padrão no `estocastico_unifei.yaml`): nas avaliações com
+P_cap fixo, resolve-se a relaxação linear do ano inteiro (limite superior, < 1 min) e os estados
+de SOC e de estoque de H₂ dela, no início e no fim de cada semana, viram a fronteira dos blocos
+MILP (limite inferior). Diferença entre os limites < 0,1% até 55 MW, até 0,33% em 57,5 MW e até
+1,6% em 60 MW nos casos com contrato; sem contrato, os dois tratamentos diferem em 0,01%. O
+Benders mantém a condição cíclica (os cortes exigem fronteira fixa). O perfil do ONS no módulo
+LRCAP é calculado no ano inteiro e recortado por bloco (antes, cada bloco começava com o módulo
+cheio e faltavam 52 recargas por ano, sem efeito no lucro porque κ = 0).
 
 ### Viabilidade econômica
 
@@ -313,7 +328,7 @@ O lucro operacional é antes de impostos, o que torna os VPLs otimistas.
 | Caso (CAPEX central) | CAPEX | Lucro operacional | VPL (8%) | TIR real | H₂ de equilíbrio (8%) |
 |---|---|---|---|---|---|
 | Referência (55 MW no LRCAP) | R\$ 732 mi | R\$ 68,1 mi/ano | **−R\$ 295 mi** | 0,6% | R\$ 68/kg |
-| Contrato 3 t/dia | R\$ 732 mi | R\$ 64,3 mi/ano | −R\$ 327 mi | −0,4% | R\$ 72/kg |
+| Contrato 3 t/dia | R\$ 732 mi | R\$ 65,5 mi/ano | −R\$ 317 mi | −0,1% | R\$ 70/kg |
 | Importação da rede | R\$ 732 mi | R\$ 88,5 mi/ano | −R\$ 120 mi | 5,2% | R\$ 41/kg |
 | Eletrolisador 10 MW | R\$ 651 mi | R\$ 60,4 mi/ano | −R\$ 259 mi | 0,7% | R\$ 71/kg |
 | Eletrolisador 25 MW | R\$ 813 mi | R\$ 73,5 mi/ano | −R\$ 351 mi | 0,0% | R\$ 70/kg |
