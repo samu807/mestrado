@@ -195,3 +195,21 @@ def test_nivel_inicial_livre():
     assert p.bess.soc_min_frac * e_merc - 1e-6 <= e0 <= p.bess.soc_max_frac * e_merc + 1e-6
     assert df.soc_mwh.iloc[-1] >= e0 - 1e-6
     assert df.tanque_h2_kg.iloc[-1] >= s0 - 1e-6
+
+
+def test_fronteiras_lp():
+    # Estados na fronteira dos blocos tirados da relaxação linear do horizonte inteiro: a
+    # concatenação dos blocos é viável (limite inferior) e a relaxação, um limite superior.
+    # Requer séries de arquivo: as sintéticas são geradas por horizonte e diferem entre o
+    # bloco e o horizonte inteiro.
+    from pvbess_h2.decomposicao import fronteiras_lp, operacao_anual
+    p = carregar_parametros(Path(__file__).resolve().parents[1] / "config" / "estocastico_unifei.yaml")
+    p.hidrogenio.entrega_min_diaria_kg, p.hidrogenio.penalidade_deficit_rs_kg = 3000.0, 35.0
+    ub, fr = fronteiras_lp(p, "2025-01-06 00:00", 14, 40.0, dias_bloco=7)
+    assert len(fr) == 2
+    assert fr[0][1] == pytest.approx(fr[1][0]) and fr[0][3] == pytest.approx(fr[1][2])
+    _, k = operacao_anual(p, "2025-01-06 00:00", 14, 40.0, dias_bloco=7, processos=2, fronteira="lp")
+    lb = k.lucro_rs - k.receita_lrcap_rs
+    assert k.limite_superior_lp_rs == pytest.approx(ub, abs=1e-3)
+    assert lb <= ub + 1e-6 * abs(ub)
+    assert lb >= ub * (1 - 0.02)

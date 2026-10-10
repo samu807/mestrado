@@ -117,7 +117,10 @@ def construir_modelo(p: Parametros, series: pd.DataFrame) -> pyo.ConcreteModel:
     def soc_max(m, t):
         return m.soc[t] <= b.soc_max_frac * m.E_merc
 
-    m.soc_final = pyo.Constraint(expr=m.soc[n - 1] >= m.E_0)
+    if livre or b.soc_final_frac is None:
+        m.soc_final = pyo.Constraint(expr=m.soc[n - 1] >= m.E_0)
+    else:
+        m.soc_final = pyo.Constraint(expr=m.soc[n - 1] >= b.soc_final_frac * m.E_merc)
 
     @m.Constraint(m.T)
     def limite_carga(m, t):
@@ -177,16 +180,20 @@ def construir_modelo(p: Parametros, series: pd.DataFrame) -> pyo.ConcreteModel:
         anterior = m.S_0 if t == 0 else m.s_h2[t - 1]
         return m.s_h2[t] == anterior + (m.m_h2[t] - m.v_h2[t]) * dt
 
-    m.tanque_final = pyo.Constraint(expr=m.s_h2[n - 1] >= m.S_0)
+    m.tanque_final = pyo.Constraint(
+        expr=m.s_h2[n - 1] >= (m.S_0 if livre or h2.tanque_final_kg is None else h2.tanque_final_kg))
 
     # Partidas do eletrolisador (u_t = 1 quando liga em t), com condição cíclica no
-    # horizonte: o estado anterior à primeira hora é o da última.
+    # horizonte (o estado anterior à primeira hora é o da última) ou, sem ela, partindo
+    # do eletrolisador desligado.
     m.u_el = pyo.Var(m.T, within=pyo.NonNegativeReals, bounds=(0, 1))
 
     @m.Constraint(m.T)
     def partida_el(m, t):
         if el.custo_partida_rs <= 0:
             return pyo.Constraint.Skip
+        if t == 0 and not p.horizonte.partida_ciclica:
+            return m.u_el[t] >= m.z_el[t]
         return m.u_el[t] >= m.z_el[t] - m.z_el[t - 1 if t > 0 else n - 1]
 
     # Contrato de fornecimento de H2: entrega mínima diária (com déficit multado, se

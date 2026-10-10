@@ -149,9 +149,12 @@ def main():
             linhas = []
             for x in grade:
                 av = avaliar_potencia(p, float(x), processos=args.processos)
+                ub = av.limite_superior or []      # relaxação linear de cada ano (fronteira "lp")
                 linhas.append({"p_cap_mw": x, "q_rs": av.esperado,
-                               **{f"q_{c.nome}": v for c, v in zip(p.estocastico.cenarios, av.lucro_cenarios)}})
-                print(f"[{caso}] P = {x:5.1f} MW  Q = R$ {av.esperado / 1e6:7.3f} mi", flush=True)
+                               **{f"q_{c.nome}": v for c, v in zip(p.estocastico.cenarios, av.lucro_cenarios)},
+                               **({"ub_rs": float(np.dot(p.estocastico.probabilidades(), ub))} if ub else {})})
+                gap = f"  gap {1 - av.esperado / linhas[-1]['ub_rs']:.3%}" if ub else ""
+                print(f"[{caso}] P = {x:5.1f} MW  Q = R$ {av.esperado / 1e6:7.3f} mi{gap}", flush=True)
             curva = pd.DataFrame(linhas)
             curva.to_csv(saida / f"{caso}.csv", index=False)
 

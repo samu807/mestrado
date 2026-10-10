@@ -121,6 +121,11 @@ estocastico:
   alpha: 0.8        # com 5 anos equiprováveis: CVaR = lucro do pior ano
   beta: 0.0         # peso do CVaR no objetivo (0 = neutro ao risco); varie para a fronteira
   dias_bloco: 7
+  # Estados de armazenamento na fronteira dos blocos (avaliações com P_cap fixo): "lp" usa
+  # o SOC e o estoque de H2 da relaxação linear do ano inteiro; "ciclica" fixa cada semana
+  # em soc_inicial_frac e tanque_inicial_kg. Com contrato de H2, a condição cíclica
+  # semanal impede guardar energia de uma semana para outra e subestima o lucro em até 3%.
+  fronteira_blocos: lp
   # IPCA (IBGE): 2021 10,06%; 2022 5,79%; 2023 4,62%; 2024 4,83%; 2025 4,26%.
   # fator_preco = IPCA acumulado do ano seguinte ao cenário até dez/2025.
   cenarios:

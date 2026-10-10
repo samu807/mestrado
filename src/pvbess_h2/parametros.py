@@ -19,6 +19,10 @@ class Horizonte:
     # desses valores; com true, o nível inicial é uma variável de decisão e o horizonte
     # termina no nível em que começou.
     nivel_inicial_livre: bool = False
+    # Partidas do eletrolisador: com true, o estado anterior à primeira hora é o da última
+    # (horizonte cíclico); com false, supõe-se o eletrolisador desligado antes do início
+    # (blocos com estados de fronteira impostos de fora).
+    partida_ciclica: bool = True
 
 
 @dataclass
@@ -39,6 +43,7 @@ class BESS:
     soc_min_frac: float = 0.10
     soc_max_frac: float = 1.00
     soc_inicial_frac: float = 0.50
+    soc_final_frac: float | None = None    # SOC mínimo ao fim do horizonte (None = soc_inicial_frac)
     custo_degradacao_rs_mwh: float = 50.0
 
 
@@ -56,6 +61,7 @@ class Hidrogenio:
     preco_venda_rs_kg: float = 35.0
     tanque_max_kg: float = 2000.0
     tanque_inicial_kg: float = 0.0
+    tanque_final_kg: float | None = None   # estoque mínimo ao fim do horizonte (None = tanque_inicial_kg)
     entrega_min_diaria_kg: float = 0.0
     venda_max_kg_h: float | None = None
     # Contrato de fornecimento: teto diário de venda (demanda do comprador) e multa por
@@ -135,6 +141,10 @@ class Estocastico:
     beta: float = 0.0                      # peso do CVaR no objetivo (0 = neutro ao risco)
     dias_bloco: int = 7
     dias_por_cenario: int | None = None    # None = ano completo; menor = rodadas de teste
+    # Estados de armazenamento na fronteira dos blocos, nas avaliações com P_cap fixo:
+    # "ciclica" = cada bloco parte de soc_inicial_frac/tanque_inicial_kg e volta a eles;
+    # "lp" = estados tirados da relaxação linear do ano inteiro (ver decomposicao.py).
+    fronteira_blocos: str = "ciclica"
     cenarios: list = field(default_factory=list)
 
     def probabilidades(self) -> list[float]:
@@ -180,6 +190,10 @@ class Parametros:
         assert d.ciclos_ano is None or (d.dias is None and not d.arquivo), \
             "lrcap.despacho_ons.ciclos_ano não se combina com 'dias' nem com 'arquivo'"
         assert 0 <= self.estocastico.alpha < 1 and self.estocastico.beta >= 0
+        assert self.estocastico.fronteira_blocos in ("ciclica", "lp"), \
+            "estocastico.fronteira_blocos deve ser 'ciclica' ou 'lp'"
+        assert b.soc_final_frac is None or b.soc_min_frac <= b.soc_final_frac <= b.soc_max_frac
+        assert h2.tanque_final_kg is None or 0 <= h2.tanque_final_kg <= h2.tanque_max_kg
         if lr.habilitado:
             # Requisitos de habilitação técnica (Portaria MME 136/2026, art. 7º)
             faixa = b.soc_max_frac - b.soc_min_frac

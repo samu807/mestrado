@@ -30,6 +30,7 @@ import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
 
+import numpy as np
 import pandas as pd
 import pyomo.environ as pyo
 from pyomo.contrib.appsi.solvers import Highs
@@ -52,10 +53,17 @@ def dividir_em_blocos(inicio: str, dias: int, dias_bloco: int = 7) -> list[tuple
     return blocos
 
 
-def _params_bloco(p: Parametros, inicio: str, dias: int) -> Parametros:
+def _params_bloco(p: Parametros, inicio: str, dias: int, fronteira: tuple | None = None) -> Parametros:
+    """Parâmetros de um bloco. `fronteira` = (SOC inicial e final do módulo mercantil, em
+    fração de E_merc; estoque de H2 inicial e final, em kg), como em `fronteiras_lp`."""
     q = copy.deepcopy(p)
     q.horizonte.inicio, q.horizonte.dias = inicio, dias
     q.lrcap.potencia_fixa_mw = None
+    if fronteira is not None:
+        (q.bess.soc_inicial_frac, q.bess.soc_final_frac,
+         q.hidrogenio.tanque_inicial_kg, q.hidrogenio.tanque_final_kg) = fronteira
+        q.horizonte.nivel_inicial_livre = False
+        q.horizonte.partida_ciclica = False
     return q
 
 
@@ -96,11 +104,16 @@ class ResultadoBloco:
 def avaliar_bloco(args) -> ResultadoBloco:
     """Resolve um bloco em x_hat: valor viável Q e corte reforçado (lam, c).
 
-    Com um 6º elemento verdadeiro em `args`, resolve só o MILP com P_cap fixo (sem corte).
+    Com um 6º elemento verdadeiro em `args`, resolve só o MILP com P_cap fixo (sem corte);
+    um 7º elemento, opcional, fixa os estados na fronteira do bloco (ver `fronteiras_lp`).
+    Os cortes exigem a condição cíclica: com a fronteira tirada da relaxação em x_hat, o
+    conjunto viável do bloco passaria a depender de x_hat.
     """
     p, inicio, dias, x_hat, gap, *extra = args
     so_valor = bool(extra and extra[0])
-    q = _params_bloco(p, inicio, dias)
+    fronteira = extra[1] if len(extra) > 1 else None
+    assert so_valor or fronteira is None, "fronteira fixa só nas avaliações sem corte"
+    q = _params_bloco(p, inicio, dias, fronteira)
     m, _ = _construir_subproblema(q)
     m.x_hat = x_hat
     opt = _solver(gap)
@@ -127,6 +140,54 @@ def avaliar_bloco(args) -> ResultadoBloco:
     r = opt.solve(m)
     c = r.best_objective_bound
     return ResultadoBloco(q_val, lam, c)
+
+
+# ---------------------------------------------------- estados na fronteira dos blocos
+def fronteiras_lp(p: Parametros, inicio: str, dias: int, x: float, dias_bloco: int = 7):
+    """Estados de armazenamento na fronteira dos blocos, pela relaxação linear do horizonte.
+
+    Resolve o horizonte inteiro de uma vez com P_cap = x, binárias relaxadas e condição
+    cíclica com nível livre. O valor ótimo é um limite superior do lucro operacional do MILP
+    do horizonte; o SOC do módulo mercantil e o estoque de H2 no início e no fim de cada bloco
+    são então impostos aos blocos MILP, cuja concatenação é uma solução viável do horizonte
+    (limite inferior). Com as condições cíclicas por bloco, cada semana começaria do mesmo
+    estado e não poderia receber energia ou hidrogênio de outra.
+
+    Retorna (limite superior, [(soc_ini, soc_fim, tanque_ini, tanque_fim) de cada bloco]),
+    com o SOC em fração da energia do módulo mercantil e o estoque em kg.
+    """
+    blocos = dividir_em_blocos(inicio, dias, dias_bloco)
+    q = _params_bloco(p, inicio, dias)
+    q.lrcap.potencia_fixa_mw = x
+    q.horizonte.nivel_inicial_livre = True
+    m = construir_modelo(q, montar_series(q))
+    m.lucro.deactivate()
+    m.obj = pyo.Objective(expr=m.lucro.expr - m.receita_lrcap, sense=pyo.maximize)
+    for v in _binarias(m):
+        v.domain = pyo.UnitInterval
+    opt = _solver(1e-4)
+    opt.config.load_solution = True
+    ub = opt.solve(m).best_objective_bound
+
+    b, h2 = q.bess, q.hidrogenio
+    e_merc = pyo.value(m.E_merc)
+    fim = np.cumsum([int(round(d * 24 / q.horizonte.dt_h)) for _, d in blocos]) - 1
+    soc = [pyo.value(m.E_0)] + [pyo.value(m.soc[int(t)]) for t in fim]
+    tanque = [pyo.value(m.S_0)] + [pyo.value(m.s_h2[int(t)]) for t in fim]
+
+    def frac(e):
+        if e_merc < 1e-3:   # sem módulo mercantil (ex.: caso sem bateria)
+            return b.soc_inicial_frac
+        return min(max(e / e_merc, b.soc_min_frac), b.soc_max_frac)
+
+    def kg(s):
+        return min(max(s, 0.0), h2.tanque_max_kg)
+
+    return ub, [(frac(soc[k]), frac(soc[k + 1]), kg(tanque[k]), kg(tanque[k + 1])) for k in range(len(blocos))]
+
+
+def _fronteiras_lp(args):
+    return fronteiras_lp(*args)
 
 
 # ----------------------------------------------------------------------------- mestre
@@ -227,11 +288,20 @@ def _gap(ub: float, lb: float) -> float:
 
 # ------------------------------------------------------------------ solução detalhada
 def operacao_anual(p: Parametros, inicio: str, dias: int, p_cap: float, dias_bloco: int = 7,
-                   processos: int = 4) -> tuple[pd.DataFrame, pd.Series]:
-    """Resolve todos os blocos com P_cap fixo e concatena a operação e os indicadores."""
+                   processos: int = 4, fronteira: str | None = None) -> tuple[pd.DataFrame, pd.Series]:
+    """Resolve todos os blocos com P_cap fixo e concatena a operação e os indicadores.
+
+    `fronteira` ("ciclica" ou "lp"; padrão: estocastico.fronteira_blocos) define os estados
+    de armazenamento no início e no fim de cada bloco.
+    """
     blocos = dividir_em_blocos(inicio, dias, dias_bloco)
+    fronteira = fronteira or p.estocastico.fronteira_blocos
     with ProcessPoolExecutor(processos, mp_context=mp.get_context("spawn")) as ex:
-        partes = list(ex.map(_operacao_bloco, [(p, ini, d, p_cap) for ini, d in blocos]))
+        if fronteira == "lp":
+            ub, fr = ex.submit(_fronteiras_lp, (p, inicio, dias, p_cap, dias_bloco)).result()
+        else:
+            ub, fr = float("nan"), [None] * len(blocos)
+        partes = list(ex.map(_operacao_bloco, [(p, ini, d, p_cap, f) for (ini, d), f in zip(blocos, fr)]))
     df = pd.concat([d for d, _ in partes])
     k = pd.concat([k for _, k in partes], axis=1)
     # Indicadores somáveis; taxas recalculadas sobre o ano
@@ -244,12 +314,13 @@ def operacao_anual(p: Parametros, inicio: str, dias: int, p_cap: float, dias_blo
                                               / max(df["p_exportacao_mw"].sum(), 1e-9))
     total["ciclos_equivalentes_mercantil"] = (df["p_descarga_bess_mw"].sum() * p.horizonte.dt_h
                                               / max(total["energia_modulo_mercantil_mwh"], 1e-9))
+    total["limite_superior_lp_rs"] = ub   # lucro operacional (sem receita fixa) da relaxação
     return df, total.round(4)
 
 
 def _operacao_bloco(args):
-    p, inicio, dias, p_cap = args
-    q = _params_bloco(p, inicio, dias)
+    p, inicio, dias, p_cap, fronteira = args
+    q = _params_bloco(p, inicio, dias, fronteira)
     q.lrcap.potencia_fixa_mw = p_cap
     s = montar_series(q)
     m = construir_modelo(q, s)

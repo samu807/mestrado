@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 import pyomo.environ as pyo
 
-from .decomposicao import _gap, _solver, avaliar_bloco, dividir_em_blocos
+from .decomposicao import _fronteiras_lp, _gap, _solver, avaliar_bloco, dividir_em_blocos
 from .modelo import potencia_lrcap_max
 from .parametros import Cenario, Parametros
 
@@ -39,10 +39,13 @@ def parametros_cenario(p: Parametros, c: Cenario) -> Parametros:
     return q
 
 
+def dias_cenario(p: Parametros, c: Cenario) -> int:
+    return p.estocastico.dias_por_cenario or (366 if calendar.isleap(c.ano) else 365)
+
+
 def blocos_cenario(p: Parametros, c: Cenario) -> list[tuple[Parametros, str, int]]:
-    dias = p.estocastico.dias_por_cenario or (366 if calendar.isleap(c.ano) else 365)
     q = parametros_cenario(p, c)
-    return [(q, ini, d) for ini, d in dividir_em_blocos(f"{c.ano}-01-01", dias, p.estocastico.dias_bloco)]
+    return [(q, ini, d) for ini, d in dividir_em_blocos(f"{c.ano}-01-01", dias_cenario(p, c), p.estocastico.dias_bloco)]
 
 
 def cvar(valores, probs, alpha: float) -> float:
@@ -62,6 +65,7 @@ class Avaliacao:
     esperado: float
     cvar: float
     objetivo: float
+    limite_superior: list[float] | None = None   # relaxação linear de cada cenário (fronteira "lp")
 
 
 def _executar(tarefas, processos):
@@ -70,10 +74,26 @@ def _executar(tarefas, processos):
 
 
 def avaliar_potencia(p: Parametros, x: float, processos: int = 4, gap_sub: float = 1e-4) -> Avaliacao:
-    """Lucro de cada cenário com P_cap = x fixo (sem cortes)."""
+    """Lucro de cada cenário com P_cap = x fixo (sem cortes).
+
+    Com estocastico.fronteira_blocos = "lp", os estados na fronteira dos blocos vêm da
+    relaxação linear de cada ano (decomposicao.fronteiras_lp), cujo valor também é
+    devolvido como limite superior do lucro de cada cenário.
+    """
     est = p.estocastico
     probs = est.probabilidades()
     blocos = [(s, b) for s, c in enumerate(est.cenarios) for b in blocos_cenario(p, c)]
+    if est.fronteira_blocos == "lp":
+        anos = [(parametros_cenario(p, c), f"{c.ano}-01-01", dias_cenario(p, c), x, est.dias_bloco)
+                for c in est.cenarios]
+        with ProcessPoolExecutor(processos, mp_context=mp.get_context("spawn")) as ex:
+            lps = list(ex.map(_fronteiras_lp, anos))
+        fronteiras = [f for _, fs in lps for f in fs]
+        res = _executar([(q, ini, d, x, gap_sub, True, f) for (_, (q, ini, d)), f in zip(blocos, fronteiras)],
+                        processos)
+        av = _resumir(p, x, blocos, res, probs)
+        av.limite_superior = [p.lrcap.receita_fixa_rs_mw_ano * x + ub for ub, _ in lps]
+        return av
     res = _executar([(q, ini, d, x, gap_sub, True) for _, (q, ini, d) in blocos], processos)
     return _resumir(p, x, blocos, res, probs)
 
