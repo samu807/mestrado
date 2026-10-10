@@ -157,3 +157,41 @@ def test_ciclos_ano_com_arquivo_e_igual_em_blocos():
     p.horizonte.inicio, p.horizonte.dias = "2025-03-03 00:00", 14
     bloco = montar_series(p).ons_descarga_pu
     assert np.allclose(bloco.values, anual.loc[bloco.index].values)
+
+
+def test_perfil_ons_em_blocos_igual_ao_anual():
+    # O módulo LRCAP não recomeça cheio em cada bloco: o recorte reproduz o perfil do ano
+    # inteiro, e a recarga repõe exatamente a energia descarregada (condição cíclica).
+    p = carregar_parametros(Path(__file__).resolve().parents[1] / "config" / "estocastico_unifei.yaml")
+    cols = ["ons_descarga_pu", "ons_recarga_pu", "ons_soc_pu"]
+    p.horizonte.inicio, p.horizonte.dias = "2025-01-01 00:00", 365
+    anual = montar_series(p)
+    rte = p.bess.eficiencia_carga * p.bess.eficiencia_descarga
+    assert anual.ons_recarga_pu.sum() == pytest.approx(anual.ons_descarga_pu.sum() / rte)
+    for inicio, dias in [("2025-01-01 00:00", 7), ("2025-03-03 00:00", 7), ("2025-12-24 00:00", 8)]:
+        p.horizonte.inicio, p.horizonte.dias = inicio, dias
+        bloco = montar_series(p)
+        assert np.allclose(bloco[cols].values, anual.loc[bloco.index, cols].values)
+        assert bloco.ons_recarga_pu.sum() == pytest.approx(bloco.ons_descarga_pu.sum() / rte)
+
+
+def test_perfil_ons_ciclico_sem_arquivo():
+    p = carregar_parametros(CONFIG)
+    s = montar_series(p)
+    rte = p.bess.eficiencia_carga * p.bess.eficiencia_descarga
+    assert s.ons_recarga_pu.sum() == pytest.approx(s.ons_descarga_pu.sum() / rte)
+
+
+def test_nivel_inicial_livre():
+    p_fixo, m_fixo, _, k_fixo = resolver_caso({"hidrogenio": {"entrega_min_diaria_kg": 2000.0,
+                                                              "penalidade_deficit_rs_kg": 35.0}}, dias=4)
+    p, m, df, k = resolver_caso({"horizonte": {"nivel_inicial_livre": True},
+                                 "hidrogenio": {"entrega_min_diaria_kg": 2000.0,
+                                                "penalidade_deficit_rs_kg": 35.0}}, dias=4)
+    # Nível livre relaxa o nível inicial fixo
+    assert k.lucro_rs >= k_fixo.lucro_rs - 1e-6
+    e0, s0 = pyo.value(m.E_0), pyo.value(m.S_0)
+    e_merc = pyo.value(m.E_merc)
+    assert p.bess.soc_min_frac * e_merc - 1e-6 <= e0 <= p.bess.soc_max_frac * e_merc + 1e-6
+    assert df.soc_mwh.iloc[-1] >= e0 - 1e-6
+    assert df.tanque_h2_kg.iloc[-1] >= s0 - 1e-6

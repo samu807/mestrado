@@ -161,15 +161,8 @@ def dias_despacho(p: Parametros, idx: pd.DatetimeIndex, pld: np.ndarray) -> np.n
     return np.isin(idx.normalize(), list(escolhidos))
 
 
-def despacho_ons(p: Parametros, idx: pd.DatetimeIndex, pld: np.ndarray | None = None) -> pd.DataFrame:
-    """Perfil de despacho do ONS no módulo LRCAP, por MW contratado (p.u. de P_cap).
-
-    Retorna `descarga_pu`, `recarga_pu` e `soc_pu` (energia armazenada em MWh por MW
-    contratado, ao fim de cada intervalo). O módulo começa cheio. Sem arquivo, o
-    perfil é gerado assim: descarga a potência plena nas `horas_descarga` dos dias
-    selecionados e recarga, nas `horas_recarga`, até encher (limitada à potência
-    nominal). O perfil é exógeno ao empreendedor (Portaria MME 136/2026, art. 5º §2º).
-    """
+def _perfil_ons(p: Parametros, idx: pd.DatetimeIndex, pld: np.ndarray | None, e_ini: float) -> pd.DataFrame:
+    """Perfil do ONS em `idx` com o módulo LRCAP partindo de `e_ini` (MWh/MW)."""
     b, lr, d = p.bess, p.lrcap, p.lrcap.despacho_ons
     dt = p.horizonte.dt_h
     e_max = b.soc_max_frac * lr.energia_por_mw_h
@@ -191,7 +184,7 @@ def despacho_ons(p: Parametros, idx: pd.DatetimeIndex, pld: np.ndarray | None = 
 
     soc = np.empty(len(idx))
     rec_calc = np.zeros(len(idx))
-    e = e_max
+    e = e_ini
     for t in range(len(idx)):
         if rec is None:
             limite = rec_pld[t] if d.modo == "pld" and not d.arquivo else float(idx[t].hour in d.horas_recarga)
@@ -218,6 +211,75 @@ def despacho_ons(p: Parametros, idx: pd.DatetimeIndex, pld: np.ndarray | None = 
         warnings.warn("Despacho ONS excede o limite anual de ciclos, rateado no horizonte (art. 4º §3º)")
 
     return pd.DataFrame({"descarga_pu": desc, "recarga_pu": rec_calc, "soc_pu": soc}, index=idx)
+
+
+def _perfil_ciclico(p: Parametros, idx: pd.DatetimeIndex, pld: np.ndarray | None) -> pd.DataFrame:
+    """Perfil com condição cíclica: o módulo começa no estado em que termina o horizonte.
+
+    Uma primeira passada, com o módulo cheio, dá o estado final; a segunda parte dele. Como
+    o perfil repõe a carga a cada dia, o estado final não muda entre as passadas.
+    """
+    e_max = p.bess.soc_max_frac * p.lrcap.energia_por_mw_h
+    if p.lrcap.despacho_ons.arquivo:   # perfil informado: recarga dada, só se verifica o SOC
+        return _perfil_ons(p, idx, pld, e_max)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        e_fim = _perfil_ons(p, idx, pld, e_max)["soc_pu"].iat[-1]
+    return _perfil_ons(p, idx, pld, e_fim)
+
+
+_PERFIS_ANUAIS: dict = {}
+
+
+def _perfil_anual(p: Parametros, idx: pd.DatetimeIndex) -> pd.DataFrame | None:
+    """Perfil do ONS calculado sobre os anos civis que contêm `idx`, com PLD do arquivo.
+
+    Cada bloco da decomposição recebe o recorte deste perfil, de modo que o estado do módulo
+    LRCAP no início do bloco é o deixado pelo dia anterior, e não um módulo cheio. Retorna
+    None se o arquivo de PLD não cobrir os anos inteiros.
+    """
+    b, lr, d, m = p.bess, p.lrcap, p.lrcap.despacho_ons, p.mercado
+    arq = Path(m.arquivo)
+    arq = arq if arq.is_absolute() else p.base_dir / arq
+    anos = (idx[0].year, idx[-1].year)
+    chave = (str(arq), float(m.fator_preco), anos, p.horizonte.dt_h,
+             b.eficiencia_carga, b.eficiencia_descarga, b.soc_min_frac, b.soc_max_frac,
+             lr.energia_por_mw_h, lr.duracao_h, lr.ciclos_max_dia, lr.ciclos_max_ano,
+             d.modo, tuple(d.janela_recarga), tuple(d.horas_descarga), tuple(d.horas_recarga), d.ciclos_ano)
+    if chave not in _PERFIS_ANUAIS:
+        idx_ano = pd.date_range(f"{anos[0]}-01-01", f"{anos[1] + 1}-01-01", freq=pd.Timedelta(hours=p.horizonte.dt_h),
+                                inclusive="left")
+        try:
+            pld = _ler_serie(str(arq), p.base_dir, "pld", idx_ano) * m.fator_preco
+        except ValueError:
+            return None
+        if len(_PERFIS_ANUAIS) >= 16:
+            _PERFIS_ANUAIS.clear()
+        _PERFIS_ANUAIS[chave] = _perfil_ciclico(p, idx_ano, pld.to_numpy())
+    perfil = _PERFIS_ANUAIS[chave].reindex(idx)
+    return None if perfil.isna().any().any() else perfil
+
+
+def despacho_ons(p: Parametros, idx: pd.DatetimeIndex, pld: np.ndarray | None = None) -> pd.DataFrame:
+    """Perfil de despacho do ONS no módulo LRCAP, por MW contratado (p.u. de P_cap).
+
+    Retorna `descarga_pu`, `recarga_pu` e `soc_pu` (energia armazenada em MWh por MW
+    contratado, ao fim de cada intervalo). Sem arquivo de despacho, o perfil é gerado
+    assim: descarga a potência plena nas horas de descarga dos dias selecionados e
+    recarga, nas horas de recarga, até encher (limitada à potência nominal). O perfil é
+    exógeno ao empreendedor (Portaria MME 136/2026, art. 5º §2º).
+
+    Com PLD lido de arquivo, o perfil é calculado uma vez para o ano civil inteiro, com
+    condição cíclica no ano, e recortado no horizonte pedido; assim, os blocos da
+    decomposição veem o mesmo perfil que o ano completo. Nos demais casos, a condição
+    cíclica é aplicada ao próprio horizonte.
+    """
+    d = p.lrcap.despacho_ons
+    if p.mercado.arquivo and not d.arquivo and d.dias is None:
+        perfil = _perfil_anual(p, idx)
+        if perfil is not None:
+            return perfil
+    return _perfil_ciclico(p, idx, pld)
 
 
 def montar_series(p: Parametros) -> pd.DataFrame:

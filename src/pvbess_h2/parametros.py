@@ -14,6 +14,11 @@ class Horizonte:
     inicio: str = "2025-01-06 00:00"
     dias: int = 7
     dt_h: float = 1.0
+    # Condição cíclica dos estoques (SOC do módulo mercantil e tanque de H2): com false,
+    # partem de bess.soc_inicial_frac e hidrogenio.tanque_inicial_kg e terminam acima
+    # desses valores; com true, o nível inicial é uma variável de decisão e o horizonte
+    # termina no nível em que começou.
+    nivel_inicial_livre: bool = False
 
 
 @dataclass

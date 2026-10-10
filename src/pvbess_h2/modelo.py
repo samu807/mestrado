@@ -91,7 +91,13 @@ def construir_modelo(p: Parametros, series: pd.DataFrame) -> pyo.ConcreteModel:
     # ----------------------------------------------------- Módulo mercantil do BESS
     # Energia e potência remanescentes após reservar o módulo LRCAP
     m.E_merc = pyo.Expression(expr=b.energia_mwh - lr.energia_por_mw_h * m.P_cap)
-    m.E_0 = pyo.Expression(expr=b.soc_inicial_frac * m.E_merc)
+    livre = p.horizonte.nivel_inicial_livre
+    if livre:   # condição cíclica com nível livre: e_{-1} = e_{N-1}, ambos variáveis
+        m.E_0 = pyo.Var(within=pyo.NonNegativeReals)
+        m.E_0_min = pyo.Constraint(expr=m.E_0 >= b.soc_min_frac * m.E_merc)
+        m.E_0_max = pyo.Constraint(expr=m.E_0 <= b.soc_max_frac * m.E_merc)
+    else:
+        m.E_0 = pyo.Expression(expr=b.soc_inicial_frac * m.E_merc)
 
     @m.Constraint(m.T)
     def balanco_potencia(m, t):
@@ -164,12 +170,14 @@ def construir_modelo(p: Parametros, series: pd.DataFrame) -> pyo.ConcreteModel:
     def producao_h2(m, t):
         return m.m_h2[t] == kg_por_mwh * m.p_el[t]
 
+    m.S_0 = pyo.Var(bounds=(0, h2.tanque_max_kg)) if livre else pyo.Param(initialize=h2.tanque_inicial_kg)
+
     @m.Constraint(m.T)
     def balanco_tanque(m, t):
-        anterior = h2.tanque_inicial_kg if t == 0 else m.s_h2[t - 1]
+        anterior = m.S_0 if t == 0 else m.s_h2[t - 1]
         return m.s_h2[t] == anterior + (m.m_h2[t] - m.v_h2[t]) * dt
 
-    m.tanque_final = pyo.Constraint(expr=m.s_h2[n - 1] >= h2.tanque_inicial_kg)
+    m.tanque_final = pyo.Constraint(expr=m.s_h2[n - 1] >= m.S_0)
 
     # Partidas do eletrolisador (u_t = 1 quando liga em t), com condição cíclica no
     # horizonte: o estado anterior à primeira hora é o da última.
