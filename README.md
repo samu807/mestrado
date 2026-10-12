@@ -218,7 +218,9 @@ R\$ 600 mil/MW·ano, H₂ a R\$ 35/kg, partida a R\$ 500 — provisórios).
 esperado nos 5 anos sem a receita fixa, Q(P), numa grade de 2,5 MW; o custo de oportunidade de
 contratar mais um MW é −dQ/dP e a potência ótima para cada receita fixa R é argmax R·P + Q(P).
 Contrato de H₂: volume diário firme (mínimo = máximo), multa de R\$ 35/kg não entregue
-(provisória).
+(provisória). A multa é uma cláusula de firmeza, não ressarcimento do produto (este seria só a
+diferença entre o preço de reposição e o do contrato); somada à venda perdida, cada kg não
+entregue custa R\$ 70, e o contrato é praticamente firme.
 
 ![Curva de oferta](docs/figuras/curva_oferta.png)
 

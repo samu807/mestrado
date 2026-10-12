@@ -27,8 +27,9 @@ from pvbess_h2 import carregar_parametros  # noqa: E402
 from pvbess_h2.decomposicao import operacao_anual  # noqa: E402
 from pvbess_h2.estocastico import avaliar_potencia, parametros_cenario  # noqa: E402
 
-# Multa por kg não entregue: PLACEHOLDER (= preço do H2, isto é, ressarcir o comprador
-# pelo valor do produto que ele terá de comprar de outro fornecedor).
+# Multa por kg não entregue: PLACEHOLDER igual ao preço do H2. É uma cláusula de firmeza, e não
+# ressarcimento do produto (este seria só a diferença entre o preço de reposição e o do
+# contrato). Somada à venda perdida, cada kg não entregue custa 2 x preço ao empreendedor.
 MULTA = 35.0
 CASOS = {
     "base": ("H₂ ilimitado, sem importação", {}),
