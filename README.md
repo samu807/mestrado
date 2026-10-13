@@ -376,7 +376,8 @@ construí-la e contratar a melhor potência: max_P {R·d·P + Q_inv(P)} − cust
 | 12,1% (central) | R\$ 1,015 mi | **R\$ 1,115 mi** | R\$ 1,214 mi |
 | 8,0% | R\$ 838 mil | R\$ 919 mil | R\$ 1,001 mi |
 
-- A oferta é "tudo ou nada": zero abaixo do lance mínimo e 60 MW acima dele.
+- Com o BESS de referência (60 MW/300 MWh), a oferta é "tudo ou nada": zero abaixo do lance
+  mínimo e 60 MW acima dele (ver o dimensionamento abaixo).
 - **O lance mínimo é o custo anual do BESS por MW:** capital R\$ 934 mil + O&M com augmentation
   R\$ 158 mil + acréscimo de TUST R\$ 22 mil = R\$ 1,115 mi. Consumo auxiliar (cabe na folga da
   CONCAP) e uso mercantil (a 60 MW o módulo mercantil some) valem zero.
@@ -385,9 +386,30 @@ construí-la e contratar a melhor potência: max_P {R·d·P + Q_inv(P)} − cust
   ±9%; O&M ±1 p.p. ±6%; parcela de energia 45–75% ±3%; disponibilidade de 97% +3%; TUST regional
   −1% a +2%; consumo auxiliar de 2% +1%. Degradação por MWh: 0%. 50 despachos/ano: +1%.
   Contrato firme de 3 t/dia: −3% (−5% com tanque de 10 t).
-- **Papel do híbrido no lance:** dividir a conexão com a FV poupa R\$ 109 mil/MW·ano de TUST.
+- **Papel do híbrido no lance:** dividir a conexão com a FV poupa R\$ 109 mil/MW·ano de TUST
+  (R\$ 131 mil com o BESS dimensionado para o contrato).
 - O lance central supera em 34% os R\$ 831 mil das térmicas existentes no LRCAP 3/2026 (mesmo o
   cenário mais barato, R\$ 838 mil, fica acima) e é muito menor que os R\$ 2,33 mi do LRCAP 2/2026.
+
+**Dimensionamento do BESS e bateria isolada** (`lance_dimensionamento.csv`). Com potência igual à
+contratada e 4,8 MWh/MW, o BESS não tem módulo mercantil e não altera a operação da FV e do
+eletrolisador: o lucro operacional esperado mais a degradação do LRCAP é igual ao lucro sem BESS
+(verificado com o modelo para 30 e 50 MW). O lance é então o custo anual por MW:
+
+| Arranjo | Potência (MW) | Energia (MWh) | 12,1% | 8,0% |
+|---|---|---|---|---|
+| Híbrido, BESS de referência | 60 | 300 | R\$ 1,115 mi | R\$ 919 mil |
+| Híbrido, dimensionado para o contrato | 60 | 288 | R\$ 1,086 mi | R\$ 896 mil |
+| Híbrido, dimensionado para o contrato | 30 a 50 | 4,8/MW | **R\$ 1,064 mi** | R\$ 874 mil |
+| Bateria isolada (sem FV), dimensionada | 30 a 60 | 4,8/MW | R\$ 1,195 mi | R\$ 1,005 mi |
+
+- **A bateria do leilão deve ser dimensionada para o contrato:** no BESS de referência, ofertar
+  57,5 MW e manter 2,5 MW/24 MWh mercantis rende R\$ 2,1 mi/ano, mas essa capacidade custa
+  R\$ 4,7 mi/ano; os 12 MWh além dos 288 MWh necessários custam R\$ 29 mil/MW·ano no lance.
+- **A oferta deixa de ser "tudo ou nada":** até 50 MW a bateria cabe no MUST da usina FV e o lance
+  por MW é constante (R\$ 1,064 mi); acima disso cada MW paga TUST e o lance sobe até R\$ 1,086 mi.
+- **Bateria isolada:** R\$ 131 mil/MW·ano acima do híbrido, inteiramente pela TUST sobre toda a
+  potência. No lance, o papel da FV com H₂ é dividir a conexão, não gerar receita para a bateria.
 
 ## Próximos passos sugeridos
 
