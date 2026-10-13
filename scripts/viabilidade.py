@@ -356,6 +356,51 @@ def lance_minimo_por_caso(base, eco, saida, processos, infos):
     return df
 
 
+def dimensionada(p, potencia, isolada=False):
+    """Cópia dos parâmetros com o BESS dimensionado exatamente para o contrato: potência igual à
+    contratada e energia rho * P (módulo LRCAP puro, sem módulo mercantil). Com `isolada`, sem a
+    usina FV e o eletrolisador (bateria isolada, que não divide a conexão)."""
+    q = copy.deepcopy(p)
+    q.bess.potencia_carga_mw = q.bess.potencia_descarga_mw = potencia
+    q.bess.energia_mwh = q.lrcap.energia_por_mw_h * potencia
+    if isolada:
+        q.pv.potencia_pico_mw = 0.0
+        q.eletrolisador.potencia_max_mw = 0.0
+    return q
+
+
+def lance_dimensionado(p, eco, pr, potencia, info, isolada=False):
+    """Lance mínimo de um BESS dimensionado para o contrato.
+
+    Sem módulo mercantil, o BESS não altera a operação da usina (o módulo LRCAP é liquidado na
+    CONCAP), e Q_inv(P) = lucro sem BESS - consumo auxiliar não custeado. A indiferença
+    R d P + Q_inv(P) - C_bess = lucro sem BESS dá R = (C_bess + consumo auxiliar) / (d P).
+    """
+    q = dimensionada(p, potencia, isolada)
+    custo = custo_anual_bess(q, eco, pr)
+    _, cons = ajuste_investimento(q, info, pr["aux"], [potencia])
+    d = pr["disp"]
+    return {"potencia_mw": potencia, "energia_mwh": q.bess.energia_mwh, "capex_bess_rs": capex_bess(q, eco, pr),
+            "capital": custo["capital"] / potencia / d, "om_augmentation": custo["om"] / potencia / d,
+            "tust": custo["tust"] / potencia / d, "consumo_auxiliar": float(cons[0]) / potencia / d,
+            "lance_minimo_rs_mw_ano": (custo["total"] + float(cons[0])) / potencia / d}
+
+
+def dimensionamento(base, eco, info, saida):
+    """Lance mínimo em função da potência do BESS dimensionado para o contrato, no híbrido
+    (conexão compartilhada com a FV) e numa bateria isolada."""
+    linhas = []
+    for pot in np.arange(base.lrcap.potencia_min_mw, potencia_bess(base) + 1e-6, 2.5):
+        for isolada in (False, True):
+            for taxa in eco["taxas_desconto"]:
+                pr = premissas(eco, taxa=taxa)
+                linhas.append({"arranjo": "isolada" if isolada else "hibrido", "taxa": taxa,
+                               **lance_dimensionado(base, eco, pr, float(pot), info, isolada)})
+    df = pd.DataFrame(linhas)
+    df.to_csv(saida / "lance_dimensionamento.csv", index=False)
+    return df
+
+
 def sensibilidade(base, eco, curva, info, q_sem, saida):
     """Lance mínimo do caso de referência com uma premissa alterada de cada vez."""
     t, a = eco["tust_geracao_rs_kw_mes"], eco["consumo_auxiliar_frac"]
@@ -478,6 +523,7 @@ def main():
     grafico(res, P, Qi, q_sem, eco, base, saida)
     grafico_oferta(curva, P, Qi, q_sem, eco, base, dec, saida)
     lmc = lance_minimo_por_caso(base, eco, saida, args.processos, infos)
+    dim = dimensionamento(base, eco, infos["base"], saida)
     pd.DataFrame({c: {k: float(np.dot(probs, [d[k] for d in linhas])) for k in ["e_inj", "pld_medio", "horas"]}
                   for c, (linhas, probs) in infos.items()}).T.to_csv(saida / "despacho_ons_casos.csv")
 
@@ -495,6 +541,9 @@ def main():
                 "tust", "consumo_auxiliar", "uso_mercantil"]].to_string(index=False))
     print("\nLance mínimo por caso:")
     print(lmc.pivot_table(index="caso", columns="taxa", values=["lance_minimo_rs_mw_ano", "p_cap_mw"]).to_string())
+    print("\nLance mínimo do BESS dimensionado para o contrato (R$ mil/MW·ano):")
+    print(dim.pivot_table(index="potencia_mw", columns=["arranjo", "taxa"], values="lance_minimo_rs_mw_ano")
+          .div(1e3).round(0).to_string())
     print(f"\nResultados salvos em {saida}")
 
 

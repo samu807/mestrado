@@ -10,7 +10,7 @@ Quando o BESS ainda será construído — situação prevista na Portaria, que t
 
 O estudo adota as seguintes delimitações de escopo:
 
-a) as capacidades instaladas da usina FV, do BESS e do eletrolisador são dados de entrada, e não variáveis de decisão — o dimensionamento ótimo dos equipamentos está fora do escopo desta etapa, e o efeito do tamanho do eletrolisador e do tanque de hidrogênio é avaliado por análise de sensibilidade (Seção 3.8.4);
+a) as capacidades instaladas da usina FV, do BESS e do eletrolisador são dados de entrada, e não variáveis de decisão — o dimensionamento ótimo dos equipamentos está fora do escopo desta etapa, e o efeito do tamanho do eletrolisador e do tanque de hidrogênio é avaliado por análise de sensibilidade (Seção 3.8.4); para o BESS a construir, avalia-se ainda a bateria dimensionada para o contrato do leilão (Seção 3.8.3);
 
 b) o horizonte de análise é de um ano, com resolução horária, representativo da operação ao longo do contrato de 15 anos previsto para o LRCAP;
 
@@ -588,6 +588,8 @@ R^{min} \approx \frac{1}{d} \left( \frac{I^{bess} / F(i, n) + C^{om,bess}}{\bar 
 $$ {#eq:lance-aprox}
 
 isto é, o lance mínimo de um BESS a construir corresponde aproximadamente ao seu custo anual equivalente por MW — capital, O&M com reposição de módulos e uso da rede —, acrescido da recarga e do consumo auxiliar não custeados pela CONCAP e dividido pela disponibilidade. Como o desgaste do despacho já está no O&M, o lance não depende do custo de degradação por MWh e só depende da frequência do despacho por meio do consumo auxiliar, cuja folga diminui quando o módulo é despachado menos vezes. A aproximação desconsidera o valor residual do uso mercantil da bateria e é verificada no Capítulo 4.
+
+**Dimensionamento do BESS e bateria isolada.** As curvas de oferta são obtidas para o BESS de referência, de 60 MW e 300 MWh. Para um BESS construído para o leilão, porém, a potência e a energia podem ser escolhidas junto com o lance. Avalia-se, por isso, o BESS dimensionado para o contrato, com $\bar P^{dis} = P^{cap}$ e $E^{tot} = \rho P^{cap}$, isto é, um módulo LRCAP sem módulo mercantil. Como a energia desse módulo é liquidada na CONCAP, ele não altera a operação da usina, e $Q^{inv}(P^{cap}) = \Pi^{0} - \kappa^{aux} P^{cap}$. O lance mínimo é, então, dado exatamente pela Equação {eq:lance-aprox}, com $\kappa = 0$, para cada potência entre $\underline P^{cap}$ e a potência do BESS de referência. Para isolar o papel do arranjo híbrido, o mesmo cálculo é feito para uma bateria isolada, sem a usina FV e o eletrolisador, cujo montante de uso de injeção é a própria potência ($M^{0} = 0$ e $M = P^{cap}$). Como, no lance, ambas operam apenas o módulo LRCAP, a diferença entre os dois lances mede o valor do compartilhamento da conexão. O valor do módulo mercantil é avaliado comparando-se o lucro que ele acrescenta na curva de oferta com o seu custo anual.
 
 ### 3.8.4 Casos avaliados
 
