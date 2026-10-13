@@ -1,5 +1,5 @@
-# Parâmetros econômicos para a análise de viabilidade (valores reais de dez/2025).
-# Cada item: [baixo, central, alto].
+# Parâmetros econômicos para a análise de viabilidade e do lance mínimo (valores reais de dez/2025).
+# Cada item com três valores: [baixo, central, alto].
 capex:
   pv_rs_kw: [3000, 4250, 5500]        # EPE/MME, Caderno de Parâmetros de Custos – PDE 2035 (nov/2025)
   bess_rs_kw: [5000, 5500, 6000]      # idem; duração (h) associada a confirmar no caderno
@@ -7,12 +7,32 @@ capex:
   # Convertido pela PTAX de 09/12/2025 (R$ 5,4025/US$), sem tributos de importação.
   eletrolisador_usd_kw: [1100, 2000, 2500]
 cambio_rs_usd: 5.4025
-# O&M fixo anual, em fração do CAPEX (hipótese do autor; o O&M variável do eletrolisador e a
-# degradação do BESS já estão no modelo de operação).
+# O&M fixo anual, em fração do investimento.
+# BESS: 2,5% do investimento em R$/kW, incluindo a reposição parcial de módulos (augmentation) que
+# mantém a capacidade nominal durante os 15 anos, sem O&M variável (NREL, Annual Technology
+# Baseline 2024, Utility-Scale Battery Storage). Por isso, na análise de investimento, o desgaste do
+# módulo LRCAP não é cobrado por MWh (ver scripts/viabilidade.py). FV e eletrolisador: hipótese.
 om_fixo_frac:
   pv: 0.015
   bess: 0.025
   eletrolisador: 0.03
-# ANEEL, WACC regulatório 2026 (geração): 8,00% real após impostos; 12,11% real antes de impostos.
-taxas_desconto: [0.08, 0.1211]
+# Taxa real de desconto. Central: WACC regulatório da geração ANTES de impostos (ANEEL, 2026),
+# coerente com o fluxo de caixa antes de impostos. 8,0% (após impostos) só como sensibilidade:
+# aplicada a um fluxo antes de impostos, ignora o imposto de renda e é otimista.
+taxa_central: 0.1211
+taxas_desconto: [0.1211, 0.08]
 vida_anos: 15                          # prazo do contrato do LRCAP; sem valor residual (conservador)
+# Uso da rede: TUST de geração, R$/kW·mês, ciclo 2026/2027 (ANEEL, jun/2026): média nacional
+# (central) e faixa entre as regiões (baixo, alto). Pela regulação do armazenamento aprovada pela
+# ANEEL em 02/06/2026, sistemas despachados pelo ONS pagam o uso da rede só na injeção. Cobrada sobre
+# a potência da usina FV e a do BESS. Na rodada final, usar a TUST do barramento de conexão.
+tust_geracao_rs_kw_mes: [5.68, 10.93, 19.49]
+# Consumo auxiliar do BESS (climatização, controle), contínuo, em fração da potência nominal.
+# Valor indicativo de fornecedor (0,8–1,6% da potência do conversor), a confirmar com catálogo.
+# A parcela do módulo LRCAP medida no seu PMI entra na recarga; o que exceder a folga custeada
+# pela CONCAP (injetada/RTE de referência) é pago ao PLD (Portaria MME 136/2026, art. 9º §§ 7º-8º).
+consumo_auxiliar_frac: [0.0, 0.01, 0.02]
+# Fração da receita fixa efetivamente recebida. A Portaria exige 100% de disponibilidade, e a
+# indisponibilidade acordada com o ONS é isenta de penalidade; as penalidades dependem do edital.
+disponibilidade: 1.0
+disponibilidade_sensibilidade: 0.97
