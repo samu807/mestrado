@@ -49,7 +49,7 @@ scripts/
   vss_evpi.py              VSS e EVPI do programa estocástico
   curva_oferta.py          curva de oferta no LRCAP (contrato de H₂, importação, despacho, degradação, dimensionamento)
   erro_decomposicao.py     efeito do tamanho do bloco da decomposição (7, 14, 28 dias)
-  viabilidade.py           VPL, TIR, valor da bateria e preço de equilíbrio do H₂ (config/economia.yaml)
+  viabilidade.py           VPL, TIR, lance mínimo (parcelas e sensibilidade) e H₂ de equilíbrio (config/economia.yaml)
 tests/                     testes (modelo, importação de dados, decomposição)
 ```
 
@@ -261,9 +261,11 @@ entregue custa R\$ 70, e o contrato é praticamente firme.
 
 ### Robustez: degradação, dimensionamento e decomposição
 
-**Custo de degradação do BESS.** O valor de R\$ 50/MWh é baixo. Custo de reposição dos módulos ÷
-energia descarregada na vida útil: pack estacionário de US\$ 70/kWh (BNEF, 2025) × R\$ 5,40/US\$ ×
-1,74 (tributos no Brasil, EPE) ÷ (4.000–6.000 ciclos × 90% de DoD) ≈ **R\$ 120–185/MWh**.
+**Custo de degradação do BESS existente.** R\$ 50/MWh é o custo marginal do desgaste. O custo
+integral de reposição ÷ energia descarregada na vida útil — pack de US\$ 70/kWh (BNEF, 2025) ×
+R\$ 5,40/US\$ × 1,74 (tributos, EPE) ÷ (4.000–6.000 ciclos × 90% de DoD) ≈ R\$ 120–185/MWh — é um
+limite superior. Na decisão de construir o BESS, o desgaste contratado vai para o O&M (ver
+Viabilidade), para não pagar a bateria duas vezes.
 
 ![Curva de oferta por custo de degradação](docs/figuras/curva_oferta_degradacao.png)
 
@@ -293,7 +295,7 @@ energia descarregada na vida útil: pack estacionário de US\$ 70/kWh (BNEF, 202
 
 **Tanque de H₂ no contrato de 3 t/dia** (2 t → 10 t, com 55 MW no LRCAP): déficit de 40 → 11 t/ano,
 lucro +R\$ 1,6 mi/ano, custo marginal entre 30 e 50 MW de R\$ 100–169 mil → R\$ 85–126 mil e lance
-mínimo de R\$ 795 → 765 mil/MW·ano. O tanque guarda o H₂ dos dias de sol para os nublados, papel
+mínimo de R\$ 1,044 → 1,020 mi/MW·ano (12,1%). O tanque guarda o H₂ dos dias de sol para os nublados, papel
 que, com 2 t, cabia à bateria mercantil. Com 60 MW (sem bateria mercantil) os dois tanques dão o
 mesmo resultado: o eletrolisador só opera de dia e quase não sobra H₂ para guardar.
 
@@ -315,55 +317,70 @@ Benders mantém a condição cíclica (os cortes exigem fronteira fixa). O perfi
 LRCAP é calculado no ano inteiro e recortado por bloco (antes, cada bloco começava com o módulo
 cheio e faltavam 52 recargas por ano, sem efeito no lucro porque κ = 0).
 
-### Viabilidade econômica
+### Viabilidade econômica e lance mínimo
 
 `python scripts/viabilidade.py` (usa os resultados da curva de oferta; `--sem-bess` refaz o caso
-sem bateria, ~1 min). Parâmetros em `config/economia.yaml`: CAPEX de FV R\$ 3.000–5.500/kW e de
-BESS R\$ 5.000–6.000/kW (EPE/MME, Caderno de Parâmetros de Custos – PDE 2035), eletrolisador
-US\$ 1.100–2.500/kW (IEA, Global Hydrogen Review 2025; PTAX R\$ 5,4025), O&M fixo de 1,5% (FV),
-2,5% (BESS) e 3% (eletrolisador) do CAPEX ao ano (hipótese), taxa real de 8,0% (WACC regulatório
-ANEEL 2026, geração, após impostos) e 12,1% (antes de impostos), 15 anos sem valor residual.
-O lucro operacional é antes de impostos, o que torna os VPLs otimistas.
+sem bateria, ~1 min). Parâmetros em `config/economia.yaml`:
+
+| Parâmetro | Valores (baixo; central; alto) | Fonte |
+|---|---|---|
+| CAPEX FV / BESS | R\$ 3.000–5.500/kW; R\$ 5.000–6.000/kW | EPE/MME, Caderno de Parâmetros de Custos – PDE 2035 |
+| CAPEX eletrolisador | US\$ 1.100–2.500/kW (PTAX R\$ 5,4025) | IEA, Global Hydrogen Review 2025 |
+| O&M fixo | 2,5% (BESS, inclui reposição de módulos), 1,5% (FV), 3% (eletrolisador) | BESS: NREL ATB 2024; demais: hipótese |
+| Taxa real | **12,1% (antes de impostos, central)**; 8,0% (após impostos, sensibilidade) | ANEEL 2026 (WACC da geração) |
+| TUST de geração | R\$ 5,68; 10,93; 19,49/kW·mês, sobre FV e BESS | ANEEL ciclo 2026/27 (média nacional e faixa regional) |
+| Consumo auxiliar do BESS | 0; 1%; 2% da potência | indicativo de fornecedor, a confirmar |
+| Disponibilidade | 100% (sensibilidade 97%) | Portaria MME 136/2026 |
+| Horizonte | 15 anos, sem valor residual | prazo do contrato |
+
+Três escolhas tornam a análise coerente:
+- **Sem dupla contagem da degradação.** O investimento é amortizado em 15 anos sem valor residual
+  e o O&M de 2,5% já inclui a reposição parcial de módulos (*augmentation*) para ~1 ciclo/dia. Na
+  decisão de construir, o desgaste do módulo LRCAP não é cobrado por MWh (R\$ 73 mil/MW·ano
+  devolvidos a Q(P)); o uso mercantil mantém R\$ 50/MWh. A curva Q(P) do BESS existente não muda.
+- **Taxa coerente com o fluxo.** O fluxo é antes de impostos, então a taxa central é a antes de
+  impostos (12,1%); 8% ignora o IR e é otimista.
+- **Custos fixos do BESS.** TUST (armazenamento despachado pelo ONS paga só na injeção, regra da
+  ANEEL de 02/06/2026), consumo auxiliar (o do módulo LRCAP só custa acima da folga de recarga que
+  a CONCAP paga, ~100 MWh/MW·ano com despacho diário) e disponibilidade.
 
 ![Viabilidade](docs/figuras/viabilidade.png)
 
-| Caso (CAPEX central) | CAPEX | Lucro operacional | VPL (8%) | TIR real | H₂ de equilíbrio (8%) |
-|---|---|---|---|---|---|
-| Referência (55 MW no LRCAP) | R\$ 732 mi | R\$ 68,1 mi/ano | **−R\$ 295 mi** | 0,6% | R\$ 68/kg |
-| Contrato 3 t/dia | R\$ 732 mi | R\$ 65,5 mi/ano | −R\$ 317 mi | −0,1% | R\$ 70/kg |
-| Importação da rede | R\$ 732 mi | R\$ 88,5 mi/ano | −R\$ 120 mi | 5,2% | R\$ 41/kg |
-| Eletrolisador 10 MW | R\$ 651 mi | R\$ 60,4 mi/ano | −R\$ 259 mi | 0,7% | R\$ 71/kg |
-| Eletrolisador 25 MW | R\$ 813 mi | R\$ 73,5 mi/ano | −R\$ 351 mi | 0,0% | R\$ 70/kg |
+| Caso (CAPEX central, R\$ 600 mil/MW·ano) | CAPEX | Lucro operacional | VPL (12,1%) | VPL (8%) | TIR real | H₂ de equilíbrio (12,1%) |
+|---|---|---|---|---|---|---|
+| Referência (55 MW no LRCAP) | R\$ 732 mi | R\$ 72,1 mi/ano | **−R\$ 457 mi** | −R\$ 385 mi | −2,2% | R\$ 101/kg |
+| Contrato 3 t/dia | R\$ 732 mi | R\$ 69,5 mi/ano | −R\$ 475 mi | −R\$ 407 mi | −3,0% | R\$ 101/kg |
+| Importação da rede | R\$ 732 mi | R\$ 92,9 mi/ano | −R\$ 316 mi | −R\$ 206 mi | 3,0% | R\$ 53/kg |
+| Eletrolisador 10 MW | R\$ 651 mi | R\$ 64,2 mi/ano | −R\$ 413 mi | −R\$ 350 mi | −2,5% | R\$ 107/kg |
+| Eletrolisador 25 MW | R\$ 813 mi | R\$ 77,7 mi/ano | −R\$ 517 mi | −R\$ 439 mi | −2,6% | R\$ 100/kg |
 
-- **Com os parâmetros atuais, nenhum caso se paga.** Só a importação com CAPEX baixo (equipamento
-  chinês, FV e BESS no piso da EPE) tem VPL positivo (+R\$ 94 mi a 8%).
-- O preço de equilíbrio do H₂ (operação mantida fixa, aproximação conservadora) é R\$ 68/kg no
-  caso de referência, quase o dobro dos R\$ 35/kg adotados e acima da faixa de preços considerada.
-- **Valor da bateria:** lucro sem BESS = R\$ 35,4 mi/ano; com BESS e 55 MW no LRCAP a R\$ 600 mil,
-  R\$ 68,1 mi. O ganho de R\$ 32,8 mi/ano não cobre o custo anual do BESS (R\$ 46,8 mi a 8%, CAPEX
-  central). A bateria só se paga com receita fixa de **R\$ 852 mil/MW·ano** (faixa de R\$ 778 mil a
-  R\$ 1,11 mi conforme CAPEX e taxa), contratando 57,5–60 MW. Esse valor é próximo do preço das
-  térmicas existentes no LRCAP 3/2026 (R\$ 831 mil).
-- Sem a receita do LRCAP, a bateria agrega só R\$ 9,7 mi/ano (uso no H₂ e no MCP): o leilão é o que
-  pode viabilizá-la.
+- **Nenhum caso se paga.** Fluxo do caso de referência: R\$ 72,1 mi − O&M R\$ 17,1 mi − TUST
+  R\$ 14,4 mi = R\$ 40,5 mi/ano. Só a importação com CAPEX baixo e taxa de 8% empata (+R\$ 8 mi).
+- **Valor da bateria:** lucro sem BESS = R\$ 35,4 mi/ano; com BESS e 55 MW a R\$ 600 mil,
+  R\$ 72,1 mi. O ganho de R\$ 36,7 mi/ano não cobre o custo anual do BESS (R\$ 64,9 mi a 12,1%:
+  capital 48,7 + O&M 8,3 + TUST 7,9). Sem o LRCAP, a bateria agrega só R\$ 8,8 mi/ano.
 
-**Curva de oferta com o investimento no BESS.** Se a bateria ainda vai ser construída, para cada
-receita fixa R o proponente compara não construí-la (lucro sem BESS, oferta 0) com construí-la e
-contratar a melhor potência: max_P {R·P + Q(P)} − custo anual do BESS.
+**Curva de oferta com o investimento no BESS e lance mínimo.** Se a bateria ainda vai ser
+construída, para cada receita fixa R o proponente compara não construí-la (lucro sem BESS) com
+construí-la e contratar a melhor potência: max_P {R·d·P + Q_inv(P)} − custo anual do BESS.
 
 ![Curva de oferta com investimento](docs/figuras/curva_oferta_investimento.png)
 
 | Taxa | CAPEX baixo (R\$ 5.000/kW) | central (R\$ 5.500/kW) | alto (R\$ 6.000/kW) |
 |---|---|---|---|
-| 8,0% | R\$ 780 mil (57,5 MW) | **R\$ 855 mil (57,5 MW)** | R\$ 925 mil (60 MW) |
-| 12,1% | R\$ 940 mil (60 MW) | R\$ 1,03 mi (60 MW) | R\$ 1,11 mi (60 MW) |
+| 12,1% (central) | R\$ 995 mil | **R\$ 1,081 mi** | R\$ 1,168 mi |
+| 8,0% | R\$ 841 mil | R\$ 912 mil | R\$ 983 mil |
 
-- A oferta vira "tudo ou nada": zero abaixo do lance mínimo e 57,5–60 MW acima dele. A curva
-  escalonada (35 → 60 MW) só vale para uma bateria já existente.
-- O lance mínimo ≈ custo anualizado do BESS por MW (R\$ 780 mil a 8%, CAPEX central) + degradação
-  do despacho diário (R\$ 73 mil) = R\$ 853 mil: o uso mercantil da bateria quase não reduz o lance.
-- O lance mínimo central (R\$ 855 mil) fica próximo dos R\$ 831 mil obtidos por térmicas
-  existentes no LRCAP 3/2026, e muito abaixo dos R\$ 2,33 mi do LRCAP 2/2026.
+- A oferta é "tudo ou nada": zero abaixo do lance mínimo e 60 MW acima dele.
+- **O lance mínimo é o custo anual do BESS por MW:** capital R\$ 812 mil + O&M com augmentation
+  R\$ 138 mil + TUST R\$ 131 mil = R\$ 1,081 mi. Consumo auxiliar (cabe na folga da CONCAP) e uso
+  mercantil (a 60 MW o módulo mercantil some) valem zero.
+- Sensibilidade (uma premissa por vez, `lance_sensibilidade.csv`): taxa de 8% −16%; TUST de
+  R\$ 5,68 a 19,49 −6% a +10%; CAPEX ±8%; O&M ±1 p.p. ±5%; disponibilidade de 97% +3%; consumo
+  auxiliar de 2% +1%. Degradação por MWh: 0%. 50 despachos/ano: +1% (menos folga para o consumo
+  auxiliar). Contrato firme de 3 t/dia: −3% (−6% com tanque de 10 t).
+- O lance central supera em 30% os R\$ 831 mil das térmicas existentes no LRCAP 3/2026 (mesmo o
+  cenário mais barato, R\$ 841 mil, fica acima) e é muito menor que os R\$ 2,33 mi do LRCAP 2/2026.
 
 ## Próximos passos sugeridos
 

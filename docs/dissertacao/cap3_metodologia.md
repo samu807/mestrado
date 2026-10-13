@@ -297,7 +297,7 @@ Fonte: elaborado pelo autor com dados de CCEE (2026a) e do PVGIS.
 
 **Parâmetros técnico-econômicos.** Os parâmetros do eletrolisador foram definidos a partir da faixa típica da tecnologia PEM, cujo consumo específico de energia situa-se entre 4,3 e 5,2 kWh/Nm³, ou aproximadamente 48 a 58 kWh/kg, até que os dados do fabricante do equipamento da UNIFEI sejam incorporados. O preço do hidrogênio não possui, até o momento, referência de mercado consolidada no Brasil e é, por isso, objeto de análise de sensibilidade. O mesmo se aplica aos termos do contrato de fornecimento de hidrogênio — volume diário e multa por déficit —, avaliados em cenários alternativos ao caso sem contrato.
 
-**Custo de degradação do BESS.** O custo de degradação pode ser estimado como o custo de reposição dos módulos de bateria dividido pela energia que eles descarregam ao longo da vida útil. Com o preço médio de *packs* de baterias de íons de lítio para armazenamento estacionário de US\$ 70/kWh em 2025 (BNEF, 2025), convertido pela taxa PTAX de 09/12/2025 (R\$ 5,4025/US\$) e acrescido de 74% de tributos incidentes no Brasil (EPE, 2024), e com vida útil de 4.000 a 6.000 ciclos a 90% de profundidade de descarga, obtém-se entre R\$ 120 e R\$ 185 por MWh descarregado. O valor de R\$ 50/MWh adotado no caso de referência situa-se abaixo dessa faixa; por isso, o efeito de valores de R\$ 100 e R\$ 200/MWh é avaliado na Seção 3.8.4.
+**Custo de degradação do BESS.** No modelo de operação, o desgaste da bateria é representado por um custo por MWh descarregado, $c^{deg}$, que mede o custo marginal de usar uma bateria existente: cada ciclo adicional antecipa a perda de capacidade e a reposição dos módulos. O custo integral de reposição dividido pela energia descarregada ao longo da vida útil é um limite superior desse custo marginal. Com o preço médio de *packs* de baterias de íons de lítio para armazenamento estacionário de US\$ 70/kWh em 2025 (BNEF, 2025), convertido pela taxa PTAX de 09/12/2025 (R\$ 5,4025/US\$) e acrescido de 74% de tributos incidentes no Brasil (EPE, 2024), e com vida útil de 4.000 a 6.000 ciclos a 90% de profundidade de descarga, esse limite fica entre R\$ 120 e R\$ 185 por MWh descarregado. Adota-se R\$ 50/MWh no caso de referência, e o efeito de valores de R\$ 100 e R\$ 200/MWh é avaliado na Seção 3.8.4. Na decisão de construir o BESS (Seção 3.8.2), porém, o desgaste do uso contratado não é cobrado por MWh: o investimento é amortizado no prazo do contrato, sem valor residual, e o O&M fixo inclui a reposição parcial de módulos (*augmentation*) que mantém a capacidade nominal durante a vida útil, com cerca de um ciclo por dia (NREL, 2024). Cobrar também o desgaste por MWh pagaria a bateria duas vezes.
 
 **Receita fixa do LRCAP.** Como ainda não houve leilão de armazenamento em baterias no Brasil, a receita fixa foi delimitada por quatro referências. A inferior é o primeiro leilão do mecanismo italiano de contratação de capacidade de armazenamento (MACSE), realizado em setembro de 2025 com contratos de 15 anos e desenho semelhante ao do LRCAP, cujo preço médio de € 12.959/(MWh·ano) (TERNA, 2025) corresponde, para um sistema de 4 h e com a taxa de câmbio PTAX de 30/09/2025 (R\$ 6,2396/€), a cerca de R\$ 323 mil/(MW·ano). No LRCAP de março de 2026, que contratou o mesmo produto — potência disponível ao ONS —, termelétricas existentes a óleo e biodiesel obtiveram preço médio de R\$ 831 mil/(MW·ano) (CCEE, 2026c), e o conjunto de termelétricas a gás natural, biometano e carvão e de ampliações de hidrelétricas, novas e existentes, R\$ 2,334 milhões/(MW·ano) (CCEE, 2026b). Por fim, o custo de investimento de referência de sistemas de baterias, de R\$ 5.000 a R\$ 6.000/kW (BRASIL; EPE, 2025), corresponde, anualizado a 10% ao ano em 15 anos, a R\$ 657 mil a R\$ 789 mil/(MW·ano), sem considerar operação e manutenção, encargos e reposição de módulos. Com base nessas referências, a análise de sensibilidade abrange receitas fixas de R\$ 330 mil a R\$ 2,33 milhões/(MW·ano). O valor de R\$ 600 mil/(MW·ano) adotado no caso de referência situa-se no extremo inferior dessa faixa, abaixo do preço obtido por usinas existentes e do custo anualizado de investimento em baterias, e constitui, portanto, uma hipótese conservadora quanto à atratividade do leilão.
 
@@ -528,10 +528,10 @@ A curva de oferta não depende do formato do leilão nem do comportamento dos de
 A viabilidade do empreendimento é avaliada pelo valor presente líquido (VPL) de um fluxo de caixa anual constante, em termos reais, ao longo do prazo do contrato do LRCAP ($n = 15$ anos), sem valor residual, conforme a Equação {eq:vpl}:
 
 $$
-\mathrm{VPL} = -I + F(i, n)\,\left(\Pi - C^{om}\right), \qquad F(i, n) = \frac{1 - (1 + i)^{-n}}{i}
+\mathrm{VPL} = -I + F(i, n)\,\left(\Pi - C^{om} - C^{rede}\right), \qquad F(i, n) = \frac{1 - (1 + i)^{-n}}{i}
 $$ {#eq:vpl}
 
-em que $I$ é o investimento total na usina FV, no BESS e no eletrolisador, $\Pi$ é o lucro operacional esperado na potência ótima para a receita fixa considerada (Seção 3.8.1), $C^{om}$ é o custo anual de operação e manutenção fixo e $F(i, n)$ é o fator de valor presente de uma série uniforme à taxa real $i$. A taxa interna de retorno (TIR) é a taxa para a qual o VPL é nulo. Os parâmetros adotados são apresentados no Quadro 3.3.
+em que $I$ é o investimento total na usina FV, no BESS e no eletrolisador, $\Pi$ é o lucro operacional esperado na potência ótima para a receita fixa considerada (Seção 3.8.1), $C^{om}$ é o custo anual de operação e manutenção fixo, $C^{rede} = 12\,\tau\,(P^{pv} + \bar P^{dis})$ é o custo anual de uso da rede, com a tarifa de uso do sistema de transmissão na geração (TUST) $\tau$, em R\$/kW·mês, aplicada às potências da usina FV e do BESS, e $F(i, n)$ é o fator de valor presente de uma série uniforme à taxa real $i$. A taxa interna de retorno (TIR) é a taxa para a qual o VPL é nulo. Os parâmetros adotados são apresentados no Quadro 3.3.
 
 ::: {custom-style="Legenda"}
 Quadro 3.3 – Parâmetros da análise de viabilidade econômica
@@ -542,23 +542,32 @@ Quadro 3.3 – Parâmetros da análise de viabilidade econômica
 | Investimento na usina FV | R\$ 3.000; 4.250; 5.500/kW | BRASIL; EPE (2025) |
 | Investimento no BESS | R\$ 5.000; 5.500; 6.000/kW | BRASIL; EPE (2025) |
 | Investimento no eletrolisador | US\$ 1.100; 2.000; 2.500/kW | IEA (2025): sistemas chineses de US\$ 500 a 1.100/kW e demais de US\$ 1.900 a 2.500/kW; convertidos pela PTAX de 09/12/2025 (R\$ 5,4025/US\$) |
-| O&M fixo anual | 1,5% (FV), 2,5% (BESS) e 3% (eletrolisador) do investimento | Hipótese do autor; o O&M variável do eletrolisador e a degradação do BESS já estão no modelo de operação |
-| Taxa de desconto real | 8,0% e 12,1% ao ano | ANEEL (2026): custo de capital regulatório da geração, após e antes de impostos |
+| O&M fixo anual | 1,5% (FV), 2,5% (BESS) e 3% (eletrolisador) do investimento | BESS: NREL (2024), incluída a reposição parcial de módulos que mantém a capacidade nominal em 15 anos, com cerca de um ciclo por dia e sem O&M variável; FV e eletrolisador: hipótese do autor |
+| Taxa de desconto real | 12,1% (central) e 8,0% ao ano | ANEEL (2026): custo de capital regulatório da geração antes e após impostos |
+| Uso da rede (TUST de geração) | R\$ 5,68; 10,93; 19,49/kW·mês | Ciclo 2026/2027: média nacional e faixa entre regiões (MOVIMENTO ECONÔMICO, 2026); armazenamento despachado pelo ONS paga apenas na injeção (CENÁRIO ENERGIA, 2026) |
+| Consumo auxiliar do BESS | 0; 1%; 2% da potência nominal | Valor indicativo de fornecedores, de 0,8% a 1,6% da potência do conversor (ENERGY CENTRAL, 2025) |
+| Disponibilidade | 100% (sensibilidade: 97%) | Portaria MME nº 136/2026: disponibilidade integral, com isenção de penalidade para a indisponibilidade acordada com o ONS |
 | Horizonte | 15 anos, sem valor residual | Prazo do contrato do LRCAP |
 
 ::: {custom-style="Fonte"}
 Fonte: elaborado pelo autor.
 :::
 
-Como o lucro operacional não considera tributos sobre a renda, o VPL calculado com a taxa após impostos é otimista; a taxa antes de impostos fornece uma avaliação mais conservadora. A partir do VPL, calcula-se ainda o preço de equilíbrio do hidrogênio, $\pi^{h2,eq} = \pi^{h2} - \mathrm{VPL} / (F(i, n)\, V)$, em que $V$ é a quantidade anual de hidrogênio vendida. Essa expressão mantém a operação fixa e, portanto, superestima ligeiramente o preço de equilíbrio, pois um preço maior levaria a uma produção maior.
+Como o fluxo de caixa é calculado antes dos tributos sobre a renda, adota-se como taxa central o custo de capital antes de impostos (12,1%), que já incorpora o efeito desses tributos. A taxa após impostos (8,0%) é apresentada apenas como sensibilidade, pois, aplicada a um fluxo antes de impostos, ignora o imposto de renda e superestima o VPL. A partir do VPL, calcula-se ainda o preço de equilíbrio do hidrogênio, $\pi^{h2,eq} = \pi^{h2} - \mathrm{VPL} / (F(i, n)\, V)$, em que $V$ é a quantidade anual de hidrogênio vendida. Essa expressão mantém a operação fixa e, portanto, superestima ligeiramente o preço de equilíbrio, pois um preço maior levaria a uma produção maior.
 
-Para isolar a contribuição da bateria, o modelo é resolvido também sem o BESS e, consequentemente, sem participação no leilão, o que fornece o lucro operacional $\Pi^{0}$ da usina FV com o eletrolisador. Quando o BESS ainda será construído, o proponente compara, para cada receita fixa $R$, a alternativa de não construí-lo com a de construí-lo e contratar a melhor potência, deduzido o custo anual equivalente do BESS, $C^{bess} = I^{bess} / F(i, n) + C^{om,bess}$. A potência ofertada passa a ser dada pela Equação {eq:oferta-inv}:
+Para isolar a contribuição da bateria, o modelo é resolvido também sem o BESS e, consequentemente, sem participação no leilão, o que fornece o lucro operacional $\Pi^{0}$ da usina FV com o eletrolisador. Quando o BESS ainda será construído, o proponente compara, para cada receita fixa $R$, a alternativa de não construí-lo com a de construí-lo e contratar a melhor potência, deduzido o custo anual equivalente do BESS, $C^{bess} = I^{bess} / F(i, n) + C^{om,bess} + 12\,\tau\,\bar P^{dis}$, que inclui o capital, o O&M fixo com a reposição parcial de módulos e o uso da rede. Nessa decisão, o lucro operacional $Q(P)$ da Seção 3.8.1 é ajustado em dois pontos, conforme a Equação {eq:qinv}: devolve-se o custo de degradação do módulo LRCAP, cujo desgaste já está no investimento e no O&M fixo (Seção 3.5), e desconta-se o consumo auxiliar do BESS que não é custeado pela CONCAP:
 
 $$
-P^{*}_{inv}(R) = \begin{cases} \arg\max_{P \in \mathcal{X}_h} \left\{ R P + Q(P) \right\}, & \text{se } \max_{P \in \mathcal{X}_h} \left\{ R P + Q(P) \right\} - C^{bess} > \Pi^{0} \\ 0, & \text{caso contrário} \end{cases}
+Q^{inv}(P) = Q(P) + c^{deg} E^{ons} P - \bar\lambda \left[ a H \left(\bar P^{dis} - P\right) + \max\!\left(0,\; a H - \phi E^{ons}\right) P \right]
+$$ {#eq:qinv}
+
+em que $E^{ons}$ é a energia injetada pelo módulo LRCAP por MW contratado em um ano, $a$ é o consumo auxiliar em fração da potência, $H$ é o número de horas do ano e $\bar\lambda$ é o PLD médio. O primeiro termo entre colchetes é o consumo do módulo mercantil, pago pelo empreendedor. O segundo é a parcela do consumo do módulo LRCAP que, medida no seu ponto de medição e contada como recarga, excede a folga $\phi E^{ons}$ entre a recarga custeada pela CONCAP, $E^{ons}/\mathrm{RTE}^{ref}$, e a recarga necessária, $E^{ons}/(\eta^{ch}\eta^{dis})$, isto é, $\phi = 1/\mathrm{RTE}^{ref} - 1/(\eta^{ch}\eta^{dis})$ (BRASIL, 2026, art. 9º, §§ 7º e 8º). Com despacho diário, $E^{ons} \approx 1.461$ MWh/MW, a folga é de cerca de 100 MWh/MW por ano e cobre um consumo auxiliar de até 1,1% da potência. A receita fixa é multiplicada pela disponibilidade $d$, e a potência ofertada passa a ser dada pela Equação {eq:oferta-inv}:
+
+$$
+P^{*}_{inv}(R) = \begin{cases} \arg\max_{P \in \mathcal{X}_h} \left\{ R d P + Q^{inv}(P) \right\}, & \text{se } \max_{P \in \mathcal{X}_h} \left\{ R d P + Q^{inv}(P) \right\} - C^{bess} > \Pi^{0} \\ 0, & \text{caso contrário} \end{cases}
 $$ {#eq:oferta-inv}
 
-O lance mínimo, $R^{min}$, é a menor receita fixa para a qual a construção do BESS é vantajosa, isto é, o menor $R$ para o qual $P^{*}_{inv}(R) > 0$. Ele é calculado para as três faixas de investimento e para as duas taxas de desconto do Quadro 3.3.
+O lance mínimo, $R^{min}$, é a menor receita fixa para a qual a construção do BESS é vantajosa, isto é, o menor $R$ para o qual $P^{*}_{inv}(R) > 0$. Ele é calculado com resolução de R\$ 1 mil/(MW·ano) para as três faixas de investimento e as duas taxas de desconto do Quadro 3.3 e, no caso central, decomposto nas parcelas de capital, O&M, uso da rede, consumo auxiliar e uso mercantil, cuja soma é o lance.
 
 ### 3.8.3 Frequência do despacho do ONS
 
@@ -572,13 +581,13 @@ $$ {#eq:custo-ons}
 
 e uma variação de $N^{ons}$ desloca o custo de oportunidade marginal de um valor constante, sem alterar a operação do lado mercantil. As simulações com diferentes valores de $N^{ons}$ permitem verificar essa aproximação.
 
-Essa relação permite também aproximar o lance mínimo da Seção 3.8.2. No lance mínimo, a potência ofertada tende à potência total do BESS ($P \approx \bar P^{dis}$), de modo que o módulo mercantil se anula e a operação do lado mercantil se aproxima da operação sem BESS. Nessa condição, $Q(\bar P^{dis}) \approx \Pi^{0} - \left(c^{deg} H^{cap} N^{ons} + \kappa\right) \bar P^{dis}$, e a condição de indiferença $R\, \bar P^{dis} + Q(\bar P^{dis}) - C^{bess} = \Pi^{0}$ resulta na Equação {eq:lance-aprox}:
+Essa relação vale para o BESS existente. Para o BESS a construir, ela permite aproximar o lance mínimo da Seção 3.8.2. No lance mínimo, a potência ofertada tende à potência total do BESS ($P \approx \bar P^{dis}$), de modo que o módulo mercantil se anula e a operação do lado mercantil se aproxima da operação sem BESS. Nessa condição, $Q(\bar P^{dis}) \approx \Pi^{0} - \left(c^{deg} H^{cap} N^{ons} + \kappa\right) \bar P^{dis}$. Como a Equação {eq:qinv} devolve o termo de degradação, $Q^{inv}(\bar P^{dis}) \approx \Pi^{0} - \left(\kappa + \kappa^{aux}\right) \bar P^{dis}$, em que $\kappa^{aux}$ é o consumo auxiliar não custeado, por MW. A condição de indiferença $R\, d\, \bar P^{dis} + Q^{inv}(\bar P^{dis}) - C^{bess} = \Pi^{0}$ resulta na Equação {eq:lance-aprox}:
 
 $$
-R^{min} \approx \frac{C^{bess}}{\bar P^{dis}} + c^{deg}\, H^{cap}\, N^{ons} + \kappa
+R^{min} \approx \frac{1}{d} \left( \frac{I^{bess} / F(i, n) + C^{om,bess}}{\bar P^{dis}} + 12\,\tau + \kappa + \kappa^{aux} \right)
 $$ {#eq:lance-aprox}
 
-isto é, o lance mínimo de um BESS a construir corresponde aproximadamente ao seu custo anual equivalente por MW, acrescido do custo de degradação imposto pelo despacho do ONS e do custo da recarga excedente. A aproximação desconsidera o valor residual do uso mercantil da bateria e é verificada no Capítulo 4.
+isto é, o lance mínimo de um BESS a construir corresponde aproximadamente ao seu custo anual equivalente por MW — capital, O&M com reposição de módulos e uso da rede —, acrescido da recarga e do consumo auxiliar não custeados pela CONCAP e dividido pela disponibilidade. Como o desgaste do despacho já está no O&M, o lance não depende do custo de degradação por MWh e só depende da frequência do despacho por meio do consumo auxiliar, cuja folga diminui quando o módulo é despachado menos vezes. A aproximação desconsidera o valor residual do uso mercantil da bateria e é verificada no Capítulo 4.
 
 ### 3.8.4 Casos avaliados
 
@@ -618,13 +627,13 @@ a) **previsão perfeita dentro de cada ano:** mesmo na extensão estocástica, a
 
 b) **agente tomador de preço:** a operação do sistema não altera o PLD;
 
-c) **receita fixa simplificada:** a receita fixa é rateada linearmente no horizonte, sem reajuste pelo Índice Nacional de Preços ao Consumidor Amplo (IPCA), sem o abatimento mensal por desempenho e sem as penalidades por indisponibilidade, cujos detalhes dependem do edital do leilão;
+c) **receita fixa simplificada:** a receita fixa é rateada linearmente no horizonte, sem reajuste pelo Índice Nacional de Preços ao Consumidor Amplo (IPCA), sem o abatimento mensal por desempenho e sem as penalidades por indisponibilidade, cujos detalhes dependem do edital do leilão; o efeito de uma disponibilidade de 97% sobre o lance é avaliado como sensibilidade;
 
 d) **disponibilidade integral:** o módulo LRCAP atende a 100% do despacho, sem indisponibilidades programadas ou forçadas;
 
 e) **eletrolisador simplificado:** eficiência constante em toda a faixa de operação, com custo de partida apenas na extensão estocástica e sem tempos mínimos de operação e de parada, estado de espera (*standby*) ou limites de rampa;
 
-f) **degradação linear:** o custo de degradação do BESS é proporcional à energia descarregada, sem dependência da profundidade de descarga, e seu valor de referência (R\$ 50/MWh) é inferior à estimativa baseada no custo de reposição dos módulos, o que é tratado por análise de sensibilidade;
+f) **degradação linear:** o custo de degradação do BESS existente é proporcional à energia descarregada, sem dependência da profundidade de descarga, e seu valor de referência (R\$ 50/MWh) é inferior ao custo integral de reposição dos módulos, o que é tratado por análise de sensibilidade; na decisão de construir o BESS, o desgaste do uso contratado está no O&M fixo, e o uso mercantil mantém o custo por MWh, hipótese conservadora, pois o O&M de referência já cobre cerca de um ciclo por dia;
 
 g) **divisão contínua do BESS:** a alocação entre os módulos é tratada como contínua, embora na prática seja discreta, em função da modularidade dos contêineres e conversores;
 
@@ -636,7 +645,7 @@ j) **contrato de hidrogênio simplificado:** o contrato é representado por um v
 
 k) **curva de oferta discreta:** a curva é obtida numa grade de 2,5 MW, de modo que a potência ótima e os custos marginais são conhecidos com essa resolução, e não inclui o investimento no BESS;
 
-l) **viabilidade simplificada:** a análise de viabilidade considera fluxo de caixa constante em termos reais, sem tributos sobre a renda, sem financiamento, sem valor residual e com custo de O&M fixo hipotético, e utiliza o lucro operacional calculado com os parâmetros provisórios de operação;
+l) **viabilidade simplificada:** a análise de viabilidade considera fluxo de caixa constante em termos reais, antes dos tributos sobre a renda e descontado à taxa antes de impostos, sem financiamento, sem benefícios fiscais e sem valor residual; o O&M fixo da FV e do eletrolisador é hipotético, a TUST é a média nacional, e não a do barramento de conexão, e o consumo auxiliar é um valor indicativo; o lucro operacional é calculado com os parâmetros provisórios de operação;
 
 m) **amostra de cenários:** os cinco anos históricos são tratados como equiprováveis e constituem uma amostra pequena; o VSS e o EVPI são, portanto, medidos dentro da amostra, e a avaliação da decisão fora da amostra é deixada para trabalhos futuros.
 
@@ -687,6 +696,8 @@ CCEE – CÂMARA DE COMERCIALIZAÇÃO DE ENERGIA ELÉTRICA. **InfoLeilão Expres
 :::
 
 ::: {custom-style="Referencia"}
+CENÁRIO ENERGIA. **ANEEL aprova marco de baterias com tarifação dupla para sistemas sem despacho do ONS**. 2 jun. 2026. Disponível em: https://cenarioenergia.com.br/2026/06/02/aneel-aprova-marco-de-baterias-com-tarifacao-dupla-para-sistemas-sem-despacho-do-ons/. Acesso em: 13 out. 2026.
+
 CONEJO, A. J. *et al.* **Decomposition techniques in mathematical programming**: engineering and science applications. Berlin: Springer, 2006.
 :::
 
@@ -695,6 +706,8 @@ CONEJO, A. J.; CARRIÓN, M.; MORALES, J. M. **Decision making under uncertainty 
 :::
 
 ::: {custom-style="Referencia"}
+ENERGY CENTRAL. **BESS 5 MWh aux consumption**. 2025. Disponível em: https://www.energycentral.com/energy-biz/post/bess-5-mwh-aux-consumption-nB19OmDcUfffS2B. Acesso em: 13 out. 2026.
+
 EPE – EMPRESA DE PESQUISA ENERGÉTICA. **Plano Decenal de Expansão de Energia 2034**: caderno de micro e minigeração distribuída e baterias. Rio de Janeiro: EPE, 2024.
 :::
 
@@ -723,6 +736,10 @@ HULD, T.; MÜLLER, R.; GAMBARDELLA, A. A new solar radiation database for estima
 :::
 
 ::: {custom-style="Referencia"}
+MOVIMENTO ECONÔMICO. **Aneel conclui tarifas de transmissão e NE sai favorecido no ciclo 2026/2027**. 29 jun. 2026. Disponível em: https://movimentoeconomico.com.br/economia/energia/2026/06/29/aneel-conclui-tarifas-de-transmissao-e-ne-sai-favorecido-no-ciclo-2026-2027/. Acesso em: 13 out. 2026.
+
+NREL – NATIONAL RENEWABLE ENERGY LABORATORY. **2024 Annual Technology Baseline**: utility-scale battery storage. Golden: NREL, 2024. Disponível em: https://atb.nrel.gov/electricity/2024/utility-scale_battery_storage. Acesso em: 13 out. 2026.
+
 ROCKAFELLAR, R. T.; URYASEV, S. Optimization of conditional value-at-risk. **Journal of Risk**, v. 2, n. 3, p. 21–41, 2000.
 :::
 
