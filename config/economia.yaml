@@ -2,11 +2,24 @@
 # Cada item com três valores: [baixo, central, alto].
 capex:
   pv_rs_kw: [3000, 4250, 5500]        # EPE/MME, Caderno de Parâmetros de Custos – PDE 2035 (nov/2025)
-  bess_rs_kw: [5000, 5500, 6000]      # idem; duração (h) associada a confirmar no caderno
+  # EPE/MME, Caderno de Parâmetros de Custos PDE 2035 (26/11/2025), em R$/kW de um sistema de
+  # bess_duracao_referencia_h horas; convertido em parcelas de potência e de energia abaixo.
+  bess_rs_kw: [5000, 5500, 6000]
   # IEA, Global Hydrogen Review 2025: sistemas fora da China US$ 1.900–2.500/kW; chineses US$ 500–1.100/kW.
   # Convertido pela PTAX de 09/12/2025 (R$ 5,4025/US$), sem tributos de importação.
   eletrolisador_usd_kw: [1100, 2000, 2500]
 cambio_rs_usd: 5.4025
+# Investimento no BESS com parcelas de potência e de energia: C = c_ref [(1 - f) P + f E / h_ref], com
+# c_ref de capex.bess_rs_kw (R$/kW de um sistema de h_ref horas) e f a parcela que escala com a energia.
+# O caderno do PDE 2035 não informa a duração de referência (as edições de 2030 e 2034 usavam 3 h);
+# central: 4 h, a duração do produto do LRCAP; sensibilidade: 3 h. A bateria do modelo tem 5 h (300 MWh
+# para 60 MW), de modo que a energia além da referência passa a ter custo.
+bess_duracao_referencia_h: 4
+bess_duracao_referencia_sensibilidade_h: 3
+# Composição típica de um sistema de 4 h: bloco de baterias 35–55% do investimento, conversores e
+# transformador 10–20%, conexão, obras e custos indiretos 25–40% (BESS-Market, 2026; Ember, 2025).
+# Central: 60% escala com a energia (bloco de baterias e parte das obras e custos indiretos).
+bess_fracao_energia: [0.45, 0.6, 0.75]
 # O&M fixo anual, em fração do investimento.
 # BESS: 2,5% do investimento em R$/kW, incluindo a reposição parcial de módulos (augmentation) que
 # mantém a capacidade nominal durante os 15 anos, sem O&M variável (NREL, Annual Technology
@@ -27,6 +40,14 @@ vida_anos: 15                          # prazo do contrato do LRCAP; sem valor r
 # ANEEL em 02/06/2026, sistemas despachados pelo ONS pagam o uso da rede só na injeção. Cobrada sobre
 # a potência da usina FV e a do BESS. Na rodada final, usar a TUST do barramento de conexão.
 tust_geracao_rs_kw_mes: [5.68, 10.93, 19.49]
+# Montante de uso (MUST) de injeção. Compartilhado: max(P_FV, P_BESS), com a FV limitada quando a
+# bateria injeta (conexão compartilhada, Portaria MME 136/2026, art. 4º §1º, II; o MUST deve permitir a
+# descarga e a recarga totais do SAE, art. 9º §13). Não compartilhado: P_FV + P_BESS.
+must_compartilhado: true
+# TUST de consumo (média nacional 2026/2027), usada só na sensibilidade de cobrança dupla (carga e
+# injeção). A REN ANEEL 1.162/2026 prevê faturamento das duas parcelas para SAE colocalizado; fontes
+# secundárias indicam isenção da parcela de consumo sob despacho centralizado do ONS. A confirmar.
+tust_consumo_rs_kw_mes: 15.23
 # Consumo auxiliar do BESS (climatização, controle), contínuo, em fração da potência nominal.
 # Valor indicativo de fornecedor (0,8–1,6% da potência do conversor), a confirmar com catálogo.
 # A parcela do módulo LRCAP medida no seu PMI entra na recarga; o que exceder a folga custeada

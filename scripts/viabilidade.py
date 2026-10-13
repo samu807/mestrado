@@ -69,8 +69,9 @@ def fmt_taxa(i):
 def premissas(eco, **troca):
     """Premissas centrais da análise de investimento, com trocas pontuais (sensibilidade)."""
     pr = {"capex": "central", "taxa": eco["taxa_central"], "om_bess": eco["om_fixo_frac"]["bess"],
-          "tust": eco["tust_geracao_rs_kw_mes"][1], "aux": eco["consumo_auxiliar_frac"][1],
-          "disp": eco["disponibilidade"]}
+          "h_ref": eco["bess_duracao_referencia_h"], "f_energia": eco["bess_fracao_energia"][1],
+          "tust": eco["tust_geracao_rs_kw_mes"][1], "must_compartilhado": eco["must_compartilhado"],
+          "dupla": False, "aux": eco["consumo_auxiliar_frac"][1], "disp": eco["disponibilidade"]}
     pr.update(troca)
     return pr
 
@@ -83,24 +84,51 @@ def tust_anual(tust_rs_kw_mes, mw):
     return tust_rs_kw_mes * 12 * 1000 * mw
 
 
-def capex_om(p, eco, nivel, om_bess=None):
-    k = NIVEIS.index(nivel)
+def must_injecao(p, pr, com_bess=True):
+    """Montante de uso de injeção [MW]: com a conexão compartilhada, a FV é limitada quando a
+    bateria injeta, e basta o maior dos dois; sem compartilhar, as potências se somam."""
+    if not com_bess or potencia_bess(p) <= 0:
+        return p.pv.potencia_pico_mw
+    if pr["must_compartilhado"]:
+        return max(p.pv.potencia_pico_mw, potencia_bess(p))
+    return p.pv.potencia_pico_mw + potencia_bess(p)
+
+
+def uso_rede(p, eco, pr, com_bess=True):
+    """Custo anual de uso da rede da usina [R$]: TUST de geração sobre o MUST de injeção e, na
+    cobrança dupla, TUST de consumo sobre a potência de recarga do BESS."""
+    custo = tust_anual(pr["tust"], must_injecao(p, pr, com_bess))
+    if com_bess and pr["dupla"]:
+        custo += tust_anual(eco["tust_consumo_rs_kw_mes"], potencia_bess(p))
+    return custo
+
+
+def capex_bess(p, eco, pr):
+    """Investimento no BESS com parcelas de potência e de energia:
+    C = c_ref [(1 - f) P + f E / h_ref], com c_ref em R$/kW para um sistema de h_ref horas."""
+    c_ref = eco["capex"]["bess_rs_kw"][NIVEIS.index(pr["capex"])]
+    f = pr["f_energia"]
+    return c_ref * ((1 - f) * potencia_bess(p) * 1e3 + f * p.bess.energia_mwh * 1e3 / pr["h_ref"])
+
+
+def capex_om(p, eco, pr):
+    k = NIVEIS.index(pr["capex"])
     c = eco["capex"]
     pv = c["pv_rs_kw"][k] * p.pv.potencia_pico_mw * 1e3
-    bess = c["bess_rs_kw"][k] * potencia_bess(p) * 1e3
+    bess = capex_bess(p, eco, pr)
     el = c["eletrolisador_usd_kw"][k] * eco["cambio_rs_usd"] * p.eletrolisador.potencia_max_mw * 1e3
     om = eco["om_fixo_frac"]
-    om_b = bess * (om["bess"] if om_bess is None else om_bess)
+    om_b = bess * pr["om_bess"]
     return {"pv": pv, "bess": bess, "eletrolisador": el,
             "om": pv * om["pv"] + om_b + el * om["eletrolisador"], "om_bess": om_b}
 
 
 def custo_anual_bess(p, eco, pr):
-    """Custo anual equivalente do BESS: capital, O&M fixo (com augmentation) e TUST."""
-    c = capex_om(p, eco, pr["capex"], pr["om_bess"])
+    """Custo anual equivalente do BESS: capital, O&M fixo (com augmentation) e acréscimo de uso da rede."""
+    c = capex_om(p, eco, pr)
     capital = c["bess"] / fator_anuidade(pr["taxa"], eco["vida_anos"])
-    return {"capital": capital, "om": c["om_bess"], "tust": tust_anual(pr["tust"], potencia_bess(p)),
-            "total": capital + c["om_bess"] + tust_anual(pr["tust"], potencia_bess(p))}
+    rede = uso_rede(p, eco, pr, True) - uso_rede(p, eco, pr, False)
+    return {"capital": capital, "om": c["om_bess"], "tust": rede, "total": capital + c["om_bess"] + rede}
 
 
 def info_despacho(p):
@@ -259,7 +287,7 @@ def grafico_oferta(curva, P, Qi, q_sem, eco, base, dec, saida):
     ax[0].legend(frameon=False, fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.14))
 
     # Cascata: parcelas positivas empilhadas até o lance; o uso mercantil desconta
-    nomes = [("capital", "Capital"), ("om_augmentation", "O&M e\naugmentation"), ("tust", "TUST"),
+    nomes = [("capital", "Capital"), ("om_augmentation", "O&M e\naugmentation"), ("tust", "Uso da\nrede"),
              ("consumo_auxiliar", "Consumo\nauxiliar"), ("uso_mercantil", "Uso\nmercantil")]
     base_y, xs = 0.0, []
     for k, (chave, rot) in enumerate(nomes):
@@ -332,14 +360,22 @@ def sensibilidade(base, eco, curva, info, q_sem, saida):
     """Lance mínimo do caso de referência com uma premissa alterada de cada vez."""
     t, a = eco["tust_geracao_rs_kw_mes"], eco["consumo_auxiliar_frac"]
     om = eco["om_fixo_frac"]["bess"]
+    fe = eco["bess_fracao_energia"]
     casos = [("Central", {}),
-             ("Investimento baixo (R$ 5.000/kW)", {"capex": "baixo"}),
-             ("Investimento alto (R$ 6.000/kW)", {"capex": "alto"}),
+             ("Investimento de referência de R$ 5.000/kW", {"capex": "baixo"}),
+             ("Investimento de referência de R$ 6.000/kW", {"capex": "alto"}),
+             (f"Referência da EPE para {eco['bess_duracao_referencia_sensibilidade_h']} h",
+              {"h_ref": eco["bess_duracao_referencia_sensibilidade_h"]}),
+             (f"Parcela de energia de {fe[0]:.0%}", {"f_energia": fe[0]}),
+             (f"Parcela de energia de {fe[2]:.0%}", {"f_energia": fe[2]}),
              (f"Taxa de {fmt_taxa(0.08)} (após impostos)", {"taxa": 0.08}),
              (f"O&M de {om - 0.01:.1%}".replace(".", ","), {"om_bess": om - 0.01}),
              (f"O&M de {om + 0.01:.1%}".replace(".", ","), {"om_bess": om + 0.01}),
              (f"TUST de R$ {t[0]:.2f}/kW·mês".replace(".", ","), {"tust": t[0]}),
              (f"TUST de R$ {t[2]:.2f}/kW·mês".replace(".", ","), {"tust": t[2]}),
+             ("Conexão não compartilhada", {"must_compartilhado": False}),
+             (f"Cobrança dupla (TUST de consumo de R$ {eco['tust_consumo_rs_kw_mes']:.2f})".replace(".", ","),
+              {"dupla": True}),
              ("Sem consumo auxiliar", {"aux": a[0]}),
              (f"Consumo auxiliar de {a[2]:.0%}", {"aux": a[2]}),
              (f"Disponibilidade de {eco['disponibilidade_sensibilidade']:.0%}",
@@ -349,8 +385,10 @@ def sensibilidade(base, eco, curva, info, q_sem, saida):
         pr = premissas(eco, **troca)
         dec = decomposicao(base, eco, pr, curva, info, q_sem)
         linhas.append({"caso": nome, "capex_nivel": pr["capex"], "taxa": pr["taxa"], "om_bess_frac": pr["om_bess"],
-                       "tust_rs_kw_mes": pr["tust"], "consumo_auxiliar_frac": pr["aux"], "disponibilidade": pr["disp"],
-                       **dec})
+                       "duracao_referencia_h": pr["h_ref"], "fracao_energia": pr["f_energia"],
+                       "tust_rs_kw_mes": pr["tust"], "must_compartilhado": pr["must_compartilhado"],
+                       "cobranca_dupla": pr["dupla"], "consumo_auxiliar_frac": pr["aux"], "disponibilidade": pr["disp"],
+                       "capex_bess_rs": capex_bess(base, eco, pr), **dec})
     df = pd.DataFrame(linhas)
     df.to_csv(saida / "lance_sensibilidade.csv", index=False)
     return df
@@ -397,9 +435,9 @@ def main():
                 P, Qi = curva_investimento(curva, p, infos[caso], pr["aux"])
                 v = r_ref * pr["disp"] * P + Qi
                 k = int(np.argmax(v))
-                c = capex_om(p, eco, nivel)
+                c = capex_om(p, eco, pr)
                 capex = c["pv"] + c["bess"] + c["eletrolisador"]
-                rede = tust_anual(pr["tust"], p.pv.potencia_pico_mw + potencia_bess(p))
+                rede = uso_rede(p, eco, pr, True)
                 fluxo = v[k] - c["om"] - rede
                 fa = fator_anuidade(i, n)
                 vpl = -capex + fa * fluxo
@@ -453,8 +491,8 @@ def main():
     print("\nLance mínimo e valor da bateria (caso de referência):")
     print(bat.to_string(index=False))
     print("\nSensibilidade e parcelas do lance mínimo (caso de referência):")
-    print(sens.drop(columns=["capex_nivel", "om_bess_frac", "tust_rs_kw_mes", "consumo_auxiliar_frac",
-                             "disponibilidade"]).to_string(index=False))
+    print(sens[["caso", "taxa", "capex_bess_rs", "lance_minimo_rs_mw_ano", "p_cap_mw", "capital", "om_augmentation",
+                "tust", "consumo_auxiliar", "uso_mercantil"]].to_string(index=False))
     print("\nLance mínimo por caso:")
     print(lmc.pivot_table(index="caso", columns="taxa", values=["lance_minimo_rs_mw_ano", "p_cap_mw"]).to_string())
     print(f"\nResultados salvos em {saida}")
