@@ -36,6 +36,8 @@ def parametros_cenario(p: Parametros, c: Cenario) -> Parametros:
     q.pv.arquivo = c.pv_arquivo
     q.mercado.arquivo = c.pld_arquivo
     q.mercado.fator_preco = c.fator_preco
+    if c.fator_emissao_arquivo and q.rede.fator_emissao_kg_mwh is None:   # valor constante prevalece
+        q.rede.fator_emissao_arquivo = c.fator_emissao_arquivo
     return q
 
 

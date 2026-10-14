@@ -60,6 +60,9 @@ Os dois módulos disputam a capacidade do **ponto de conexão compartilhado**.
 | $\bar P^{exp},\ \bar P^{imp}$ | limites do ponto de conexão compartilhado | MW | `rede.*` |
 | $\bar P^{imp,m}$ | limite de importação do lado mercantil ($=0$ se H₂ verde estrito) | MW | `rede.*` |
 | $c^{imp}$ | adicional sobre a energia importada (encargos, TUSD) | R\$/MWh | `rede.custo_adicional_importacao_rs_mwh` |
+| $f_t$ | fator de emissão da energia da rede na hora $t$ | kgCO₂/MWh | `rede.fator_emissao_*` |
+| $f^{pv},\ e^{proc}$ | emissões atribuídas à energia FV e às demais etapas do H₂ | kgCO₂/MWh, kgCO₂/kg | `pv.fator_emissao_kg_mwh`, `hidrogenio.emissao_processo_kg_kg` |
+| $L,\ \mathcal{W}$ | limite de intensidade de emissões do H₂ e janelas de apuração | kgCO₂/kg, – | `hidrogenio.limite_emissoes_kg_kg`, `janela_emissoes_h` |
 | $R^{cap}$ | receita fixa | R\$/MW·ano | `lrcap.receita_fixa_rs_mw_ano` |
 | $\underline P^{cap}$ | disponibilidade mínima (30 MW, art. 7º, III) | MW | `lrcap.potencia_min_mw` |
 | $H^{cap}$ | duração do ciclo completo (4 h, art. 4º §3º) | h | `lrcap.duracao_h` |
@@ -140,6 +143,17 @@ recarga total do SAE, art. 9º §13):
 $$ -\bar P^{imp} \le p^{exp}_t - p^{imp}_t + p^{dis,lr}_t - p^{ch,lr}_t \le \bar P^{exp} $$
 Com `h2_verde_estrito: true` impõe-se $\bar P^{imp,m}=0$: o eletrolisador só recebe
 energia renovável local (PV direto ou PV armazenado no módulo mercantil).
+
+**Limite de emissões do H₂** (alternativa ao H₂ verde estrito; Lei 14.948/2024: 7 kgCO₂eq/kgH₂).
+A energia da rede vai só ao eletrolisador e é toda atribuída ao H₂; o restante da energia do
+eletrolisador é FV, direta ou armazenada. Em cada janela $w \in \mathcal{W}$ (uma semana por
+padrão, coincidente com os blocos da decomposição):
+$$ p^{imp}_t \le p^{el}_t \qquad \forall t $$
+$$ \sum_{t\in w}\Big[f_t\, p^{imp}_t + f^{pv}\,(p^{el}_t - p^{imp}_t)\Big]\Delta t + e^{proc}\sum_{t\in w} m_t\Delta t
+   \;\le\; L \sum_{t\in w} m_t \Delta t \qquad \forall w $$
+Como $m_t = (1000/k^{el})\,p^{el}_t$, com $f^{pv}=e^{proc}=0$ a restrição diz que a energia do
+eletrolisador tem fator médio de até $L\,k^{el}/1000$ (127 kg/MWh para $L=7$ e 55 kWh/kg).
+É linear e não acrescenta binárias. $L = 0$ reproduz o H₂ verde estrito.
 
 **Eletrolisador e hidrogênio**
 $$ \alpha^{el}\bar P^{el} z_t \le p^{el}_t \le \bar P^{el} z_t, \qquad m_t = \frac{1000}{k^{el}}\, p^{el}_t $$
@@ -226,6 +240,7 @@ e a bateria mercantil operando em ciclos diários, o efeito tende a ser pequeno.
   mínimo ligado/desligado.
 - Degradação dependente da profundidade de descarga; custo de reposição de módulos
   para manter a disponibilidade ao longo dos 15 anos do CRCAP (art. 9º §4º, II-j).
-- Critérios de certificação do H₂ verde (correlação temporal, adicionalidade).
+- Critérios de certificação do H₂ verde além do limite de intensidade semanal (correlação
+  horária, adicionalidade, fator de emissão da rede definido pela regulamentação do SBCH2).
 - Dimensionamento ótimo (capacidades como variáveis, CAPEX anualizado) e avaliação
   econômica no horizonte do CRCAP (15 anos, início em 1º/08/2028).

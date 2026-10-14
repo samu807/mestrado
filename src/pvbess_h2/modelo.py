@@ -196,6 +196,29 @@ def construir_modelo(p: Parametros, series: pd.DataFrame) -> pyo.ConcreteModel:
             return m.u_el[t] >= m.z_el[t]
         return m.u_el[t] >= m.z_el[t] - m.z_el[t - 1 if t > 0 else n - 1]
 
+    # Limite de emissões do H2 (Lei 14.948/2024). A energia comprada da rede vai só ao
+    # eletrolisador e é toda atribuída ao H2; o restante da energia do eletrolisador é FV,
+    # direta ou via módulo mercantil. Em cada janela, emissões <= limite x H2 produzido.
+    if h2.limite_emissoes_kg_kg is not None:
+        f_rede = series["fator_emissao_kg_mwh"].to_numpy()
+        f_pv = p.pv.fator_emissao_kg_mwh
+
+        @m.Constraint(m.T)
+        def importacao_so_h2(m, t):
+            return m.p_imp[t] <= m.p_el[t]
+
+        m.emissoes_h2 = pyo.Expression(m.T, rule=lambda m, t: (
+            (f_rede[t] * m.p_imp[t] + f_pv * (m.p_el[t] - m.p_imp[t])) * dt
+            + h2.emissao_processo_kg_kg * m.m_h2[t] * dt))
+        passos = max(1, int(round(h2.janela_emissoes_h / dt)))
+        janelas = [range(i, min(i + passos, n)) for i in range(0, n, passos)]
+        m.J = pyo.RangeSet(0, len(janelas) - 1)
+
+        @m.Constraint(m.J)
+        def limite_emissoes(m, j):
+            return (sum(m.emissoes_h2[t] for t in janelas[j])
+                    <= h2.limite_emissoes_kg_kg * sum(m.m_h2[t] * dt for t in janelas[j]))
+
     # Contrato de fornecimento de H2: entrega mínima diária (com déficit multado, se
     # houver penalidade) e teto diário de venda.
     m.deficit_h2 = pyo.Var(m.D, within=pyo.NonNegativeReals,

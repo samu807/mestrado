@@ -310,6 +310,7 @@ def operacao_anual(p: Parametros, inicio: str, dias: int, p_cap: float, dias_blo
     total["energia_modulo_lrcap_mwh"] = k.loc["energia_modulo_lrcap_mwh"].iloc[0]
     total["energia_modulo_mercantil_mwh"] = k.loc["energia_modulo_mercantil_mwh"].iloc[0]
     total["fator_capacidade_eletrolisador"] = df["p_eletrolisador_mw"].mean() / p.eletrolisador.potencia_max_mw
+    total["intensidade_h2_kgco2_kg"] = total["emissoes_h2_kgco2"] / max(total["h2_produzido_kg"], 1e-9)
     total["preco_medio_exportacao_rs_mwh"] = ((df["pld_rs_mwh"] * df["p_exportacao_mw"]).sum()
                                               / max(df["p_exportacao_mw"].sum(), 1e-9))
     total["ciclos_equivalentes_mercantil"] = (df["p_descarga_bess_mw"].sum() * p.horizonte.dt_h

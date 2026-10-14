@@ -31,6 +31,10 @@ class PV:
     arquivo: str | None = None
     fator_capacidade_pico: float = 0.85
     nebulosidade: float = 0.25
+    # Emissões atribuídas à energia FV no limite de emissões do H2 [kgCO2eq/MWh]. 0 = só
+    # emissões de operação, como no fator da rede; ciclo de vida da FV de grande porte:
+    # mediana de 48 (IPCC AR5, 2014, Anexo III).
+    fator_emissao_kg_mwh: float = 0.0
 
 
 @dataclass
@@ -68,6 +72,13 @@ class Hidrogenio:
     # kg não entregue abaixo da entrega mínima (None = entrega mínima obrigatória).
     entrega_max_diaria_kg: float | None = None
     penalidade_deficit_rs_kg: float | None = None
+    # Limite de intensidade de emissões do H2 [kgCO2eq/kg H2] (None = sem limite). Com limite,
+    # a energia comprada da rede só pode ir ao eletrolisador, é toda atribuída ao H2, e a
+    # intensidade média de cada janela de janela_emissoes_h horas não passa do limite (Lei
+    # 14.948/2024: 7 kgCO2eq/kgH2 até 2030). Exige rede.h2_verde_estrito = false.
+    limite_emissoes_kg_kg: float | None = None
+    janela_emissoes_h: int = 168
+    emissao_processo_kg_kg: float = 0.0    # outras etapas (compressão, água), por kg de H2
 
 
 @dataclass
@@ -77,6 +88,11 @@ class Rede:
     permitir_importacao: bool = True
     h2_verde_estrito: bool = True
     custo_adicional_importacao_rs_mwh: float = 250.0
+    # Fator de emissão da energia comprada da rede [kgCO2eq/MWh]: série horária em CSV
+    # (timestamp,fator_kg_mwh) ou valor constante, que prevalece sobre os arquivos dos
+    # cenários (ex.: fator marginal). Usado no limite de emissões do H2.
+    fator_emissao_arquivo: str | None = None
+    fator_emissao_kg_mwh: float | None = None
 
 
 @dataclass
@@ -133,6 +149,7 @@ class Cenario:
     pv_arquivo: str
     probabilidade: float | None = None     # None = uniforme
     fator_preco: float = 1.0               # correção do PLD para a moeda de referência
+    fator_emissao_arquivo: str | None = None   # fator de emissão horário da rede no ano
 
 
 @dataclass
@@ -194,6 +211,15 @@ class Parametros:
             "estocastico.fronteira_blocos deve ser 'ciclica' ou 'lp'"
         assert b.soc_final_frac is None or b.soc_min_frac <= b.soc_final_frac <= b.soc_max_frac
         assert h2.tanque_final_kg is None or 0 <= h2.tanque_final_kg <= h2.tanque_max_kg
+        if h2.limite_emissoes_kg_kg is not None:
+            r = self.rede
+            assert h2.limite_emissoes_kg_kg >= 0 and h2.janela_emissoes_h >= 1
+            assert r.permitir_importacao and not r.h2_verde_estrito, \
+                "hidrogenio.limite_emissoes_kg_kg exige rede.permitir_importacao: true e rede.h2_verde_estrito: false"
+            cen = self.estocastico.cenarios
+            assert (r.fator_emissao_arquivo or r.fator_emissao_kg_mwh is not None
+                    or (cen and all(c.fator_emissao_arquivo for c in cen))), \
+                "hidrogenio.limite_emissoes_kg_kg exige o fator de emissão da rede (rede.fator_emissao_*)"
         if lr.habilitado:
             # Requisitos de habilitação técnica (Portaria MME 136/2026, art. 7º)
             faixa = b.soc_max_frac - b.soc_min_frac

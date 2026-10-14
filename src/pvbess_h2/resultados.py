@@ -31,6 +31,15 @@ def serie_resultados(m: pyo.ConcreteModel, series: pd.DataFrame) -> pd.DataFrame
     return df.round(6)
 
 
+def emissoes_h2(df: pd.DataFrame, p: Parametros) -> float:
+    """Emissões atribuídas ao H2 [kgCO2eq]: toda a energia comprada da rede, ao fator da hora, e
+    o restante da energia do eletrolisador ao fator da FV, mais as emissões de processo."""
+    imp, el = df["p_importacao_mw"], df["p_eletrolisador_mw"]
+    f_rede = df["fator_emissao_kg_mwh"] if "fator_emissao_kg_mwh" in df else 0.0
+    energia = (f_rede * imp + p.pv.fator_emissao_kg_mwh * (el - imp).clip(lower=0)).sum() * p.horizonte.dt_h
+    return float(energia + p.hidrogenio.emissao_processo_kg_kg * df["producao_h2_kg_h"].sum() * p.horizonte.dt_h)
+
+
 def indicadores(m: pyo.ConcreteModel, df: pd.DataFrame, p: Parametros) -> pd.Series:
     e = lambda col: df[col].sum() * p.horizonte.dt_h  # noqa: E731
     k = {
@@ -56,6 +65,8 @@ def indicadores(m: pyo.ConcreteModel, df: pd.DataFrame, p: Parametros) -> pd.Ser
         "h2_produzido_kg": e("producao_h2_kg_h"),
         "h2_vendido_kg": e("venda_h2_kg_h"),
         "deficit_h2_kg": sum(pyo.value(m.deficit_h2[d]) for d in m.D),
+        "emissoes_h2_kgco2": emissoes_h2(df, p),
+        "intensidade_h2_kgco2_kg": emissoes_h2(df, p) / max(e("producao_h2_kg_h"), 1e-9),
         "ciclos_equivalentes_mercantil": e("p_descarga_bess_mw") / max(pyo.value(m.E_merc), 1e-9),
         "fator_capacidade_eletrolisador": df["p_eletrolisador_mw"].mean() / p.eletrolisador.potencia_max_mw,
         "preco_medio_exportacao_rs_mwh": (df["pld_rs_mwh"] * df["p_exportacao_mw"]).sum()

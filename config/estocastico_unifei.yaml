@@ -76,6 +76,9 @@ rede:
   # (PV + BESS carregada pelo PV): a importação da rede é proibida.
   h2_verde_estrito: true
   custo_adicional_importacao_rs_mwh: 250.0  # encargos/TUSD sobre a energia importada
+  # Fator de emissão horário do SIN (scripts/importar_emissoes.py, dados do ONS): usado no
+  # limite de emissões do H2 (hidrogenio.limite_emissoes_kg_kg, desligado por padrão).
+  fator_emissao_arquivo: data/fator_emissao_sin_2025.csv
 
 mercado:
   # PLD horário do submercado Sudeste/Centro-Oeste (CCEE, dados abertos)
@@ -129,8 +132,8 @@ estocastico:
   # IPCA (IBGE): 2021 10,06%; 2022 5,79%; 2023 4,62%; 2024 4,83%; 2025 4,26%.
   # fator_preco = IPCA acumulado do ano seguinte ao cenário até dez/2025.
   cenarios:
-    - {nome: "2021", ano: 2021, pld_arquivo: data/pld_se_2021.csv, pv_arquivo: data/pv_itajuba_sarah3_2021.csv, fator_preco: 1.2097}
-    - {nome: "2022", ano: 2022, pld_arquivo: data/pld_se_2022.csv, pv_arquivo: data/pv_itajuba_sarah3_2022.csv, fator_preco: 1.1435}
-    - {nome: "2023", ano: 2023, pld_arquivo: data/pld_se_2023.csv, pv_arquivo: data/pv_itajuba_sarah3_2023.csv, fator_preco: 1.093}
-    - {nome: "2024", ano: 2024, pld_arquivo: data/pld_se_2024.csv, pv_arquivo: data/pv_itajuba_sarah3_2024.csv, fator_preco: 1.0426}
-    - {nome: "2025", ano: 2025, pld_arquivo: data/pld_se_2025.csv, pv_arquivo: data/pv_itajuba_sarah3_2025.csv, fator_preco: 1.0}
+    - {nome: "2021", ano: 2021, pld_arquivo: data/pld_se_2021.csv, pv_arquivo: data/pv_itajuba_sarah3_2021.csv, fator_emissao_arquivo: data/fator_emissao_sin_2021.csv, fator_preco: 1.2097}
+    - {nome: "2022", ano: 2022, pld_arquivo: data/pld_se_2022.csv, pv_arquivo: data/pv_itajuba_sarah3_2022.csv, fator_emissao_arquivo: data/fator_emissao_sin_2022.csv, fator_preco: 1.1435}
+    - {nome: "2023", ano: 2023, pld_arquivo: data/pld_se_2023.csv, pv_arquivo: data/pv_itajuba_sarah3_2023.csv, fator_emissao_arquivo: data/fator_emissao_sin_2023.csv, fator_preco: 1.093}
+    - {nome: "2024", ano: 2024, pld_arquivo: data/pld_se_2024.csv, pv_arquivo: data/pv_itajuba_sarah3_2024.csv, fator_emissao_arquivo: data/fator_emissao_sin_2024.csv, fator_preco: 1.0426}
+    - {nome: "2025", ano: 2025, pld_arquivo: data/pld_se_2025.csv, pv_arquivo: data/pv_itajuba_sarah3_2025.csv, fator_emissao_arquivo: data/fator_emissao_sin_2025.csv, fator_preco: 1.0}

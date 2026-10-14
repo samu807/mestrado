@@ -213,3 +213,43 @@ def test_fronteiras_lp():
     assert k.limite_superior_lp_rs == pytest.approx(ub, abs=1e-3)
     assert lb <= ub + 1e-6 * abs(ub)
     assert lb >= ub * (1 - 0.02)
+
+
+def _limite(lim, fator=200.0, janela=24, dias=2):
+    return resolver_caso({"rede": {"h2_verde_estrito": False, "fator_emissao_kg_mwh": fator},
+                          "hidrogenio": {"limite_emissoes_kg_kg": lim, "janela_emissoes_h": janela}}, dias=dias)
+
+
+def test_limite_emissoes_zero_equivale_ao_h2_verde_estrito():
+    _, m_est, _, _ = resolver_caso({"rede": {"h2_verde_estrito": True}})
+    _, m_lim, df, _ = _limite(0.0)
+    assert df.p_importacao_mw.max() < 1e-6
+    assert pyo.value(m_lim.lucro) == pytest.approx(pyo.value(m_est.lucro), rel=1e-3)
+
+
+def test_limite_emissoes_respeitado_em_cada_janela():
+    # Com 200 kg/MWh e limite de 3 kg/kg, a rede pode suprir até 3 / (0,055 x 200) = 27% da
+    # energia do eletrolisador em cada dia; sem limite, a compra seria maior.
+    p, m, df, kpi = _limite(3.0)
+    _, m_sem, df_sem, _ = resolver_caso({"rede": {"h2_verde_estrito": False}})
+    _, m_est, _, _ = resolver_caso({"rede": {"h2_verde_estrito": True}})
+    assert (df.p_importacao_mw <= df.p_eletrolisador_mw + 1e-6).all()
+    assert 1e-3 < df.p_importacao_mw.sum() < df_sem.p_importacao_mw.sum()
+    dia = df.index.normalize()
+    emis = (200.0 * df.p_importacao_mw).groupby(dia).sum()
+    h2 = df.producao_h2_kg_h.groupby(dia).sum()
+    assert (emis <= 3.0 * h2 + 1e-4).all()
+    assert kpi.intensidade_h2_kgco2_kg <= 3.0 + 1e-6
+    assert pyo.value(m_est.lucro) - 1e-3 <= pyo.value(m.lucro) <= pyo.value(m_sem.lucro) + 1e-3
+
+
+def test_limite_emissoes_exige_importacao_e_fator():
+    p = carregar_parametros(CONFIG)
+    p.hidrogenio.limite_emissoes_kg_kg = 7.0
+    with pytest.raises(AssertionError):
+        p.validar()                       # h2_verde_estrito = true no caso base
+    p.rede.h2_verde_estrito = False
+    with pytest.raises(AssertionError):
+        p.validar()                       # sem fator de emissão da rede
+    p.rede.fator_emissao_kg_mwh = 40.0
+    p.validar()

@@ -31,6 +31,9 @@ from pvbess_h2.estocastico import avaliar_potencia, parametros_cenario  # noqa: 
 # ressarcimento do produto (este seria só a diferença entre o preço de reposição e o do
 # contrato). Somada à venda perdida, cada kg não entregue custa 2 x preço ao empreendedor.
 MULTA = 35.0
+# Fator de emissão marginal da rede: térmica a gás natural, 56,1 tCO2/TJ (IPCC, 2006) com 45% de
+# rendimento, o mesmo de scripts/importar_emissoes.py.
+FATOR_MARGINAL = 56.1 * 3.6 / 0.45
 CASOS = {
     "base": ("H₂ ilimitado, sem importação", {}),
     "contrato_2t": ("Contrato 2 t/dia, sem importação",
@@ -57,10 +60,20 @@ CASOS = {
     "contrato_3t_tanque_10t": ("Contrato 3 t/dia, tanque de 10 t",
                                {"hidrogenio": {"entrega_min_diaria_kg": 3000.0, "entrega_max_diaria_kg": 3000.0,
                                                "penalidade_deficit_rs_kg": MULTA, "tanque_max_kg": 10000.0}}),
+    # Limite de emissões do H2 em vez do H2 verde estrito: a rede só supre o eletrolisador e a
+    # intensidade semanal fica abaixo de 7 kgCO2/kgH2 (Lei 14.948/2024) ou de 3,4 (≈ UE). Fator da
+    # rede horário médio do SIN (ONS) ou marginal: toda compra vem de térmica a gás (449 kg/MWh).
+    **{f"emissoes_{str(lim).replace('.', '_')}{suf}": (
+        f"Limite de {lim:g} kgCO₂/kgH₂{rot}".replace(".", ","),
+        {"rede": {"h2_verde_estrito": False, **extra}, "hidrogenio": {"limite_emissoes_kg_kg": float(lim)}})
+       for lim in (7, 3.4)
+       for suf, rot, extra in (("", ", fator médio", {}),
+                               ("_marginal", ", fator marginal", {"fator_emissao_kg_mwh": FATOR_MARGINAL}))},
 }
 INDICADORES = ["receita_mcp_rs", "receita_h2_rs", "custo_importacao_rs", "custo_h2_rs", "custo_degradacao_rs",
                "energia_exportada_mwh", "energia_importada_mwh", "energia_eletrolisador_mwh", "curtailment_mwh",
-               "h2_produzido_kg", "h2_vendido_kg", "deficit_h2_kg", "fator_capacidade_eletrolisador"]
+               "h2_produzido_kg", "h2_vendido_kg", "deficit_h2_kg", "fator_capacidade_eletrolisador",
+               "emissoes_h2_kgco2"]
 
 
 def aplicar(base, ajustes):
@@ -88,7 +101,7 @@ def graficos(curvas, nomes, saida, rotulo):
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    cores = ["#256abf", "#2a9d5c", "#7cc49a", "#d9731a", "#a64d79"]
+    cores = ["#256abf", "#2a9d5c", "#7cc49a", "#d9731a", "#a64d79", "#6b6b6b"]
     fig, ax = plt.subplots(1, 3, figsize=(15, 4.6))
     receitas = np.arange(0, 1.5e6 + 1, 5e3)
     for (caso, c), cor in zip(curvas.items(), cores):
@@ -168,6 +181,7 @@ def main():
                 _, k = operacao_anual(q, f"{c.ano}-01-01", dias, x_ref, processos=args.processos)
                 ks.append(k[INDICADORES])
             op = pd.concat(ks, axis=1).mean(axis=1)
+            op["intensidade_h2_kgco2_kg"] = op["emissoes_h2_kgco2"] / max(op["h2_produzido_kg"], 1e-9)
             op["p_cap_mw"] = x_ref
             op.to_csv(saida / f"{caso}_operacao.csv", header=["valor"])
             print(f"[{caso}] ótimo com R$ {r_ref / 1e3:.0f} mil/MW·ano: {x_ref:.1f} MW", flush=True)

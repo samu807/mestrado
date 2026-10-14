@@ -297,11 +297,18 @@ def montar_series(p: Parametros) -> pd.DataFrame:
     else:
         pld = pld_sintetico(p, idx, rng)
 
+    r = p.rede
+    if r.fator_emissao_arquivo and r.fator_emissao_kg_mwh is None:
+        fe = _ler_serie(r.fator_emissao_arquivo, p.base_dir, "fator_kg_mwh", idx).to_numpy()
+    else:
+        fe = np.full(len(idx), r.fator_emissao_kg_mwh or 0.0)
+
     ons = despacho_ons(p, idx, pld.to_numpy())
     return pd.DataFrame(
         {
             "pv_disp_mw": p.pv.potencia_pico_mw * fc.values,
             "pld_rs_mwh": pld.values,
+            "fator_emissao_kg_mwh": fe,
             "ons_descarga_pu": ons["descarga_pu"].values,
             "ons_recarga_pu": ons["recarga_pu"].values,
             "ons_soc_pu": ons["soc_pu"].values,

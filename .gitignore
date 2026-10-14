@@ -7,3 +7,4 @@ resultados/*
 !resultados/.gitkeep
 *.lp
 *.log
+data/brutos/ons/
