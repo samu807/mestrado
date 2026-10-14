@@ -44,6 +44,7 @@ scripts/
   rodar_caso.py            resolve um caso e salva CSV + indicadores + gráfico em resultados/
   varredura_lrcap.py       sensibilidade: lucro × potência contratada no LRCAP
   importar_dados.py        converte CSVs brutos da CCEE (PLD) e do PVGIS (PV) para data/
+  importar_emissoes.py     fator de emissão horário do SIN a partir da geração por usina do ONS
   anual_benders.py         ano completo por decomposição de Benders (blocos semanais em paralelo)
   estocastico.py           programa estocástico com CVaR (anos históricos como cenários)
   vss_evpi.py              VSS e EVPI do programa estocástico
@@ -87,7 +88,8 @@ Os resultados vão para `resultados/<nome_do_cenario>/`.
 descarga são despachados (sistema mais apertado); nos demais, o módulo fica cheio e não recarrega.
 
 Formatos aceitos diretamente pelo modelo (para outras fontes):
-`timestamp,pld`, `timestamp,fator_capacidade` e, para o despacho do ONS,
+`timestamp,pld`, `timestamp,fator_capacidade`, `timestamp,fator_kg_mwh` (fator de emissão da
+rede, em `rede.fator_emissao_arquivo`) e, para o despacho do ONS,
 `timestamp,descarga_pu,recarga_pu` (em `lrcap.despacho_ons.arquivo`).
 
 ## Resultados — Itajubá (MG), ano de 2025
@@ -258,6 +260,55 @@ entregue custa R\$ 70, e o contrato é praticamente firme.
   A operação mercantil (MCP, H₂) é idêntica nos três casos, e o ótimo não muda.
 - Esse custo pode ser calculado à parte, sem simulação; a frequência importa para o limiar de
   entrada, não para a potência ótima.
+
+### Limite de emissões do H₂ (alternativa ao H₂ verde estrito)
+
+Em vez de proibir a compra da rede, `hidrogenio.limite_emissoes_kg_kg` limita a intensidade de
+emissões do H₂ em cada semana (Lei 14.948/2024: 7 kgCO₂eq/kgH₂ até 2030). A energia da rede só
+pode ir ao eletrolisador e é toda atribuída ao H₂:
+
+    p_imp[t] ≤ p_el[t]
+    Σ_semana [ f_t · p_imp[t] + f_pv · (p_el[t] − p_imp[t]) ] + e_proc · H  ≤  L · H
+
+Com 55 kWh/kg, isso equivale a um fator médio de até 127 kgCO₂/MWh na energia do eletrolisador
+(L = 7) ou 62 kg/MWh (L = 3,4, próximo do critério da UE). L = 0 reproduz o H₂ verde estrito. A
+restrição é linear e fica dentro de cada bloco semanal da decomposição.
+
+**Fator de emissão da rede** (`python scripts/importar_emissoes.py`): para cada hora de 2021–2025,
+soma das térmicas fósseis (geração por usina do ONS × fator do IPCC por combustível, com
+rendimento típico: gás 449, carvão 988, óleo 700–730 kg/MWh) dividida pela geração do SIN sem
+MMGD. Médias anuais: 94 (2021), 31, 27, 37 e 42 kg/MWh (2025). Em jan–abr/2025 a média mensal
+fica 2% a 5% abaixo da do MCTI (metodologia de 2025); pela metodologia anterior, os fatores do MCTI
+de 2021–2023 são 34% a 42% maiores. Sensibilidade marginal: toda compra vem de térmica a gás
+(449 kg/MWh). Emissões só de operação; a FV entra com zero (com ciclo de vida, 48 kg/MWh,
+`pv.fator_emissao_kg_mwh`, ela sozinha daria 2,6 kgCO₂/kgH₂).
+
+![Curva de oferta com limite de emissões](docs/figuras/curva_oferta_emissoes.png)
+
+| Caso | Ótimo (R\$ 600 mil) | Lucro esperado | FC do eletrolisador | H₂ | Compra da rede | Intensidade | Receita para 60 MW | H₂ de equilíbrio (12,1%) |
+|---|---|---|---|---|---|---|---|---|
+| H₂ verde estrito | 55 MW | R\$ 68,1 mi | 0,37 | 1.029 t | 0 | 0 | R\$ 895 mil | R\$ 103/kg |
+| Limite 3,4, fator marginal | 52,5 MW | R\$ 70,5 mi | 0,45 | 1.251 t | 9 GWh | 3,38 kg/kg | R\$ 914 mil | R\$ 89/kg |
+| Limite 7, fator marginal | 50 MW | R\$ 73,8 mi | 0,56 | 1.567 t | 24 GWh | 6,93 kg/kg | R\$ 1,007 mi | R\$ 76/kg |
+| Limite 3,4, fator médio | 60 MW | R\$ 88,3 mi | 0,91 | 2.524 t | 90 GWh | 1,40 kg/kg | R\$ 496 mil | R\$ 54/kg |
+| Limite 7, fator médio | 60 MW | R\$ 88,5 mi | 0,92 | 2.553 t | 92 GWh | 1,47 kg/kg | R\$ 474 mil | R\$ 54/kg |
+| Importação livre | 60 MW | R\$ 88,5 mi | 0,92 | 2.553 t | 92 GWh | – | R\$ 474 mil | R\$ 54/kg |
+
+- **Com o fator médio do SIN, nenhum dos limites restringe**: mesmo comprando 92 GWh, o H₂ fica em
+  1,5 kgCO₂/kg, e o resultado é igual ao da importação livre. O que corta 1.500 t/ano de H₂ é a
+  regra de H₂ verde estrito, não o limite da lei.
+- **Com o fator marginal, os limites restringem** (intensidade no teto): a rede supre no máximo 28%
+  (L = 7) ou 14% (L = 3,4) da energia do eletrolisador.
+- **A bateria muda de papel.** Com o fator médio, a rede substitui a bateria à noite e os últimos MW
+  ficam baratos (R\$ 474 mil). Com o fator marginal, cada MWh solar guardado "abre espaço" para
+  comprar mais da rede: a bateria vale mais fora do leilão, e o ótimo cai para 50 MW.
+- **O lance mínimo da bateria a construir não muda** (R\$ 1,115 mi com o BESS de referência,
+  R\$ 1,064 mi dimensionado para o contrato): a regra de emissões altera a economia do H₂, não a
+  da bateria contratada.
+- O VPL do híbrido melhora (−R\$ 471 mi → −R\$ 434 mi com L = 7 marginal → −R\$ 330 mi com o fator
+  médio), mas continua negativo. Nos casos marginais, o H₂ de equilíbrio usa o volume na potência
+  ótima da curva (50 e 52,5 MW), e o VPL, 55 MW: o preço está levemente subestimado.
+- As curvas "estrito" e "importação livre" são anteriores à fronteira LP (diferença de ~0,04%).
 
 ### Robustez: degradação, dimensionamento e decomposição
 
