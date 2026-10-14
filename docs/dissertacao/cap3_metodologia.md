@@ -74,7 +74,7 @@ O problema é formulado como um problema de Programação Linear Inteira Mista (
 
 ### 3.4.1 Conjuntos e índices
 
-Seja $\mathcal{T} = \{0, 1, \dots, N-1\}$ o conjunto de intervalos de tempo de duração $\Delta t$ (em horas) e $\mathcal{D}$ o conjunto de dias do horizonte, sendo $\mathcal{T}_d \subseteq \mathcal{T}$ os intervalos pertencentes ao dia $d$.
+Seja $\mathcal{T} = \{0, 1, \dots, N-1\}$ o conjunto de intervalos de tempo de duração $\Delta t$ (em horas) e $\mathcal{D}$ o conjunto de dias do horizonte, sendo $\mathcal{T}_d \subseteq \mathcal{T}$ os intervalos pertencentes ao dia $d$. No limite de emissões do hidrogênio (Seção 3.4.5), $\mathcal{W}$ denota o conjunto de semanas do horizonte, cada qual tratada como o conjunto de seus intervalos.
 
 ### 3.4.2 Parâmetros
 
@@ -105,6 +105,9 @@ Tabela 3.1 – Parâmetros do modelo e valores do caso de referência
 | $\pi^{def}$ | Multa por kg de H₂ não entregue | R\$/kg | 35 |
 | $\bar P^{exp}, \bar P^{imp}$ | Limites de exportação e importação no ponto de conexão | MW | 80 |
 | $c^{imp}$ | Custo adicional sobre a energia importada | R\$/MWh | 250 |
+| $f_t$ | Fator de emissão da energia da rede no intervalo $t$ | kgCO₂/MWh | série (Seção 3.5) ou 449 (marginal) |
+| $L$ | Limite de intensidade de emissões do hidrogênio | kgCO₂/kgH₂ | sem limite (referência); 7 ou 3,4 |
+| $f^{pv}, e^{proc}$ | Emissões atribuídas à energia FV e às demais etapas da produção de H₂ | kgCO₂/MWh; kgCO₂/kg | 0; 0 |
 | $R^{cap}$ | Receita fixa do LRCAP | R\$/(MW·ano) | 600.000 (sensibilidade: 330.000 a 2.334.000) |
 | $\underline P^{cap}$ | Disponibilidade mínima para participação no LRCAP | MW | 30 |
 | $H^{cap}$ | Duração do ciclo completo exigida | h | 4 |
@@ -273,7 +276,19 @@ $$ {#eq:entrega-max}
 
 A variável $q^{def}_d$ representa a parcela da entrega mínima não cumprida no dia $d$, sujeita à multa $\pi^{def}$ na função objetivo. Sem ela, um dia de baixa irradiância tornaria o problema inviável, já que a importação de energia é vedada no caso de referência; com ela, o modelo decide entre produzir o hidrogênio, inclusive com energia previamente armazenada no BESS, e pagar a multa. Quando não há multa definida, adota-se $q^{def}_d = 0$ e a entrega mínima é obrigatória. Nos casos com contrato, adota-se $D^{h2} = \bar D^{h2}$, isto é, um volume diário firme, e $\pi^{def} = \pi^{h2}$, isto é, uma multa igual ao preço por kg não entregue. Esse valor não deve ser lido como ressarcimento do produto: se o comprador repuser o hidrogênio com outro fornecedor ao mesmo preço, seu prejuízo direto é nulo, pois ele deixa de pagar o empreendedor, e uma indenização desse tipo corresponderia apenas à diferença entre o preço de reposição e o do contrato. A multa adotada representa, antes, uma cláusula de firmeza, que remunera o custo da interrupção para um comprador que depende da entrega diária. Como o kg não entregue também deixa de ser vendido, seu custo efetivo para o empreendedor é a soma $\pi^{h2} + \pi^{def}$, de R\$ 70/kg, e cada MWh entregue ao eletrolisador para evitar o déficit passa a valer $(\pi^{h2} + \pi^{def} - c^{h2}) \cdot 1000/k^{el} \approx$ R\$ 1.245/MWh, o dobro do valor sem contrato. Os casos com contrato representam, portanto, um contrato praticamente firme, e o valor do BESS no seu cumprimento depende diretamente de $\pi^{def}$. Os volumes de 2.000 e 3.000 kg/dia correspondem, respectivamente, a cerca de 65% e 98% da produção média do caso sem contrato (3.060 kg/dia). Nessa configuração, o hidrogênio produzido além do volume contratado não pode ser vendido, e a energia excedente passa a ser exportada ao MCP ou vertida, o que restabelece o papel do mercado de curto prazo na arbitragem. O caso sem contrato corresponde a $D^{h2} = 0$ e $\bar D^{h2}$ ilimitado.
 
-O modelo resultante, composto pela função objetivo da Equação {eq:fo} e pelas restrições das Equações {eq:cap} a {eq:entrega-max}, é um MILP. Sem contrato de hidrogênio, para um horizonte de uma semana (168 h), o problema possui 1.688 variáveis contínuas, 505 variáveis binárias e 2.692 restrições; para um ano (8.760 h), 87.966 variáveis contínuas, 26.281 binárias e 140.164 restrições. O contrato acrescenta duas restrições por dia.
+**Limite de emissões do hidrogênio.** No caso de referência, a vedação à importação ($\bar P^{imp,m} = 0$) assegura que o hidrogênio seja produzido apenas com energia renovável local. O marco legal do hidrogênio de baixa emissão de carbono, porém, qualifica o hidrogênio pela intensidade de emissões de gases de efeito estufa, apurada por análise de ciclo de vida, com valor inicial de até 7 kgCO₂eq/kgH₂, mantido até 2030 (BRASIL, 2024). Para representar esse critério, o modelo admite, como alternativa à vedação, um limite $L$ à intensidade de emissões do hidrogênio. A energia importada pode ser destinada apenas ao eletrolisador, no mesmo intervalo, e é integralmente atribuída ao hidrogênio (Equação {eq:imp-el}); em cada semana $w \in \mathcal{W}$, as emissões atribuídas ao hidrogênio não podem exceder $L$ vezes a sua produção (Equação {eq:emissoes}):
+
+$$
+p^{imp}_t \leq p^{el}_t \qquad \forall t \in \mathcal{T}
+$$ {#eq:imp-el}
+
+$$
+\sum_{t \in w} \Big[ f_t\, p^{imp}_t + f^{pv} \left(p^{el}_t - p^{imp}_t\right) + e^{proc}\, m_t \Big] \Delta t \;\leq\; L \sum_{t \in w} m_t\, \Delta t \qquad \forall w \in \mathcal{W}
+$$ {#eq:emissoes}
+
+em que $f_t$ é o fator de emissão da energia da rede no intervalo $t$, $f^{pv}$ é o fator atribuído à energia FV, consumida diretamente ou após o armazenamento no módulo mercantil, e $e^{proc}$ representa as emissões das demais etapas por kg de hidrogênio. Pela Equação {eq:prod}, com $f^{pv} = e^{proc} = 0$, a restrição equivale a limitar o fator de emissão médio da energia do eletrolisador, em cada semana, a $L\,k^{el}/1000$: 127 kgCO₂/MWh para $L = 7$ e 62 kgCO₂/MWh para $L = 3{,}4$. Cada MWh de origem FV consumido pelo eletrolisador abre espaço, assim, para a importação de uma fração de MWh da rede. A restrição é linear e não introduz variáveis binárias; com $L = 0$, ela reproduz a vedação à importação. A janela semanal coincide com os blocos da decomposição (Seção 3.6.2), de modo que a restrição pertence integralmente a cada subproblema. O valor de 3,4 kgCO₂/kgH₂ corresponde aproximadamente ao critério europeu para combustíveis renováveis de origem não biológica, de redução de 70% das emissões em relação ao comparador fóssil de 94 gCO₂eq/MJ (UNIÃO EUROPEIA, 2023), e é avaliado como sensibilidade.
+
+O modelo resultante, composto pela função objetivo da Equação {eq:fo} e pelas restrições das Equações {eq:cap} a {eq:emissoes}, é um MILP. Sem contrato de hidrogênio, para um horizonte de uma semana (168 h), o problema possui 1.688 variáveis contínuas, 505 variáveis binárias e 2.692 restrições; para um ano (8.760 h), 87.966 variáveis contínuas, 26.281 binárias e 140.164 restrições. O contrato acrescenta duas restrições por dia, e o limite de emissões, uma restrição por intervalo e uma por semana.
 
 ## 3.5 Dados de entrada
 
@@ -294,6 +309,8 @@ Fonte: elaborado pelo autor com dados de CCEE (2026a) e do PVGIS.
 :::
 
 **Despacho do ONS.** Na ausência de histórico de despacho de sistemas de armazenamento contratados no LRCAP, adota-se um perfil diário sintético: descarga na potência contratada entre 18 h e 22 h, horário de maior demanda líquida, e recarga entre 10 h e 15 h, até a restauração completa do estado de carga, limitada à potência nominal. O perfil é coerente com a diretriz de que a programação da recarga busque minimizar o custo total de operação do SIN (BRASIL, 2026, art. 4º, § 14), o que tende a deslocá-la para as horas de excedente de geração solar. O perfil resulta em um ciclo completo por dia (365 no ano), dentro dos limites regulatórios. Trata-se da hipótese mais intensa de uso do módulo LRCAP; o efeito de despachos menos frequentes é avaliado na Seção 3.8.3.
+
+**Fator de emissão da rede.** Nos casos com limite de emissões, o fator de emissão horário da energia da rede, $f_t$, foi estimado a partir da geração horária por usina do Sistema Interligado Nacional (SIN), disponibilizada pelo ONS em seu portal de dados abertos (ONS, 2026), para os anos de 2021 a 2025. Em cada hora, somam-se as emissões das termelétricas a combustíveis fósseis — a geração de cada usina multiplicada pelo fator de emissão do combustível (IPCC, 2006) e dividida por um rendimento típico: 45% para o gás natural (449 kgCO₂/MWh), 35% para o carvão mineral (988 kgCO₂/MWh) e 38% para os óleos diesel e combustível (702 e 733 kgCO₂/MWh) — e divide-se o total pela geração do SIN, excluídas a micro e a minigeração distribuídas. A biomassa, os resíduos industriais, a fonte nuclear e as demais renováveis entram com emissão nula. Os fatores médios anuais resultantes são de 94, 31, 27, 37 e 42 kgCO₂/MWh, de 2021 a 2025. De janeiro a abril de 2025, as médias mensais ficam entre 2% e 5% abaixo dos fatores publicados pelo Ministério da Ciência, Tecnologia e Inovação (MCTI, 2025), cuja metodologia passou a incluir, naquele ano, os novos empreendimentos renováveis conectados ao SIN; pela metodologia anterior, os fatores oficiais de 2021 a 2023 são de 34% a 42% maiores que os aqui estimados. Como alternativa, considera-se um fator marginal constante, de 449 kgCO₂/MWh, que supõe que toda energia importada é suprida por uma termelétrica a gás natural. Os fatores consideram apenas as emissões de operação; para manter a mesma fronteira, a energia FV entra com fator nulo ($f^{pv} = 0$).
 
 **Parâmetros técnico-econômicos.** Os parâmetros do eletrolisador foram definidos a partir da faixa típica da tecnologia PEM, cujo consumo específico de energia situa-se entre 4,3 e 5,2 kWh/Nm³, ou aproximadamente 48 a 58 kWh/kg, até que os dados do fabricante do equipamento da UNIFEI sejam incorporados. O preço do hidrogênio não possui, até o momento, referência de mercado consolidada no Brasil e é, por isso, objeto de análise de sensibilidade. O mesmo se aplica aos termos do contrato de fornecimento de hidrogênio — volume diário e multa por déficit —, avaliados em cenários alternativos ao caso sem contrato.
 
@@ -593,7 +610,7 @@ isto é, o lance mínimo de um BESS a construir corresponde aproximadamente ao s
 
 ### 3.8.4 Casos avaliados
 
-A curva de oferta é construída para os cenários anuais da Seção 3.7.2, com o lucro esperado ($\beta = 0$), nos casos do Quadro 3.2. Os casos variam as hipóteses que a análise do caso de referência indicou como determinantes para o custo de oportunidade: a existência de um limite de demanda de hidrogênio (Seção 3.4.5), a vedação à importação de energia da rede, a frequência do despacho do ONS, o custo de degradação do BESS e o dimensionamento do eletrolisador e do tanque de hidrogênio.
+A curva de oferta é construída para os cenários anuais da Seção 3.7.2, com o lucro esperado ($\beta = 0$), nos casos do Quadro 3.2. Os casos variam as hipóteses que a análise do caso de referência indicou como determinantes para o custo de oportunidade: a existência de um limite de demanda de hidrogênio (Seção 3.4.5), a regra de suprimento do eletrolisador pela rede — vedação, limite de emissões ou importação livre —, a frequência do despacho do ONS, o custo de degradação do BESS e o dimensionamento do eletrolisador e do tanque de hidrogênio.
 
 ::: {custom-style="Legenda"}
 Quadro 3.2 – Casos avaliados na construção da curva de oferta
@@ -606,6 +623,8 @@ Quadro 3.2 – Casos avaliados na construção da curva de oferta
 | Contrato 3 t/dia | $D^{h2} = \bar D^{h2} = 3.000$ kg/dia | Vedada | – |
 | Importação | Sem limite de volume | Permitida | – |
 | Importação e contrato 3 t/dia | $D^{h2} = \bar D^{h2} = 3.000$ kg/dia | Permitida | – |
+| Limite de emissões, fator médio | Sem limite de volume | Só ao eletrolisador, com $L$ de 7 ou 3,4 kgCO₂/kgH₂ | $f_t$ médio horário do SIN |
+| Limite de emissões, fator marginal | Sem limite de volume | Só ao eletrolisador, com $L$ de 7 ou 3,4 kgCO₂/kgH₂ | $f_t$ = 449 kgCO₂/MWh |
 | Frequência do despacho | Sem limite de volume | Vedada | 50; 150 ou 365 despachos/ano |
 | Degradação | Sem limite de volume | Vedada | $c^{deg}$ de R\$ 100 ou 200/MWh |
 | Eletrolisador | Sem limite de volume | Vedada | Eletrolisador de 10 ou 25 MW |
@@ -615,11 +634,11 @@ Quadro 3.2 – Casos avaliados na construção da curva de oferta
 Fonte: elaborado pelo autor.
 :::
 
-Nos casos com importação, o eletrolisador e o BESS mercantil podem ser supridos pela rede ao PLD acrescido de $c^{imp}$. Essa configuração corresponde a um critério de qualificação do hidrogênio baseado na intensidade de emissões, e não na origem física da energia, e é avaliada como alternativa à hipótese de suprimento exclusivamente fotovoltaico. Para cada caso, além da curva de oferta, registram-se a potência ótima e a operação média nos cenários para a receita fixa de referência, de R\$ 600 mil/(MW·ano), e calcula-se o lance mínimo para a construção do BESS (Seção 3.8.2), com o lucro sem BESS recalculado nos casos que alteram o contrato de hidrogênio, a importação ou o eletrolisador.
+Nos casos com importação, o eletrolisador e o BESS mercantil podem ser supridos pela rede ao PLD acrescido de $c^{imp}$, sem limite de emissões. Nos casos com limite de emissões, a energia da rede, ao mesmo custo, supre apenas o eletrolisador e está sujeita às Equações {eq:imp-el} e {eq:emissoes}, o que representa o critério de qualificação do hidrogênio pela intensidade de emissões (BRASIL, 2024). Ambas as configurações são avaliadas como alternativas à hipótese de suprimento exclusivamente fotovoltaico. Para cada caso, além da curva de oferta, registram-se a potência ótima e a operação média nos cenários para a receita fixa de referência, de R\$ 600 mil/(MW·ano), e calcula-se o lance mínimo para a construção do BESS (Seção 3.8.2), com o lucro sem BESS recalculado nos casos que alteram o contrato de hidrogênio, a importação ou o eletrolisador.
 
 ## 3.9 Implementação computacional
 
-O modelo foi implementado na linguagem Python, com o uso da biblioteca de modelagem algébrica Pyomo (BYNUM *et al.*, 2021) e do *solver* HiGHS (HUANGFU; HALL, 2018). A estrutura do código separa: (i) a leitura e validação dos parâmetros, organizados em arquivos de configuração em formato YAML, com verificação automática dos requisitos regulatórios; (ii) a importação e o tratamento das séries de dados; (iii) a construção do modelo de otimização; (iv) a decomposição de Benders, nas versões determinística e estocástica; (v) o cálculo do VSS e do EVPI; (vi) a construção da curva de oferta; (vii) a análise de viabilidade econômica e do lance mínimo; e (viii) o pós-processamento dos resultados. Os subproblemas semanais são resolvidos em paralelo em processos independentes, cada qual restrito a uma linha de execução do *solver*, a fim de evitar a concorrência por núcleos de processamento. A consistência do modelo é verificada por um conjunto de testes automatizados que conferem, entre outros aspectos, o balanço de potência, os limites dos estados de carga, a exclusividade entre carga e descarga, o cumprimento do despacho do ONS e a seleção dos dias de despacho, o limite do ponto de conexão, as entregas do contrato de hidrogênio e a validade dos cortes de Benders. O código e os dados são mantidos sob controle de versão, o que assegura a reprodutibilidade dos resultados.
+O modelo foi implementado na linguagem Python, com o uso da biblioteca de modelagem algébrica Pyomo (BYNUM *et al.*, 2021) e do *solver* HiGHS (HUANGFU; HALL, 2018). A estrutura do código separa: (i) a leitura e validação dos parâmetros, organizados em arquivos de configuração em formato YAML, com verificação automática dos requisitos regulatórios; (ii) a importação e o tratamento das séries de dados; (iii) a construção do modelo de otimização; (iv) a decomposição de Benders, nas versões determinística e estocástica; (v) o cálculo do VSS e do EVPI; (vi) a construção da curva de oferta; (vii) a análise de viabilidade econômica e do lance mínimo; e (viii) o pós-processamento dos resultados. Os subproblemas semanais são resolvidos em paralelo em processos independentes, cada qual restrito a uma linha de execução do *solver*, a fim de evitar a concorrência por núcleos de processamento. A consistência do modelo é verificada por um conjunto de testes automatizados que conferem, entre outros aspectos, o balanço de potência, os limites dos estados de carga, a exclusividade entre carga e descarga, o cumprimento do despacho do ONS e a seleção dos dias de despacho, o limite do ponto de conexão, as entregas do contrato de hidrogênio, o limite de emissões do hidrogênio e a validade dos cortes de Benders. O código e os dados são mantidos sob controle de versão, o que assegura a reprodutibilidade dos resultados.
 
 ## 3.10 Hipóteses e limitações
 
@@ -649,7 +668,9 @@ k) **curva de oferta discreta:** a curva é obtida numa grade de 2,5 MW, de modo
 
 l) **viabilidade simplificada:** a análise de viabilidade considera fluxo de caixa constante em termos reais, antes dos tributos sobre a renda e descontado à taxa antes de impostos, sem financiamento, sem benefícios fiscais e sem valor residual; o O&M fixo da FV e do eletrolisador é hipotético, a TUST é a média nacional, e não a do barramento de conexão, a regra de cobrança do armazenamento ainda deve ser confirmada no texto da REN ANEEL nº 1.162/2026, a duração de referência e a composição do custo do BESS são estimadas e o consumo auxiliar é um valor indicativo; o lucro operacional é calculado com os parâmetros provisórios de operação;
 
-m) **amostra de cenários:** os cinco anos históricos são tratados como equiprováveis e constituem uma amostra pequena; o VSS e o EVPI são, portanto, medidos dentro da amostra, e a avaliação da decisão fora da amostra é deixada para trabalhos futuros.
+m) **amostra de cenários:** os cinco anos históricos são tratados como equiprováveis e constituem uma amostra pequena; o VSS e o EVPI são, portanto, medidos dentro da amostra, e a avaliação da decisão fora da amostra é deixada para trabalhos futuros;
+
+n) **limite de emissões simplificado:** a intensidade de emissões é apurada por semana, e não por hora ou por ano, e toda a energia importada é atribuída ao hidrogênio; o fator de emissão da rede é estimado com fatores do IPCC e rendimentos típicos por combustível, e não com o consumo de combustível de cada usina, e os fatores oficiais usados na comparação foram obtidos em fontes secundárias; a energia FV entra com emissão nula, ao passo que seu ciclo de vida, com mediana de 48 gCO₂eq/kWh em usinas de grande porte (SCHLÖMER *et al.*, 2014), corresponderia, sozinho, a 2,6 kgCO₂eq/kgH₂; e a metodologia de certificação — fator médio ou marginal, janela de apuração e fronteira do ciclo de vida — depende da regulamentação do Sistema Brasileiro de Certificação do Hidrogênio.
 
 ## REFERÊNCIAS
 
@@ -663,7 +684,9 @@ BENDERS, J. F. Partitioning procedures for solving mixed-variables programming p
 
 ::: {custom-style="Referencia"}
 BESS-MARKET. **CAPEX Benchmark**: what does a BESS project cost in 2026? 2026. Disponível em: https://bess-market.com/en/knowledge/bess-capex-benchmark-2026/. Acesso em: 13 out. 2026.
+:::
 
+::: {custom-style="Referencia"}
 BIRGE, J. R. The value of the stochastic solution in stochastic linear programs with fixed recourse. **Mathematical Programming**, v. 24, n. 1, p. 314–325, 1982.
 :::
 
@@ -673,6 +696,10 @@ BIRGE, J. R.; LOUVEAUX, F. **Introduction to stochastic programming**. 2. ed. Ne
 
 ::: {custom-style="Referencia"}
 BNEF – BLOOMBERGNEF. **Lithium-ion battery pack prices fall to \$108 per kilowatt-hour, despite rising metal prices**. Londres: BloombergNEF, 9 dez. 2025. Disponível em: https://about.bnef.com. Acesso em: 3 out. 2026.
+:::
+
+::: {custom-style="Referencia"}
+BRASIL. Lei nº 14.948, de 2 de agosto de 2024. Institui o marco legal do hidrogênio de baixa emissão de carbono e dispõe sobre a Política Nacional do Hidrogênio de Baixa Emissão de Carbono. Brasília, DF: Presidência da República, 2024.
 :::
 
 ::: {custom-style="Referencia"}
@@ -701,9 +728,13 @@ CCEE – CÂMARA DE COMERCIALIZAÇÃO DE ENERGIA ELÉTRICA. **InfoLeilão Expres
 
 ::: {custom-style="Referencia"}
 CENÁRIO ENERGIA. **ANEEL aprova marco de baterias com tarifação dupla para sistemas sem despacho do ONS**. 2 jun. 2026. Disponível em: https://cenarioenergia.com.br/2026/06/02/aneel-aprova-marco-de-baterias-com-tarifacao-dupla-para-sistemas-sem-despacho-do-ons/. Acesso em: 13 out. 2026.
+:::
 
+::: {custom-style="Referencia"}
 CESCON BARRIEU. **ANEEL publishes regulation on energy storage systems**. São Paulo, jun. 2026. Disponível em: https://cesconbarrieu.com.br/en/aneel-publishes-regulation-on-energy-storage-systems/. Acesso em: 13 out. 2026.
+:::
 
+::: {custom-style="Referencia"}
 CONEJO, A. J. *et al.* **Decomposition techniques in mathematical programming**: engineering and science applications. Berlin: Springer, 2006.
 :::
 
@@ -713,9 +744,13 @@ CONEJO, A. J.; CARRIÓN, M.; MORALES, J. M. **Decision making under uncertainty 
 
 ::: {custom-style="Referencia"}
 EMBER. **How cheap is battery storage?** Londres: Ember, dez. 2025. Disponível em: https://ember-energy.org/latest-insights/how-cheap-is-battery-storage/. Acesso em: 13 out. 2026.
+:::
 
+::: {custom-style="Referencia"}
 ENERGY CENTRAL. **BESS 5 MWh aux consumption**. 2025. Disponível em: https://www.energycentral.com/energy-biz/post/bess-5-mwh-aux-consumption-nB19OmDcUfffS2B. Acesso em: 13 out. 2026.
+:::
 
+::: {custom-style="Referencia"}
 EPE – EMPRESA DE PESQUISA ENERGÉTICA. **Plano Decenal de Expansão de Energia 2034**: caderno de micro e minigeração distribuída e baterias. Rio de Janeiro: EPE, 2024.
 :::
 
@@ -728,14 +763,6 @@ HERSBACH, H. *et al.* The ERA5 global reanalysis. **Quarterly Journal of the Roy
 :::
 
 ::: {custom-style="Referencia"}
-IEA – INTERNATIONAL ENERGY AGENCY. **Global Hydrogen Review 2025**. Paris: IEA, out. 2025.
-:::
-
-::: {custom-style="Referencia"}
-IBGE – INSTITUTO BRASILEIRO DE GEOGRAFIA E ESTATÍSTICA. **Índice Nacional de Preços ao Consumidor Amplo (IPCA)**: séries históricas. Rio de Janeiro: IBGE, 2026. Disponível em: https://www.ibge.gov.br/estatisticas/economicas/precos-e-custos/9256-indice-nacional-de-precos-ao-consumidor-amplo.html. Acesso em: 3 out. 2026.
-:::
-
-::: {custom-style="Referencia"}
 HUANGFU, Q.; HALL, J. A. J. Parallelizing the dual revised simplex method. **Mathematical Programming Computation**, v. 10, n. 1, p. 119–142, 2018.
 :::
 
@@ -744,17 +771,51 @@ HULD, T.; MÜLLER, R.; GAMBARDELLA, A. A new solar radiation database for estima
 :::
 
 ::: {custom-style="Referencia"}
+IBGE – INSTITUTO BRASILEIRO DE GEOGRAFIA E ESTATÍSTICA. **Índice Nacional de Preços ao Consumidor Amplo (IPCA)**: séries históricas. Rio de Janeiro: IBGE, 2026. Disponível em: https://www.ibge.gov.br/estatisticas/economicas/precos-e-custos/9256-indice-nacional-de-precos-ao-consumidor-amplo.html. Acesso em: 3 out. 2026.
+:::
+
+::: {custom-style="Referencia"}
+IEA – INTERNATIONAL ENERGY AGENCY. **Global Hydrogen Review 2025**. Paris: IEA, out. 2025.
+:::
+
+::: {custom-style="Referencia"}
+IPCC – INTERGOVERNMENTAL PANEL ON CLIMATE CHANGE. **2006 IPCC Guidelines for National Greenhouse Gas Inventories**. v. 2: Energy. Hayama: IGES, 2006.
+:::
+
+::: {custom-style="Referencia"}
+MCTI – MINISTÉRIO DA CIÊNCIA, TECNOLOGIA E INOVAÇÃO. **Fatores de emissão de CO₂ pela geração de energia elétrica no Sistema Interligado Nacional**. Brasília: MCTI, 2025. Disponível em: https://www.gov.br/mcti/pt-br/acompanhe-o-mcti/sirene/dados-e-ferramentas/fatores-de-emissao.
+:::
+
+::: {custom-style="Referencia"}
 MOVIMENTO ECONÔMICO. **Aneel conclui tarifas de transmissão e NE sai favorecido no ciclo 2026/2027**. 29 jun. 2026. Disponível em: https://movimentoeconomico.com.br/economia/energia/2026/06/29/aneel-conclui-tarifas-de-transmissao-e-ne-sai-favorecido-no-ciclo-2026-2027/. Acesso em: 13 out. 2026.
+:::
 
+::: {custom-style="Referencia"}
 NREL – NATIONAL RENEWABLE ENERGY LABORATORY. **2024 Annual Technology Baseline**: utility-scale battery storage. Golden: NREL, 2024. Disponível em: https://atb.nrel.gov/electricity/2024/utility-scale_battery_storage. Acesso em: 13 out. 2026.
+:::
 
+::: {custom-style="Referencia"}
+ONS – OPERADOR NACIONAL DO SISTEMA ELÉTRICO. **Geração por usina em base horária**. Portal de Dados Abertos do ONS, 2026. Disponível em: https://dados.ons.org.br. Acesso em: 14 out. 2026.
+:::
+
+::: {custom-style="Referencia"}
 RADAR ENERGIA. **Aneel homologa tarifas de transmissão 2026/2027 com alta de 9,41% na RAP e impacto médio de 1,1% ao consumidor**. 2026. Disponível em: https://portalradarenergia.com.br/noticias/aneel-homologa-tarifas-de-transmissao-2026-2027-com-alta-de-9-41-na-rap-e-impact-9e740a13. Acesso em: 13 out. 2026.
+:::
 
+::: {custom-style="Referencia"}
 ROCKAFELLAR, R. T.; URYASEV, S. Optimization of conditional value-at-risk. **Journal of Risk**, v. 2, n. 3, p. 21–41, 2000.
 :::
 
 ::: {custom-style="Referencia"}
+SCHLÖMER, S. *et al.* Annex III: technology-specific cost and performance parameters. *In*: IPCC – INTERGOVERNMENTAL PANEL ON CLIMATE CHANGE. **Climate Change 2014**: mitigation of climate change. Cambridge: Cambridge University Press, 2014.
+:::
+
+::: {custom-style="Referencia"}
 TERNA. **Terna completes first MACSE auction**: 10 GWh of energy storage capacity awarded. Roma: Terna S.p.A., 1 out. 2025. Comunicado de imprensa. Disponível em: https://www.terna.it. Acesso em: 3 out. 2026.
+:::
+
+::: {custom-style="Referencia"}
+UNIÃO EUROPEIA. Regulamento Delegado (UE) 2023/1185 da Comissão, de 10 de fevereiro de 2023, que estabelece um limiar mínimo de redução das emissões de gases com efeito de estufa para os combustíveis de carbono reciclado e uma metodologia de avaliação da redução das emissões dos combustíveis renováveis de origem não biológica. **Jornal Oficial da União Europeia**, L 157, 20 jun. 2023.
 :::
 
 ::: {custom-style="Referencia"}
