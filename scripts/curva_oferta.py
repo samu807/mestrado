@@ -43,6 +43,10 @@ CASOS = {
                     {"hidrogenio": {"entrega_min_diaria_kg": 3000.0, "entrega_max_diaria_kg": 3000.0,
                                     "penalidade_deficit_rs_kg": MULTA}}),
     "importacao": ("H₂ ilimitado, com importação", {"rede": {"h2_verde_estrito": False}}),
+    # Custo adicional sobre a energia importada (base R$ 250/MWh): encargos, uso da rede e tributos.
+    **{f"importacao_cimp_{c}": (f"Importação, adicional de R$ {c}/MWh",
+                                {"rede": {"h2_verde_estrito": False, "custo_adicional_importacao_rs_mwh": float(c)}})
+       for c in (100, 400)},
     "importacao_contrato_3t": ("Contrato 3 t/dia, com importação",
                                {"rede": {"h2_verde_estrito": False},
                                 "hidrogenio": {"entrega_min_diaria_kg": 3000.0, "entrega_max_diaria_kg": 3000.0,
@@ -61,7 +65,7 @@ CASOS = {
                                {"hidrogenio": {"entrega_min_diaria_kg": 3000.0, "entrega_max_diaria_kg": 3000.0,
                                                "penalidade_deficit_rs_kg": MULTA, "tanque_max_kg": 10000.0}}),
     # Limite de emissões do H2 em vez do H2 verde estrito: a rede só supre o eletrolisador e a
-    # intensidade semanal fica abaixo de 7 kgCO2/kgH2 (Lei 14.948/2024) ou de 3,4 (≈ UE). Fator da
+    # intensidade semanal fica abaixo de 7 kgCO2/kgH2 (Lei 14.948/2024) ou de 3,4 (limiar da UE). Fator da
     # rede horário médio do SIN (ONS) ou marginal: toda compra vem de térmica a gás (449 kg/MWh).
     **{f"emissoes_{str(lim).replace('.', '_')}{suf}": (
         f"Limite de {lim:g} kgCO₂/kgH₂{rot}".replace(".", ","),

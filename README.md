@@ -451,6 +451,8 @@ construí-la e contratar a melhor potência: max_P {R·k·P + Q_inv(P)} − cust
   (R\$ 136 mil com o BESS dimensionado para o contrato), desde que a usina FV exista.
 - O lance central supera em 39% os R\$ 831 mil das térmicas existentes no LRCAP 3/2026 (mesmo o
   cenário mais barato, R\$ 870 mil, fica acima) e é muito menor que os R\$ 2,33 mi do LRCAP 2/2026.
+  Comparação só indicativa: as térmicas também recebem o CVU quando despachadas e sustentam a
+  potência sem limite de duração; a bateria entrega no máximo 4 h por despacho.
 
 **Dimensionamento do BESS e bateria isolada** (`lance_dimensionamento.csv`). Com potência igual à
 contratada e 4,8 MWh/MW, o BESS não tem módulo mercantil e não altera a operação da FV e do

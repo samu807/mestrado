@@ -4,9 +4,12 @@ Combina o lucro operacional esperado dos casos da curva de oferta (resultados/cu
 custos de config/economia.yaml. Fluxo anual constante em termos reais durante `vida_anos`, sem valor
 residual, descontado à taxa antes de impostos (central), coerente com o fluxo antes de impostos.
 
-  VPL = -I + FA(i, n) * (lucro operacional - O&M fixo - uso da rede)
-  Lance mínimo = menor R para a qual  max_P {R d P + Q_inv(P)} - C_bess > lucro sem BESS
-  C_bess = I_bess / FA(i, n) + O&M fixo do BESS + TUST sobre a potência do BESS
+  VPL = -I J - VP(trocas de pilhas) + FA(i, n) * (lucro operacional - O&M fixo - uso da rede - tributos)
+  Lance mínimo = menor R para a qual  max_P {R k P + Q_inv(P)} - C_bess > lucro sem BESS
+  C_bess = I_bess J / FA(i, n) + O&M fixo do BESS + TUST sobre a potência do BESS
+
+I inclui a usina FV, o BESS, o eletrolisador e o tanque de H2; J é o fator de juros durante a construção
+(prazo de implantação), e as trocas de pilhas dependem do fator de capacidade do eletrolisador.
 
 Q_inv(P) é o lucro operacional da curva de oferta, Q(P), ajustado para a decisão de construir o BESS:
   - sem o custo de degradação por MWh do módulo LRCAP: o desgaste do uso contratado já está no O&M
@@ -72,7 +75,8 @@ def premissas(eco, **troca):
           "h_ref": eco["bess_duracao_referencia_h"], "f_energia": eco["bess_fracao_energia"][1],
           "tust": eco["tust_geracao_rs_kw_mes"][1], "must_compartilhado": eco["must_compartilhado"],
           "dupla": False, "aux": eco["consumo_auxiliar_frac"][1], "disp": eco["disponibilidade"],
-          "trib": eco.get("tributos_receita", 0.0), "reajuste": eco.get("receita_fixa_reajuste_ipca", True)}
+          "trib": eco.get("tributos_receita", 0.0), "reajuste": eco.get("receita_fixa_reajuste_ipca", True),
+          "implantacao": eco.get("prazo_implantacao_anos", 0), "folga": True}
     pr.update(troca)
     return pr
 
@@ -87,6 +91,27 @@ def fator_receita(eco, pr):
         n, i = eco["vida_anos"], pr["taxa"]
         k *= fator_anuidade((1 + i) * (1 + eco["ipca_anual"]) - 1, n) / fator_anuidade(i, n)
     return k
+
+
+def fator_implantacao(i, m):
+    """Valor, na entrada em operação, de 1 real investido uniformemente nos m anos anteriores, capitalizado
+    à taxa i (juros durante a construção), com a convenção de meio de período."""
+    if m <= 0:
+        return 1.0
+    return sum((1 + i) ** (k - 0.5) for k in range(1, int(m) + 1)) / m
+
+
+def troca_pilhas(capex_el, fc, eco, i):
+    """Valor presente, na entrada em operação, das trocas de pilhas do eletrolisador: fração do investimento
+    a cada `pilha_vida_h` horas equivalentes na potência nominal (fc x 8.760 h por ano). As trocas que
+    ocorreriam no último ano do contrato ou depois dele não são feitas (sem valor residual)."""
+    n, vida = eco["vida_anos"], eco["pilha_vida_h"]
+    h_ano = max(fc, 0.0) * 8760
+    vp, k = 0.0, 1
+    while h_ano > 0 and np.ceil(k * vida / h_ano) < n:
+        vp += eco["pilha_troca_frac"] * capex_el / (1 + i) ** np.ceil(k * vida / h_ano)
+        k += 1
+    return vp
 
 
 def potencia_bess(p):
@@ -130,16 +155,19 @@ def capex_om(p, eco, pr):
     pv = c["pv_rs_kw"][k] * p.pv.potencia_pico_mw * 1e3
     bess = capex_bess(p, eco, pr)
     el = c["eletrolisador_usd_kw"][k] * eco["cambio_rs_usd"] * p.eletrolisador.potencia_max_mw * 1e3
+    tanque = eco["tanque_h2_usd_kg"][k] * eco["cambio_rs_usd"] * p.hidrogenio.tanque_max_kg \
+        if p.eletrolisador.potencia_max_mw > 0 else 0.0
     om = eco["om_fixo_frac"]
     om_b = bess * pr["om_bess"]
-    return {"pv": pv, "bess": bess, "eletrolisador": el,
+    return {"pv": pv, "bess": bess, "eletrolisador": el, "tanque": tanque,
             "om": pv * om["pv"] + om_b + el * om["eletrolisador"], "om_bess": om_b}
 
 
 def custo_anual_bess(p, eco, pr):
-    """Custo anual equivalente do BESS: capital, O&M fixo (com augmentation) e acréscimo de uso da rede."""
+    """Custo anual equivalente do BESS: capital (com os juros durante a construção), O&M fixo (com
+    augmentation) e acréscimo de uso da rede."""
     c = capex_om(p, eco, pr)
-    capital = c["bess"] / fator_anuidade(pr["taxa"], eco["vida_anos"])
+    capital = c["bess"] * fator_implantacao(pr["taxa"], pr["implantacao"]) / fator_anuidade(pr["taxa"], eco["vida_anos"])
     rede = uso_rede(p, eco, pr, True) - uso_rede(p, eco, pr, False)
     return {"capital": capital, "om": c["om_bess"], "tust": rede, "total": capital + c["om_bess"] + rede}
 
@@ -158,11 +186,13 @@ def info_despacho(p):
     return linhas, est.probabilidades()
 
 
-def ajuste_investimento(p, info, aux, P):
-    """Q_inv(P) - Q(P), separado em (degradação do módulo LRCAP devolvida, consumo auxiliar)."""
+def ajuste_investimento(p, info, aux, P, folga=True):
+    """Q_inv(P) - Q(P), separado em (degradação do módulo LRCAP devolvida, consumo auxiliar). Com `folga`,
+    o consumo auxiliar do módulo LRCAP cabe na recarga custeada pela CONCAP (interpretação do art. 9º,
+    §§ 7º e 8º, da Portaria MME 136/2026); sem ela, todo o consumo auxiliar é pago ao PLD."""
     b, lr = p.bess, p.lrcap
     P = np.asarray(P, dtype=float)
-    folga_mwh = 1 / lr.rte_referencia - 1 / (b.eficiencia_carga * b.eficiencia_descarga)   # por MWh injetado
+    folga_mwh = (1 / lr.rte_referencia - 1 / (b.eficiencia_carga * b.eficiencia_descarga)) if folga else 0.0
     deg = np.zeros_like(P)
     cons = np.zeros_like(P)
     linhas, probs = info
@@ -175,9 +205,9 @@ def ajuste_investimento(p, info, aux, P):
     return deg, cons
 
 
-def curva_investimento(curva, p, info, aux):
+def curva_investimento(curva, p, info, aux, folga=True):
     P, Q = curva.p_cap_mw.to_numpy(), curva.q_rs.to_numpy()
-    deg, cons = ajuste_investimento(p, info, aux, P)
+    deg, cons = ajuste_investimento(p, info, aux, P, folga)
     return P, Q + deg - cons
 
 
@@ -207,7 +237,7 @@ def decomposicao(p, eco, pr, curva, info, q_sem):
     """Parcelas do lance mínimo por MW ofertado: capital, O&M, TUST, consumo auxiliar, uso mercantil e o
     acréscimo de tributos sobre a receita e da falta de reajuste (receita bruta acima do custo)."""
     P, Q = curva.p_cap_mw.to_numpy(), curva.q_rs.to_numpy()
-    deg, cons = ajuste_investimento(p, info, pr["aux"], P)
+    deg, cons = ajuste_investimento(p, info, pr["aux"], P, pr["folga"])
     custo = custo_anual_bess(p, eco, pr)
     r, pk = lance_minimo(P, Q + deg - cons, q_sem, custo["total"], fator_receita(eco, pr))
     k = int(np.where(P == pk)[0][0])
@@ -395,7 +425,7 @@ def lance_dimensionado(p, eco, pr, potencia, info, isolada=False):
     """
     q = dimensionada(p, potencia, isolada)
     custo = custo_anual_bess(q, eco, pr)
-    _, cons = ajuste_investimento(q, info, pr["aux"], [potencia])
+    _, cons = ajuste_investimento(q, info, pr["aux"], [potencia], pr["folga"])
     d = pr["disp"]
     lance = (custo["total"] + float(cons[0])) / potencia / fator_receita(eco, pr)
     base = (custo["total"] + float(cons[0])) / potencia / d
@@ -441,13 +471,16 @@ def sensibilidade(base, eco, curva, info, q_sem, saida):
              (f"Cobrança dupla (TUST de consumo de R$ {eco['tust_consumo_rs_kw_mes']:.2f})".replace(".", ","),
               {"dupla": True}),
              ("Sem consumo auxiliar", {"aux": a[0]}),
+             ("Consumo auxiliar sem a folga de recarga da CONCAP", {"folga": False}),
              (f"Consumo auxiliar de {a[2]:.0%}", {"aux": a[2]}),
              (f"Disponibilidade de {eco['disponibilidade_sensibilidade']:.0%}",
               {"disp": eco["disponibilidade_sensibilidade"]}),
              ("Sem tributos sobre a receita", {"trib": 0.0}),
              (f"PIS/Cofins não cumulativo ({eco['tributos_receita_sensibilidade']:.2%})".replace(".", ","),
               {"trib": eco["tributos_receita_sensibilidade"]}),
-             (f"Receita fixa sem reajuste (IPCA de {eco['ipca_anual']:.0%} a.a.)", {"reajuste": False})]
+             (f"Receita fixa sem reajuste (IPCA de {eco['ipca_anual']:.0%} a.a.)", {"reajuste": False}),
+             *[(f"Implantação em {m} ano(s)" if m else "Sem juros durante a construção", {"implantacao": m})
+               for m in eco["prazo_implantacao_sensibilidade_anos"]]]
     linhas = []
     for nome, troca in casos:
         pr = premissas(eco, **troca)
@@ -457,6 +490,7 @@ def sensibilidade(base, eco, curva, info, q_sem, saida):
                        "tust_rs_kw_mes": pr["tust"], "must_compartilhado": pr["must_compartilhado"],
                        "cobranca_dupla": pr["dupla"], "consumo_auxiliar_frac": pr["aux"], "disponibilidade": pr["disp"],
                        "tributos_receita": pr["trib"], "reajuste_ipca": pr["reajuste"],
+                       "implantacao_anos": pr["implantacao"], "folga_concap": pr["folga"],
                        "capex_bess_rs": capex_bess(base, eco, pr), **dec})
     df = pd.DataFrame(linhas)
     df.to_csv(saida / "lance_sensibilidade.csv", index=False)
@@ -506,19 +540,23 @@ def main():
                 v = r_ref * kr * P + Qi
                 k = int(np.argmax(v))
                 c = capex_om(p, eco, pr)
-                capex = c["pv"] + c["bess"] + c["eletrolisador"]
+                capex = c["pv"] + c["bess"] + c["eletrolisador"] + c["tanque"]
+                jdc = fator_implantacao(i, pr["implantacao"])
+                pilhas = troca_pilhas(c["eletrolisador"], op["fator_capacidade_eletrolisador"], eco, i)
                 rede = uso_rede(p, eco, pr, True)
                 receita_bruta = r_ref * kr * P[k] + op["receita_h2_rs"] + op["receita_mcp_rs"]
                 tributos = pr["trib"] * receita_bruta
                 fluxo = v[k] - c["om"] - rede - tributos
                 fa = fator_anuidade(i, n)
-                vpl = -capex + fa * fluxo
+                vpl = -capex * jdc - pilhas + fa * fluxo
                 h2 = op["h2_vendido_kg"]
                 linhas.append({
                     "caso": caso, "descricao": desc, "capex_nivel": nivel, "taxa": i, "p_cap_mw": P[k],
                     "lucro_operacional_rs": v[k], "om_fixo_rs": c["om"], "uso_rede_rs": rede, "tributos_rs": tributos,
                     "capex_pv_rs": c["pv"], "capex_bess_rs": c["bess"], "capex_el_rs": c["eletrolisador"],
-                    "capex_total_rs": capex, "fluxo_anual_rs": fluxo, "vpl_rs": vpl, "tir": tir(capex, fluxo, n),
+                    "capex_tanque_rs": c["tanque"], "capex_total_rs": capex, "jdc_rs": capex * (jdc - 1),
+                    "troca_pilhas_vp_rs": pilhas, "fluxo_anual_rs": fluxo, "vpl_rs": vpl,
+                    "tir": tir(capex * jdc + pilhas, fluxo, n),
                     "h2_vendido_kg": h2,
                     "preco_h2_equilibrio_rs_kg": p.hidrogenio.preco_venda_rs_kg - vpl / (fa * h2 * (1 - pr["trib"])),
                 })
@@ -549,15 +587,18 @@ def main():
     for i in eco["taxas_desconto"]:
         pr = premissas(eco, taxa=i)
         c = capex_om(base, eco, pr)
-        capex = c["pv"] + c["eletrolisador"]
+        capex = c["pv"] + c["eletrolisador"] + c["tanque"]
         om = c["pv"] * eco["om_fixo_frac"]["pv"] + c["eletrolisador"] * eco["om_fixo_frac"]["eletrolisador"]
+        jdc = fator_implantacao(i, pr["implantacao"])
+        # Sem BESS, o eletrolisador opera só com sol (fator de capacidade abaixo do caso de referência, 0,37):
+        # as 60 mil horas não são atingidas em 15 anos e não há troca de pilhas.
         rede = uso_rede(base, eco, pr, False)
         h = base.hidrogenio
         receita = q_sem / (1 - base.eletrolisador.custo_variavel_rs_kg / h.preco_venda_rs_kg)
         fluxo = q_sem - om - rede - pr["trib"] * receita
         hosp.append({"taxa": i, "capex_rs": capex, "lucro_operacional_rs": q_sem, "om_fixo_rs": om,
                      "uso_rede_rs": rede, "tributos_rs": pr["trib"] * receita, "fluxo_anual_rs": fluxo,
-                     "vpl_rs": -capex + fator_anuidade(i, n) * fluxo})
+                     "jdc_rs": capex * (jdc - 1), "vpl_rs": -capex * jdc + fator_anuidade(i, n) * fluxo})
     hosp = pd.DataFrame(hosp)
     hosp.to_csv(saida / "usina_sem_bess.csv", index=False)
 

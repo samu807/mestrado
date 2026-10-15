@@ -70,3 +70,17 @@ tributos_receita_sensibilidade: 0.0925
 # ipca_anual. A CONFIRMAR na Portaria MME 136/2026 e no edital.
 receita_fixa_reajuste_ipca: true
 ipca_anual: 0.04
+# Prazo de implantação [anos]: o investimento é desembolsado uniformemente nos anos anteriores à entrada
+# em operação e capitalizado à taxa de desconto até essa data (juros durante a construção, JDC), com a
+# convenção de meio de período: 1 ano equivale a (1 + i)^0,5. Supõe custos de referência sem JDC
+# (overnight), a confirmar nos cadernos da EPE. Central: 1 ano; sensibilidade: 0 e 2 anos.
+prazo_implantacao_anos: 1
+prazo_implantacao_sensibilidade_anos: [0, 2]
+# Armazenamento de H2 em vasos de aço a 160 bar, em US$/kg armazenado (DOE, metas técnicas de componentes
+# de entrega de hidrogênio: US$ 1.000/kg em 2010 e meta de US$ 700/kg para 2020; a 430 bar, US$ 1.100/kg).
+# Sem o compressor, cuja energia (~1 kWh/kg de 30 para 160 bar) não está no consumo específico.
+tanque_h2_usd_kg: [700, 1000, 1100]
+# Troca das pilhas do eletrolisador: 40% do investimento do sistema a cada 60.000 h equivalentes de
+# operação na potência nominal (EPRI, 2022: 35-45% e 60-80 mil horas). Trocas após o último ano não contam.
+pilha_troca_frac: 0.40
+pilha_vida_h: 60000
