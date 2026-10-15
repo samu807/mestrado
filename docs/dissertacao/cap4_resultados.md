@@ -63,23 +63,23 @@ Tabela 4.2 – Viabilidade econômica em 15 anos (receita fixa de R\$ 600 mil/(M
 
 | Caso | Invest. (R\$ mi) | Lucro op. (R\$ mi/ano) | VPL a 12,1% (R\$ mi) | VPL a 8,0% (R\$ mi) | TIR real | H₂ eq. (R\$/kg) |
 |----------------------|----------|----------|----------------------|----------|--------|-----------|
-| Referência | 781 | 72,1 | −471 (−637 a −259) | −389 | −1,6% | 103 |
-| Contrato 2 t/dia | 781 | 66,2 | −510 (−676 a −299) | −439 | −3,1% | 139 |
-| Contrato 3 t/dia | 781 | 69,5 | −488 (−654 a −277) | −411 | −2,2% | 103 |
-| Importação | 781 | 92,9 | −329 (−496 a −118) | −210 | 3,3% | 54 |
-| Importação e contrato 3 t/dia | 781 | 73,3 | −462 (−628 a −251) | −378 | −1,2% | 97 |
-| Limite 7, fator médio | 781 | 92,9 | −330 (−496 a −118) | −210 | 3,3% | 54 |
-| Limite 3,4, fator médio | 781 | 92,6 | −331 (−497 a −120) | −213 | 3,2% | 54 |
-| Limite 7, fator marginal | 781 | 77,5 | −434 (−600 a −222) | −342 | −0,2% | 76 |
-| Limite 3,4, fator marginal | 781 | 74,4 | −455 (−621 a −244) | −369 | −1,0% | 89 |
-| Eletrolisador 10 MW | 700 | 64,2 | −426 (−568 a −259) | −354 | −1,8% | 109 |
-| Eletrolisador 25 MW | 862 | 77,7 | −530 (−721 a −275) | −442 | −1,9% | 102 |
+| Referência | 781 | 72,1 | −489 (−655 a −277) | −412 | −2,3% | 108 |
+| Contrato 2 t/dia | 781 | 66,2 | −527 (−693 a −315) | −460 | −3,8% | 146 |
+| Contrato 3 t/dia | 781 | 69,5 | −506 (−672 a −295) | −434 | −3,0% | 108 |
+| Importação | 781 | 92,9 | −362 (−528 a −150) | −251 | 2,2% | 57 |
+| Importação e contrato 3 t/dia | 781 | 73,3 | −482 (−648 a −270) | −403 | −2,0% | 102 |
+| Limite 7, fator médio | 781 | 92,9 | −362 (−528 a −151) | −251 | 2,2% | 57 |
+| Limite 3,4, fator médio | 781 | 92,6 | −364 (−530 a −152) | −253 | 2,2% | 57 |
+| Limite 7, fator marginal | 781 | 77,5 | −457 (−623 a −245) | −371 | −1,0% | 80 |
+| Limite 3,4, fator marginal | 781 | 74,4 | −475 (−641 a −264) | −395 | −1,7% | 93 |
+| Eletrolisador 10 MW | 700 | 64,2 | −444 (−585 a −276) | −376 | −2,5% | 115 |
+| Eletrolisador 25 MW | 862 | 77,7 | −550 (−740 a −294) | −467 | −2,6% | 107 |
 
 ::: {custom-style="Fonte"}
-Fonte: elaborado pelo autor. Investimento, TIR e preço de equilíbrio do H₂ (H₂ eq., à taxa de 12,1%) com investimento central; entre parênteses, VPL a 12,1% com investimento alto e baixo. O lucro operacional exclui a degradação do módulo LRCAP, coberta pelo O&M fixo, e o fluxo desconta o O&M fixo e o uso da rede (Seção 3.8.2). Limites de emissões em kgCO₂/kgH₂ (Subseção 4.3.5). Nos casos de eletrolisador de 10 MW e de limite de emissões com fator marginal, o preço de equilíbrio usa o H₂ vendido na potência ótima da curva de oferta (50 ou 52,5 MW), e não na de 55 MW do VPL, e fica levemente subestimado.
+Fonte: elaborado pelo autor. Investimento, TIR e preço de equilíbrio do H₂ (H₂ eq., à taxa de 12,1%) com investimento central; entre parênteses, VPL a 12,1% com investimento alto e baixo. O lucro operacional exclui a degradação do módulo LRCAP, coberta pelo O&M fixo, e o fluxo desconta o O&M fixo, o uso da rede e o PIS/Cofins de 3,65% sobre a receita bruta (Seção 3.8.2). Limites de emissões em kgCO₂/kgH₂ (Subseção 4.3.5). Nos casos de eletrolisador de 10 MW e de limite de emissões com fator marginal, o preço de equilíbrio usa o H₂ vendido na potência ótima da curva de oferta (50 ou 52,5 MW), e não na de 55 MW do VPL, e fica levemente subestimado.
 :::
 
-Com os parâmetros adotados, nenhum caso é economicamente viável. No caso de referência, o investimento de R\$ 781 milhões — R\$ 212 milhões na usina FV, R\$ 380 milhões no BESS e R\$ 189 milhões no eletrolisador — gera fluxo anual de R\$ 45,8 milhões, após R\$ 18,3 milhões de O&M fixo e R\$ 7,9 milhões de uso da rede, e a TIR real é negativa (−1,6%). O preço do hidrogênio que tornaria o VPL nulo à taxa de 12,1% é de cerca de R\$ 103/kg, quase o triplo do valor adotado (R\$ 79/kg à taxa de 8%). Mesmo o caso de importação de energia, o de maior lucro, tem VPL negativo à taxa central em toda a faixa de investimento; apenas à taxa de 8% e com investimentos no limite inferior ele atinge o equilíbrio (VPL de R\$ 9 milhões), o que antecipa a importância da regra de suprimento do eletrolisador discutida nas Subseções 4.3.4 e 4.3.5. Com o limite de emissões do marco legal, o resultado depende do fator de emissão da rede: com o fator médio do SIN, o VPL é praticamente o da importação livre; com o fator marginal, fica entre este e o do caso de referência.
+Com os parâmetros adotados, nenhum caso é economicamente viável. No caso de referência, o investimento de R\$ 781 milhões — R\$ 212 milhões na usina FV, R\$ 380 milhões no BESS e R\$ 189 milhões no eletrolisador — gera fluxo anual de R\$ 43,1 milhões, após R\$ 18,3 milhões de O&M fixo, R\$ 7,9 milhões de uso da rede e R\$ 2,7 milhões de PIS/Cofins, e a TIR real é negativa (−2,3%). O preço do hidrogênio que tornaria o VPL nulo à taxa de 12,1% é de cerca de R\$ 108/kg, mais que o triplo do valor adotado (R\$ 84/kg à taxa de 8%). Mesmo o caso de importação de energia, o de maior lucro, tem VPL negativo em toda a faixa de investimento e nas duas taxas; no cenário mais favorável, com investimento baixo e taxa de 8%, o VPL é de −R\$ 32 milhões, o que antecipa a importância da regra de suprimento do eletrolisador discutida nas Subseções 4.3.4 e 4.3.5. Com o limite de emissões do marco legal, o resultado depende do fator de emissão da rede: com o fator médio do SIN, o VPL é praticamente o da importação livre; com o fator marginal, fica entre este e o do caso de referência.
 
 ::: {custom-style="Legenda"}
 Figura 4.2 – Viabilidade econômica: (a) VPL do projeto por caso; (b) ganho anual proporcionado pelo BESS em função da receita fixa, comparado com o seu custo anual equivalente
@@ -95,7 +95,7 @@ Fonte: elaborado pelo autor.
 
 ### 4.2.2 Valor do BESS e lance mínimo
 
-**Valor do BESS.** Sem a bateria, e portanto sem o leilão, o lucro operacional esperado é de R\$ 35,4 milhões por ano. Com o BESS e a contratação de 55 MW à receita de R\$ 600 mil/(MW·ano), passa a R\$ 72,1 milhões. O ganho de R\$ 36,7 milhões por ano não cobre o custo anual equivalente do BESS, de R\$ 66,8 milhões à taxa de 12,1% com investimento central — R\$ 56,0 milhões de capital, R\$ 9,5 milhões de O&M com reposição de módulos e R\$ 1,3 milhão de acréscimo de uso da rede (Figura 4.2(b)). Sem a receita do leilão, a bateria agrega apenas R\$ 8,8 milhões por ano, provenientes do suprimento noturno do eletrolisador e da arbitragem no MCP, já descontado o seu consumo auxiliar; é, portanto, a receita fixa do LRCAP que pode viabilizá-la.
+**Valor do BESS.** Sem a bateria, e portanto sem o leilão, o lucro operacional esperado é de R\$ 35,4 milhões por ano. Com o BESS e a contratação de 55 MW à receita de R\$ 600 mil/(MW·ano), passa a R\$ 72,1 milhões. O ganho, de R\$ 35,5 milhões por ano depois do PIS/Cofins sobre a receita fixa, não cobre o custo anual equivalente do BESS, de R\$ 66,8 milhões à taxa de 12,1% com investimento central — R\$ 56,0 milhões de capital, R\$ 9,5 milhões de O&M com reposição de módulos e R\$ 1,3 milhão de acréscimo de uso da rede (Figura 4.2(b)). Sem a receita do leilão, a bateria agrega apenas R\$ 8,8 milhões por ano, provenientes do suprimento noturno do eletrolisador e da arbitragem no MCP, já descontado o seu consumo auxiliar; é, portanto, a receita fixa do LRCAP que pode viabilizá-la.
 
 **Lance mínimo.** A Figura 4.3 compara a curva de oferta de um BESS já existente, obtida na Subseção 4.3.3, com a de um BESS a construir e decompõe o lance mínimo do caso central; a Tabela 4.3 apresenta o lance mínimo para cada faixa de investimento e taxa de desconto.
 
@@ -117,62 +117,65 @@ Tabela 4.3 – Lance mínimo para a construção do BESS, em R\$ mil/(MW·ano), 
 
 | Taxa de desconto | Investimento baixo (R\$ 5.000/kW) | Investimento central (R\$ 5.500/kW) | Investimento alto (R\$ 6.000/kW) |
 |------------------|------------------|------------------|------------------|
-| 12,1% (central) | 1.015 (60 MW) | 1.115 (60 MW) | 1.214 (60 MW) |
-| 8,0% | 838 (60 MW) | 919 (60 MW) | 1.001 (60 MW) |
+| 12,1% (central) | 1.054 (60 MW) | 1.157 (60 MW) | 1.260 (60 MW) |
+| 8,0% | 870 (60 MW) | 954 (60 MW) | 1.039 (60 MW) |
 
 ::: {custom-style="Fonte"}
 Fonte: elaborado pelo autor.
 :::
 
-Quando o BESS ainda será construído, a curva de oferta deixa de ser escalonada e passa a ser do tipo "tudo ou nada": abaixo do lance mínimo, o proponente não constrói a bateria e não oferta potência; acima dele, oferta toda a potência do BESS de referência, de 60 MW. Com a bateria dimensionada para o contrato, a oferta deixa de ser "tudo ou nada" (Subseção 4.2.4). A curva escalonada da Seção 4.3 descreve, portanto, a decisão de um proponente que já dispõe do BESS. O lance mínimo no caso central é de R\$ 1,115 milhão/(MW·ano) e coincide com o custo anual equivalente do BESS por MW (Figura 4.3(b)): R\$ 934 mil de capital, R\$ 158 mil de O&M com reposição de módulos e R\$ 22 mil de acréscimo de uso da rede. O capital reflete a energia da bateria: com 300 MWh, ou 5 h, o investimento é de R\$ 380 milhões, 15% acima do valor de referência de um sistema de 4 h. O uso da rede pesa pouco porque a bateria compartilha a conexão com a usina FV e eleva o montante de uso de injeção em apenas 10 MW. As demais parcelas são nulas: o consumo auxiliar de 1% da potência cabe na folga de recarga custeada pela CONCAP, e, com 60 MW contratados, o módulo mercantil se anula, de modo que o uso mercantil da bateria não reduz o lance. O lance mínimo supera em 34% o preço médio obtido por termelétricas existentes no LRCAP de março de 2026 (R\$ 831 mil/(MW·ano)) — mesmo no cenário mais favorável, com investimento baixo e taxa de 8%, ele fica em R\$ 838 mil — e é muito inferior ao das termelétricas e hidrelétricas do leilão anterior (R\$ 2,33 milhões/(MW·ano)). Isso sugere que o armazenamento em baterias é competitivo frente à expansão térmica, mas não frente às usinas existentes. A receita de R\$ 600 mil/(MW·ano) adotada no caso de referência é inferior ao lance mínimo em todas as combinações avaliadas: com ela, um proponente racional não construiria o BESS.
+Quando o BESS ainda será construído, a curva de oferta deixa de ser escalonada e passa a ser do tipo "tudo ou nada": abaixo do lance mínimo, o proponente não constrói a bateria e não oferta potência; acima dele, oferta toda a potência do BESS de referência, de 60 MW. Com a bateria dimensionada para o contrato, a oferta deixa de ser "tudo ou nada" (Subseção 4.2.4). A curva escalonada da Seção 4.3 descreve, portanto, a decisão de um proponente que já dispõe do BESS. O lance mínimo no caso central é de R\$ 1,157 milhão/(MW·ano) e corresponde ao custo anual equivalente do BESS por MW, acrescido do PIS/Cofins sobre a receita fixa (Figura 4.3(b)): R\$ 934 mil de capital, R\$ 158 mil de O&M com reposição de módulos, R\$ 22 mil de acréscimo de uso da rede e R\$ 43 mil de tributos sobre a receita. O capital reflete a energia da bateria: com 300 MWh, ou 5 h, o investimento é de R\$ 380 milhões, 15% acima do valor de referência de um sistema de 4 h. O uso da rede pesa pouco porque a bateria compartilha a conexão com a usina FV e eleva o montante de uso de injeção em apenas 10 MW. As demais parcelas são nulas: o consumo auxiliar de 1% da potência cabe na folga de recarga custeada pela CONCAP, e, com 60 MW contratados, o módulo mercantil se anula, de modo que o uso mercantil da bateria não reduz o lance. O lance mínimo supera em 39% o preço médio obtido por termelétricas existentes no LRCAP de março de 2026 (R\$ 831 mil/(MW·ano)) — mesmo no cenário mais favorável, com investimento baixo e taxa de 8%, ele fica em R\$ 870 mil — e é muito inferior ao das termelétricas e hidrelétricas do leilão anterior (R\$ 2,33 milhões/(MW·ano)). Isso sugere que o armazenamento em baterias é competitivo frente à expansão térmica, mas não frente às usinas existentes. A receita de R\$ 600 mil/(MW·ano) adotada no caso de referência é inferior ao lance mínimo em todas as combinações avaliadas: com ela, um proponente racional não construiria o BESS.
 
 ### 4.2.3 Sensibilidade do lance mínimo
 
 O lance mínimo da Subseção 4.2.2 foi recalculado com uma premissa de custo alterada de cada vez e para cada caso de sensibilidade da Seção 3.8.4, com investimento central e taxa de 12,1%. Nos casos que alteram o contrato de hidrogênio, a importação e o tamanho do eletrolisador, o lucro sem BESS também foi recalculado. Os resultados são apresentados na Tabela 4.4.
 
 ::: {custom-style="Legenda"}
-Tabela 4.4 – Lance mínimo para a construção do BESS com uma hipótese alterada de cada vez em relação ao caso central (investimento de referência de R\$ 5.500/kW para 4 h e taxa de 12,1%)
+Tabela 4.4 – Lance mínimo para a construção do BESS com uma hipótese alterada de cada vez em relação ao caso central (investimento de referência de R\$ 5.500/kW para 4 h, taxa de 12,1%, PIS/Cofins de 3,65% e receita reajustada pelo IPCA)
 :::
 
 | Hipótese alterada | Lance mínimo (R\$ mil/MW·ano) | Potência ofertada (MW) | Variação |
 |------------------------------|------------|------------|------------|
 | **Premissas de custo** | | | |
-| Nenhuma (caso central) | 1.115 | 60 | – |
-| Investimento de referência de R\$ 5.000/kW | 1.015 | 60 | −9% |
-| Investimento de referência de R\$ 6.000/kW | 1.214 | 60 | +9% |
-| Referência da EPE para 3 h | 1.352 | 60 | +21% |
-| Parcela de energia de 45% | 1.079 | 60 | −3% |
-| Parcela de energia de 75% | 1.150 | 60 | +3% |
-| Taxa de 8,0% (após impostos) | 919 | 60 | −18% |
-| O&M do BESS de 1,5% | 1.051 | 60 | −6% |
-| O&M do BESS de 3,5% | 1.178 | 60 | +6% |
-| TUST de R\$ 5,68/kW·mês | 1.104 | 60 | −1% |
-| TUST de R\$ 19,49/kW·mês | 1.132 | 60 | +2% |
-| Conexão não compartilhada | 1.224 | 60 | +10% |
-| Cobrança também da TUST de consumo | 1.297 | 60 | +16% |
-| Sem consumo auxiliar | 1.115 | 60 | 0% |
-| Consumo auxiliar de 2% | 1.127 | 60 | +1% |
-| Disponibilidade de 97% | 1.149 | 60 | +3% |
+| Nenhuma (caso central) | 1.157 | 60 | – |
+| Investimento de referência de R\$ 5.000/kW | 1.054 | 60 | −9% |
+| Investimento de referência de R\$ 6.000/kW | 1.260 | 60 | +9% |
+| Referência da EPE para 3 h | 1.403 | 60 | +21% |
+| Parcela de energia de 45% | 1.120 | 60 | −3% |
+| Parcela de energia de 75% | 1.194 | 60 | +3% |
+| Taxa de 8,0% (após impostos) | 954 | 60 | −18% |
+| O&M do BESS de 1,5% | 1.091 | 60 | −6% |
+| O&M do BESS de 3,5% | 1.222 | 60 | +6% |
+| TUST de R\$ 5,68/kW·mês | 1.146 | 60 | −1% |
+| TUST de R\$ 19,49/kW·mês | 1.175 | 60 | +2% |
+| Conexão não compartilhada | 1.270 | 60 | +10% |
+| Cobrança também da TUST de consumo | 1.346 | 60 | +16% |
+| Sem consumo auxiliar | 1.157 | 60 | 0% |
+| Consumo auxiliar de 2% | 1.170 | 60 | +1% |
+| Disponibilidade de 97% | 1.193 | 60 | +3% |
+| Sem PIS/Cofins | 1.115 | 60 | −4% |
+| PIS/Cofins não cumulativo (9,25%) | 1.228 | 60 | +6% |
+| Receita fixa sem reajuste pelo IPCA (4% a.a.) | 1.444 | 60 | +25% |
 | **Hipóteses de operação** | | | |
-| Contrato 2 t/dia | 1.115 | 60 | 0% |
-| Contrato 3 t/dia | 1.078 | 57,5 | −3% |
-| Contrato 3 t/dia, tanque 10 t | 1.056 | 55 | −5% |
-| Importação | 1.115 | 60 | 0% |
-| Importação e contrato 3 t/dia | 1.115 | 60 | 0% |
-| Eletrolisador 10 MW | 1.115 | 60 | 0% |
-| Eletrolisador 25 MW | 1.115 | 60 | 0% |
-| 50 despachos/ano | 1.127 | 60 | +1% |
-| 150 despachos/ano | 1.122 | 60 | +1% |
-| Degradação R\$ 100/MWh | 1.115 | 60 | 0% |
-| Degradação R\$ 200/MWh | 1.115 | 60 | 0% |
+| Contrato 2 t/dia | 1.157 | 60 | 0% |
+| Contrato 3 t/dia | 1.119 | 57,5 | −3% |
+| Contrato 3 t/dia, tanque 10 t | 1.096 | 55 | −5% |
+| Importação | 1.157 | 60 | 0% |
+| Importação e contrato 3 t/dia | 1.157 | 60 | 0% |
+| Eletrolisador 10 MW | 1.157 | 60 | 0% |
+| Eletrolisador 25 MW | 1.157 | 60 | 0% |
+| 50 despachos/ano | 1.170 | 60 | +1% |
+| 150 despachos/ano | 1.165 | 60 | +1% |
+| Degradação R\$ 100/MWh | 1.157 | 60 | 0% |
+| Degradação R\$ 200/MWh | 1.157 | 60 | 0% |
 
 ::: {custom-style="Fonte"}
 Fonte: elaborado pelo autor.
 :::
 
-O lance mínimo é determinado pelas premissas de custo do BESS. A de maior efeito é a duração a que se refere o custo da EPE: se os R\$ 5.500/kW corresponderem a um sistema de 3 h, e não de 4 h, a energia da bateria de 5 h fica mais cara e o lance sobe 21%. Seguem a taxa de desconto (−18% com a taxa após impostos, que ignora o imposto de renda), a regra de cobrança do uso da rede (+16% se o armazenamento pagar também a TUST de consumo e +10% sem compartilhar a conexão), o investimento de referência (±9%) e o O&M (±6% para ±1 ponto percentual). A parcela do custo proporcional à energia (±3%), a disponibilidade de 97% (+3%), a TUST regional (de −1% a +2%) e o consumo auxiliar (+1% com 2% da potência) pesam pouco. O compartilhamento da conexão é uma vantagem do arranjo híbrido: sem ele, a bateria pagaria a TUST sobre toda a sua potência, e o lance seria R\$ 109 mil/(MW·ano) maior.
+O lance mínimo é determinado pelas premissas de custo do BESS. A de maior efeito é a duração a que se refere o custo da EPE: se os R\$ 5.500/kW corresponderem a um sistema de 3 h, e não de 4 h, a energia da bateria de 5 h fica mais cara e o lance sobe 21%. Seguem a taxa de desconto (−18% com a taxa após impostos, que ignora o imposto de renda), a regra de cobrança do uso da rede (+16% se o armazenamento pagar também a TUST de consumo e +10% sem compartilhar a conexão), o investimento de referência (±9%) e o O&M (±6% para ±1 ponto percentual). A parcela do custo proporcional à energia (±3%), a disponibilidade de 97% (+3%), a TUST regional (de −1% a +2%) e o consumo auxiliar (+1% com 2% da potência) pesam pouco. O compartilhamento da conexão é uma vantagem do arranjo híbrido: sem ele, a bateria pagaria a TUST sobre toda a sua potência, e o lance seria R\$ 113 mil/(MW·ano) maior. Duas premissas de natureza tributária e contratual também pesam: o regime não cumulativo do PIS/Cofins, sem créditos, eleva o lance em 6%, e a falta de reajuste da receita fixa pelo IPCA, com inflação de 4% a.a., em 25%, pois a receita perderia valor real ao longo dos 15 anos; esta última é a premissa de maior efeito e deve ser confirmada no edital.
 
-As hipóteses de operação quase não alteram o lance. Como o desgaste do despacho está no O&M fixo, o custo de degradação por MWh deixa de afetá-lo, e a frequência do despacho só o altera por meio do consumo auxiliar: com 50 despachos por ano, a folga de recarga diminui e o lance sobe 1%. Com o contrato de 2 t/dia, a importação e os dois tamanhos de eletrolisador, o proponente oferta toda a potência, o módulo mercantil se anula e o lance é igual ao do caso central. A exceção é o contrato firme de 3 t/dia sem importação: o proponente oferta 57,5 MW (55 MW com o tanque de 10 t), e a bateria mercantil restante reduz o déficit de entrega e a multa correspondente, o que reduz o lance em 3% com o tanque de 2 t e em 5% com o de 10 t. A magnitude dessa redução depende da multa contratual, que faz cada kg não entregue custar R\$ 70 ao empreendedor (Seção 3.4.5). À taxa central, o lance mínimo situa-se, assim, entre R\$ 1,02 milhão e R\$ 1,35 milhão/(MW·ano), e sua incerteza decorre principalmente da duração de referência do custo do BESS, da regra de cobrança do uso da rede, do investimento e do O&M.
+As hipóteses de operação quase não alteram o lance. Como o desgaste do despacho está no O&M fixo, o custo de degradação por MWh deixa de afetá-lo, e a frequência do despacho só o altera por meio do consumo auxiliar: com 50 despachos por ano, a folga de recarga diminui e o lance sobe 1%. Com o contrato de 2 t/dia, a importação e os dois tamanhos de eletrolisador, o proponente oferta toda a potência, o módulo mercantil se anula e o lance é igual ao do caso central. A exceção é o contrato firme de 3 t/dia sem importação: o proponente oferta 57,5 MW (55 MW com o tanque de 10 t), e a bateria mercantil restante reduz o déficit de entrega e a multa correspondente, o que reduz o lance em 3% com o tanque de 2 t e em 5% com o de 10 t. A magnitude dessa redução depende da multa contratual, que faz cada kg não entregue custar R\$ 70 ao empreendedor (Seção 3.4.5). À taxa central e com a receita reajustada pelo IPCA, o lance mínimo situa-se, assim, entre R\$ 1,05 milhão e R\$ 1,40 milhão/(MW·ano), e sua incerteza decorre principalmente da duração de referência do custo do BESS, da regra de cobrança do uso da rede, do regime tributário, do investimento e do O&M; sem reajuste, chegaria a R\$ 1,44 milhão.
 
 ### 4.2.4 Dimensionamento do BESS e bateria isolada
 
@@ -184,10 +187,10 @@ Tabela 4.5 – Lance mínimo por arranjo e dimensionamento do BESS, em R\$ mil/(
 
 | Arranjo | Potência (MW) | Energia (MWh) | Taxa de 12,1% | Taxa de 8,0% |
 |------------------------------|------------|------------|------------|------------|
-| Híbrido, BESS de referência | 60 | 300 | 1.115 | 919 |
-| Híbrido, dimensionado para o contrato | 60 | 288 | 1.086 | 896 |
-| Híbrido, dimensionado para o contrato | 30 a 50 | 4,8 por MW | 1.064 | 874 |
-| Bateria isolada, dimensionada para o contrato | 30 a 60 | 4,8 por MW | 1.195 | 1.005 |
+| Híbrido, BESS de referência | 60 | 300 | 1.157 | 954 |
+| Híbrido, dimensionado para o contrato | 60 | 288 | 1.127 | 929 |
+| Híbrido, dimensionado para o contrato | 30 a 50 | 4,8 por MW | 1.104 | 907 |
+| Bateria isolada, dimensionada para o contrato | 30 a 60 | 4,8 por MW | 1.240 | 1.043 |
 
 ::: {custom-style="Fonte"}
 Fonte: elaborado pelo autor.
@@ -195,9 +198,11 @@ Fonte: elaborado pelo autor.
 
 O cálculo da Seção 3.8.3 foi verificado com o modelo de operação: com o BESS dimensionado para o contrato de 30 e de 50 MW, o lucro operacional esperado, somada a degradação do módulo LRCAP, foi igual ao lucro sem BESS, como previsto.
 
-Três resultados se destacam. Primeiro, a bateria do leilão deve ser dimensionada para o contrato, pois o módulo mercantil não se paga no lance. No BESS de referência, ofertar 57,5 MW e manter 2,5 MW e 24 MWh para uso mercantil acrescenta R\$ 2,1 milhões por ano ao lucro, mas essa capacidade custa R\$ 4,7 milhões por ano entre capital, O&M e uso da rede; já os 12 MWh além do necessário para 60 MW custam R\$ 29 mil/(MW·ano) no lance. Segundo, com o BESS dimensionado para o contrato, o lance por MW não depende da potência até a potência da usina FV, porque a bateria cabe no montante de uso de injeção já contratado pela usina; acima de 50 MW, cada MW adicional acrescenta TUST, e o lance cresce até R\$ 1,086 milhão/(MW·ano) com 60 MW. A oferta deixa de ser "tudo ou nada": o proponente ofertaria qualquer quantidade entre 30 e 50 MW a partir de R\$ 1,064 milhão/(MW·ano) e quantidades maiores a preços crescentes.
+Três resultados se destacam. Primeiro, a bateria do leilão deve ser dimensionada para o contrato, pois o módulo mercantil não se paga no lance. No BESS de referência, ofertar 57,5 MW e manter 2,5 MW e 24 MWh para uso mercantil acrescenta R\$ 2,1 milhões por ano ao lucro, mas essa capacidade custa R\$ 4,7 milhões por ano entre capital, O&M e uso da rede; já os 12 MWh além do necessário para 60 MW custam R\$ 30 mil/(MW·ano) no lance. Segundo, com o BESS dimensionado para o contrato, o lance por MW não depende da potência até a potência da usina FV, porque a bateria cabe no montante de uso de injeção já contratado pela usina; acima de 50 MW, cada MW adicional acrescenta TUST, e o lance cresce até R\$ 1,127 milhão/(MW·ano) com 60 MW. A oferta deixa de ser "tudo ou nada": o proponente ofertaria qualquer quantidade entre 30 e 50 MW a partir de R\$ 1,104 milhão/(MW·ano) e quantidades maiores a preços crescentes.
 
-Terceiro, a bateria isolada, que paga a TUST sobre toda a sua potência, tem lance de R\$ 1,195 milhão/(MW·ano), R\$ 131 mil acima do híbrido. Como, no lance, o uso mercantil é nulo nos dois arranjos, essa diferença decorre inteiramente do compartilhamento da conexão: no lance mínimo, o papel da usina FV com produção de hidrogênio é dividir o ponto de conexão, e não fornecer receitas à bateria. O compartilhamento da infraestrutura de conexão, que também reduziria o investimento do arranjo híbrido, não foi quantificado.
+Terceiro, a bateria isolada, que paga a TUST sobre toda a sua potência, tem lance de R\$ 1,240 milhão/(MW·ano), R\$ 136 mil acima do híbrido: a TUST de R\$ 131 mil/(MW·ano), acrescida do PIS/Cofins. Como, no lance, o uso mercantil é nulo nos dois arranjos, essa diferença decorre inteiramente do compartilhamento da conexão: no lance mínimo, o papel da usina FV com produção de hidrogênio é dividir o ponto de conexão, e não fornecer receitas à bateria. O compartilhamento da infraestrutura de conexão, que também reduziria o investimento do arranjo híbrido, não foi quantificado.
+
+Essa vantagem, porém, pressupõe que a usina FV com o eletrolisador seja construída. Sozinha, sem o BESS, essa usina exige R\$ 402 milhões de investimento e gera fluxo anual de R\$ 18,6 milhões, após O&M, uso da rede e PIS/Cofins, o que resulta em VPL de −R\$ 276 milhões à taxa de 12,1% (−R\$ 242 milhões a 8%). Com o hidrogênio a R\$ 35/kg, portanto, a usina que hospeda a bateria não se justificaria por si. O lance de R\$ 1,104 milhão/(MW·ano) vale para um proponente cuja usina FV exista ou se justifique por outras razões — por exemplo, uma usina já em operação ou com a energia vendida em contrato —; para um proponente que constrói só a bateria, a referência é o lance da bateria isolada, de R\$ 1,240 milhão/(MW·ano).
 
 ## 4.3 BESS disponível: quantidade a contratar e operação
 
@@ -361,7 +366,7 @@ Fonte: elaborado pelo autor. Referência: importação vedada. Fator médio: sé
 
 **Efeito sobre o BESS.** O limite de emissões altera o papel do módulo mercantil em sentidos opostos conforme o fator de emissão. Com o fator médio, como na importação livre, a rede substitui o BESS no suprimento noturno do eletrolisador, e o custo do último MW cai para R\$ 474 mil a R\$ 496 mil/(MW·ano), de modo que o ótimo passa a ser contratar toda a potência. Com o fator marginal, ao contrário, a energia FV e a energia da rede tornam-se complementares: cada MWh de origem FV consumido pelo eletrolisador, diretamente ou após armazenamento, abre espaço na Equação (3.21) para a importação de uma fração de MWh da rede, e o módulo mercantil, que desloca a energia FV para a noite, passa a valer mais fora do leilão. Com o limite de 7 kgCO₂/kgH₂, o custo do último MW sobe de R\$ 895 mil para R\$ 1,007 milhão/(MW·ano), e a potência ótima para a receita de referência cai de 55 para 50 MW.
 
-**Viabilidade e lance mínimo.** O limite de emissões não altera o lance mínimo do BESS a construir, que permanece em R\$ 1,115 milhão/(MW·ano) com o BESS de referência e em R\$ 1,064 milhão com o BESS dimensionado para o contrato: no primeiro, a oferta de toda a potência elimina o módulo mercantil, e, no segundo, o BESS não altera a operação do lado mercantil (Subseção 4.2.4). O critério altera, porém, a viabilidade do empreendimento como um todo (Tabela 4.2): à taxa de 12,1%, o VPL passa de −R\$ 471 milhões no caso de referência para −R\$ 434 milhões com o limite de 7 kgCO₂/kgH₂ e fator marginal e para −R\$ 330 milhões com fator médio, e o preço de equilíbrio do hidrogênio cai de R\$ 103/kg para R\$ 76/kg e R\$ 54/kg, respectivamente.
+**Viabilidade e lance mínimo.** O limite de emissões não altera o lance mínimo do BESS a construir, que permanece em R\$ 1,157 milhão/(MW·ano) com o BESS de referência e em R\$ 1,104 milhão com o BESS dimensionado para o contrato: no primeiro, a oferta de toda a potência elimina o módulo mercantil, e, no segundo, o BESS não altera a operação do lado mercantil (Subseção 4.2.4). O critério altera, porém, a viabilidade do empreendimento como um todo (Tabela 4.2): à taxa de 12,1%, o VPL passa de −R\$ 489 milhões no caso de referência para −R\$ 457 milhões com o limite de 7 kgCO₂/kgH₂ e fator marginal e para −R\$ 362 milhões com fator médio, e o preço de equilíbrio do hidrogênio cai de R\$ 108/kg para R\$ 80/kg e R\$ 57/kg, respectivamente.
 
 Esses resultados indicam que, sob o critério de intensidade de emissões, a informação decisiva não é o valor do limite, mas a metodologia de cálculo do fator de emissão da rede — médio ou marginal, anual, mensal ou horário —, que depende da regulamentação da certificação do hidrogênio.
 
@@ -528,9 +533,9 @@ Os resultados permitem distinguir duas decisões e hierarquizar os fatores que d
 
 a) **a bateria do leilão deve ser dimensionada para o contrato:** o módulo mercantil não se paga no lance, e, com a bateria dimensionada para o contrato, o proponente ofertaria qualquer potência entre 30 e 50 MW ao mesmo lance mínimo, que só cresce acima da potência da usina FV; com o BESS de referência, de 60 MW e 300 MWh, a oferta é do tipo "tudo ou nada";
 
-b) **o lance mínimo é de cerca de R\$ 1,06 milhão/(MW·ano) com a bateria dimensionada para o contrato** (R\$ 1,12 milhão com o BESS de referência), com investimento de referência de R\$ 5.500/kW para 4 h e taxa de 12,1% antes de impostos; varia de R\$ 1,02 milhão a R\$ 1,35 milhão/(MW·ano) com o BESS de referência, conforme a duração de referência do custo da bateria, a regra de cobrança do uso da rede, o investimento, o O&M e a disponibilidade; corresponde ao custo anual equivalente do BESS por MW (Equação (3.47)) e supera o preço obtido por termelétricas existentes no LRCAP de 2026 (R\$ 831 mil); com a taxa após impostos, que ignora o imposto de renda, cairia para R\$ 874 mil;
+b) **o lance mínimo é de cerca de R\$ 1,10 milhão/(MW·ano) com a bateria dimensionada para o contrato** (R\$ 1,16 milhão com o BESS de referência), com investimento de referência de R\$ 5.500/kW para 4 h, taxa de 12,1% antes de impostos, PIS/Cofins de 3,65% e receita fixa reajustada pelo IPCA; varia de R\$ 1,05 milhão a R\$ 1,40 milhão/(MW·ano) com o BESS de referência, conforme a duração de referência do custo da bateria, a regra de cobrança do uso da rede, o regime tributário, o investimento, o O&M e a disponibilidade, e chegaria a R\$ 1,44 milhão se a receita fixa não fosse reajustada; corresponde ao custo anual equivalente do BESS por MW acrescido dos tributos sobre a receita (Equação (3.47)) e supera o preço obtido por termelétricas existentes no LRCAP de 2026 (R\$ 831 mil); com a taxa após impostos, que ignora o imposto de renda, cairia para R\$ 907 mil;
 
-c) **o papel do arranjo híbrido no lance é o compartilhamento da conexão:** uma bateria isolada teria lance de R\$ 1,20 milhão/(MW·ano), R\$ 131 mil acima do híbrido, e as hipóteses sobre o hidrogênio alteram pouco o lance (redução de até 5%, no contrato firme de 3 t/dia com tanque de 10 t, efeito que depende da multa contratual adotada); essas hipóteses determinam, porém, a viabilidade do empreendimento como um todo: com os parâmetros adotados, nenhum caso se paga, e o preço de equilíbrio do hidrogênio no caso de referência é de cerca de R\$ 103/kg;
+c) **o papel do arranjo híbrido no lance é o compartilhamento da conexão, condicionado à existência da usina:** uma bateria isolada teria lance de R\$ 1,24 milhão/(MW·ano), R\$ 136 mil acima do híbrido, mas a usina FV com o eletrolisador que hospeda a bateria tem, sozinha, VPL de −R\$ 276 milhões; o lance do híbrido vale, portanto, para uma usina que exista ou se justifique por outras razões. As hipóteses sobre o hidrogênio alteram pouco o lance (redução de até 5%, no contrato firme de 3 t/dia com tanque de 10 t, efeito que depende da multa contratual adotada e que ignora o custo do tanque); essas hipóteses determinam, porém, a viabilidade do empreendimento como um todo: com os parâmetros adotados, nenhum caso se paga, e o preço de equilíbrio do hidrogênio no caso de referência é de cerca de R\$ 108/kg;
 
 d) **sem a receita do leilão, o BESS agrega pouco** (R\$ 8,8 milhões por ano, contra custo anual equivalente de R\$ 66,8 milhões): é o LRCAP que pode viabilizar a bateria, e a receita de referência de R\$ 600 mil/(MW·ano) é insuficiente para isso.
 

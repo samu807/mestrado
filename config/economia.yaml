@@ -57,3 +57,16 @@ consumo_auxiliar_frac: [0.0, 0.01, 0.02]
 # indisponibilidade acordada com o ONS é isenta de penalidade; as penalidades dependem do edital.
 disponibilidade: 1.0
 disponibilidade_sensibilidade: 0.97
+# Tributos sobre a receita bruta (PIS/Cofins), aplicados à receita fixa, à venda de energia no MCP e à
+# venda de H2. A taxa antes de impostos cobre IR e CSLL, mas não os tributos sobre a receita. Central:
+# regime cumulativo do lucro presumido (0,65% + 3%), admitido para receita bruta anual de até R$ 78 milhões
+# (caso de uma SPE só do BESS); sensibilidade: regime não cumulativo do lucro real (1,65% + 7,6%), sem
+# créditos. O preço do H2 é tomado líquido de ICMS. Encargos setoriais (TFSEE, contribuição à CCEE)
+# não estão incluídos.
+tributos_receita: 0.0365
+tributos_receita_sensibilidade: 0.0925
+# Reajuste anual da receita fixa pelo IPCA. Com true, a receita é constante em termos reais, coerente com o
+# fluxo em valores reais. Com false, a receita é fixa em termos nominais e perde valor real à inflação
+# ipca_anual. A CONFIRMAR na Portaria MME 136/2026 e no edital.
+receita_fixa_reajuste_ipca: true
+ipca_anual: 0.04

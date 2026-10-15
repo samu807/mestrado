@@ -71,9 +71,22 @@ def premissas(eco, **troca):
     pr = {"capex": "central", "taxa": eco["taxa_central"], "om_bess": eco["om_fixo_frac"]["bess"],
           "h_ref": eco["bess_duracao_referencia_h"], "f_energia": eco["bess_fracao_energia"][1],
           "tust": eco["tust_geracao_rs_kw_mes"][1], "must_compartilhado": eco["must_compartilhado"],
-          "dupla": False, "aux": eco["consumo_auxiliar_frac"][1], "disp": eco["disponibilidade"]}
+          "dupla": False, "aux": eco["consumo_auxiliar_frac"][1], "disp": eco["disponibilidade"],
+          "trib": eco.get("tributos_receita", 0.0), "reajuste": eco.get("receita_fixa_reajuste_ipca", True)}
     pr.update(troca)
     return pr
+
+
+def fator_receita(eco, pr):
+    """Fração da receita fixa nominal ofertada que chega ao fluxo de caixa real, por ano equivalente:
+    disponibilidade x (1 - tributos sobre a receita) x perda real sem reajuste pelo IPCA. Sem reajuste,
+    a receita constante em termos nominais vale, em valor presente, FA(i_nominal, n) / FA(i, n) de uma
+    receita constante em termos reais."""
+    k = pr["disp"] * (1 - pr["trib"])
+    if not pr["reajuste"]:
+        n, i = eco["vida_anos"], pr["taxa"]
+        k *= fator_anuidade((1 + i) * (1 + eco["ipca_anual"]) - 1, n) / fator_anuidade(i, n)
+    return k
 
 
 def potencia_bess(p):
@@ -191,17 +204,20 @@ def lance_minimo(P, Qi, q_sem, custo_anual, disp=1.0):
 
 
 def decomposicao(p, eco, pr, curva, info, q_sem):
-    """Parcelas do lance mínimo por MW ofertado: capital, O&M, TUST, consumo auxiliar e uso mercantil."""
+    """Parcelas do lance mínimo por MW ofertado: capital, O&M, TUST, consumo auxiliar, uso mercantil e o
+    acréscimo de tributos sobre a receita e da falta de reajuste (receita bruta acima do custo)."""
     P, Q = curva.p_cap_mw.to_numpy(), curva.q_rs.to_numpy()
     deg, cons = ajuste_investimento(p, info, pr["aux"], P)
     custo = custo_anual_bess(p, eco, pr)
-    r, pk = lance_minimo(P, Q + deg - cons, q_sem, custo["total"], pr["disp"])
+    r, pk = lance_minimo(P, Q + deg - cons, q_sem, custo["total"], fator_receita(eco, pr))
     k = int(np.where(P == pk)[0][0])
     d = pr["disp"]
-    # Indiferença: R d P + Q(P) + deg - cons - C = q_sem  =>  R d = C/P + cons/P + (q_sem - Q - deg)/P
+    # Indiferença: R k P + Q(P) + deg - cons - C = q_sem  =>  R d = C/P + cons/P + (q_sem - Q - deg)/P,
+    # e o restante até R (k < d) cobre os tributos sobre a receita e a perda real sem reajuste.
     parcelas = {"capital": custo["capital"] / pk / d, "om_augmentation": custo["om"] / pk / d,
                 "tust": custo["tust"] / pk / d, "consumo_auxiliar": cons[k] / pk / d,
                 "uso_mercantil": (q_sem - Q[k] - deg[k]) / pk / d}
+    parcelas["tributos_reajuste"] = r - sum(parcelas.values())
     return {"lance_minimo_rs_mw_ano": r, "p_cap_mw": pk, **parcelas, "soma_parcelas": sum(parcelas.values())}
 
 
@@ -243,7 +259,7 @@ def grafico(res, P, Qi, q_sem, eco, base, saida):
 
     pr = premissas(eco)
     rs = np.arange(0, 1.6e6 + 1, 1e4)
-    ganho = np.array([np.max(r * pr["disp"] * P + Qi) - q_sem for r in rs]) / 1e6
+    ganho = np.array([np.max(r * fator_receita(eco, pr) * P + Qi) - q_sem for r in rs]) / 1e6
     ax[1].plot(rs / 1e3, ganho, color="#256abf", lw=2, label="Ganho anual da bateria (com − sem BESS)")
     for taxa, cor in cores:
         cs = [custo_anual_bess(base, eco, premissas(eco, capex=nv, taxa=taxa))["total"] / 1e6 for nv in NIVEIS]
@@ -275,7 +291,7 @@ def grafico_oferta(curva, P, Qi, q_sem, eco, base, dec, saida):
                label="Bateria existente (só custo de oportunidade)")
     for taxa, cor in [(eco["taxa_central"], "#256abf"), (0.08, "#d9731a")]:
         pr = premissas(eco, taxa=taxa)
-        o = oferta_com_investimento(P, Qi, q_sem, custo_anual_bess(base, eco, pr)["total"], rs, pr["disp"])
+        o = oferta_com_investimento(P, Qi, q_sem, custo_anual_bess(base, eco, pr)["total"], rs, fator_receita(eco, pr))
         ax[0].step(rs / 1e3, o.p_cap_mw, where="post", color=cor, lw=2,
                    label=f"Bateria a construir, taxa de {fmt_taxa(taxa)}")
     for v, rot in [(600, "referência"), (831, "LRCAP 3/2026")]:
@@ -288,7 +304,8 @@ def grafico_oferta(curva, P, Qi, q_sem, eco, base, dec, saida):
 
     # Cascata: parcelas positivas empilhadas até o lance; o uso mercantil desconta
     nomes = [("capital", "Capital"), ("om_augmentation", "O&M e\naugmentation"), ("tust", "Uso da\nrede"),
-             ("consumo_auxiliar", "Consumo\nauxiliar"), ("uso_mercantil", "Uso\nmercantil")]
+             ("consumo_auxiliar", "Consumo\nauxiliar"), ("uso_mercantil", "Uso\nmercantil"),
+             ("tributos_reajuste", "PIS/\nCofins")]
     base_y, xs = 0.0, []
     for k, (chave, rot) in enumerate(nomes):
         v = dec[chave] / 1e3
@@ -348,7 +365,7 @@ def lance_minimo_por_caso(base, eco, saida, processos, infos):
         for taxa in eco["taxas_desconto"]:
             pr = premissas(eco, taxa=taxa)
             P, Qi = curva_investimento(curva, p, infos[caso], pr["aux"])
-            r, pk = lance_minimo(P, Qi, sem[chave], custo_anual_bess(p, eco, pr)["total"], pr["disp"])
+            r, pk = lance_minimo(P, Qi, sem[chave], custo_anual_bess(p, eco, pr)["total"], fator_receita(eco, pr))
             linhas.append({"caso": caso, "descricao": desc, "taxa": taxa, "lucro_sem_bess_rs": sem[chave],
                            "lance_minimo_rs_mw_ano": r, "p_cap_mw": pk})
     df = pd.DataFrame(linhas)
@@ -380,10 +397,12 @@ def lance_dimensionado(p, eco, pr, potencia, info, isolada=False):
     custo = custo_anual_bess(q, eco, pr)
     _, cons = ajuste_investimento(q, info, pr["aux"], [potencia])
     d = pr["disp"]
+    lance = (custo["total"] + float(cons[0])) / potencia / fator_receita(eco, pr)
+    base = (custo["total"] + float(cons[0])) / potencia / d
     return {"potencia_mw": potencia, "energia_mwh": q.bess.energia_mwh, "capex_bess_rs": capex_bess(q, eco, pr),
             "capital": custo["capital"] / potencia / d, "om_augmentation": custo["om"] / potencia / d,
             "tust": custo["tust"] / potencia / d, "consumo_auxiliar": float(cons[0]) / potencia / d,
-            "lance_minimo_rs_mw_ano": (custo["total"] + float(cons[0])) / potencia / d}
+            "tributos_reajuste": lance - base, "lance_minimo_rs_mw_ano": lance}
 
 
 def dimensionamento(base, eco, info, saida):
@@ -424,7 +443,11 @@ def sensibilidade(base, eco, curva, info, q_sem, saida):
              ("Sem consumo auxiliar", {"aux": a[0]}),
              (f"Consumo auxiliar de {a[2]:.0%}", {"aux": a[2]}),
              (f"Disponibilidade de {eco['disponibilidade_sensibilidade']:.0%}",
-              {"disp": eco["disponibilidade_sensibilidade"]})]
+              {"disp": eco["disponibilidade_sensibilidade"]}),
+             ("Sem tributos sobre a receita", {"trib": 0.0}),
+             (f"PIS/Cofins não cumulativo ({eco['tributos_receita_sensibilidade']:.2%})".replace(".", ","),
+              {"trib": eco["tributos_receita_sensibilidade"]}),
+             (f"Receita fixa sem reajuste (IPCA de {eco['ipca_anual']:.0%} a.a.)", {"reajuste": False})]
     linhas = []
     for nome, troca in casos:
         pr = premissas(eco, **troca)
@@ -433,6 +456,7 @@ def sensibilidade(base, eco, curva, info, q_sem, saida):
                        "duracao_referencia_h": pr["h_ref"], "fracao_energia": pr["f_energia"],
                        "tust_rs_kw_mes": pr["tust"], "must_compartilhado": pr["must_compartilhado"],
                        "cobranca_dupla": pr["dupla"], "consumo_auxiliar_frac": pr["aux"], "disponibilidade": pr["disp"],
+                       "tributos_receita": pr["trib"], "reajuste_ipca": pr["reajuste"],
                        "capex_bess_rs": capex_bess(base, eco, pr), **dec})
     df = pd.DataFrame(linhas)
     df.to_csv(saida / "lance_sensibilidade.csv", index=False)
@@ -478,22 +502,25 @@ def main():
             for i in eco["taxas_desconto"]:
                 pr = premissas(eco, capex=nivel, taxa=i)
                 P, Qi = curva_investimento(curva, p, infos[caso], pr["aux"])
-                v = r_ref * pr["disp"] * P + Qi
+                kr = fator_receita(eco, pr) / (1 - pr["trib"])   # disponibilidade e reajuste, sem tributos
+                v = r_ref * kr * P + Qi
                 k = int(np.argmax(v))
                 c = capex_om(p, eco, pr)
                 capex = c["pv"] + c["bess"] + c["eletrolisador"]
                 rede = uso_rede(p, eco, pr, True)
-                fluxo = v[k] - c["om"] - rede
+                receita_bruta = r_ref * kr * P[k] + op["receita_h2_rs"] + op["receita_mcp_rs"]
+                tributos = pr["trib"] * receita_bruta
+                fluxo = v[k] - c["om"] - rede - tributos
                 fa = fator_anuidade(i, n)
                 vpl = -capex + fa * fluxo
                 h2 = op["h2_vendido_kg"]
                 linhas.append({
                     "caso": caso, "descricao": desc, "capex_nivel": nivel, "taxa": i, "p_cap_mw": P[k],
-                    "lucro_operacional_rs": v[k], "om_fixo_rs": c["om"], "uso_rede_rs": rede,
+                    "lucro_operacional_rs": v[k], "om_fixo_rs": c["om"], "uso_rede_rs": rede, "tributos_rs": tributos,
                     "capex_pv_rs": c["pv"], "capex_bess_rs": c["bess"], "capex_el_rs": c["eletrolisador"],
                     "capex_total_rs": capex, "fluxo_anual_rs": fluxo, "vpl_rs": vpl, "tir": tir(capex, fluxo, n),
                     "h2_vendido_kg": h2,
-                    "preco_h2_equilibrio_rs_kg": p.hidrogenio.preco_venda_rs_kg - vpl / (fa * h2),
+                    "preco_h2_equilibrio_rs_kg": p.hidrogenio.preco_venda_rs_kg - vpl / (fa * h2 * (1 - pr["trib"])),
                 })
     res = pd.DataFrame(linhas)
     res.to_csv(saida / "viabilidade.csv", index=False)
@@ -506,8 +533,8 @@ def main():
             pr = premissas(eco, capex=nivel, taxa=i)
             P, Qi = curva_investimento(curva, base, infos["base"], pr["aux"])
             custo = custo_anual_bess(base, eco, pr)
-            ganho = float(np.max(r_ref * pr["disp"] * P + Qi) - q_sem)
-            r, pk = lance_minimo(P, Qi, q_sem, custo["total"], pr["disp"])
+            ganho = float(np.max(r_ref * fator_receita(eco, pr) * P + Qi) - q_sem)
+            r, pk = lance_minimo(P, Qi, q_sem, custo["total"], fator_receita(eco, pr))
             bat.append({"capex_nivel": nivel, "taxa": i, "custo_anual_bess_rs": custo["total"],
                         "custo_capital_rs": custo["capital"], "custo_om_rs": custo["om"], "custo_tust_rs": custo["tust"],
                         "custo_anual_bess_rs_mw": custo["total"] / potencia_bess(base),
@@ -515,6 +542,24 @@ def main():
                         "lance_minimo_rs_mw_ano": r, "p_cap_no_lance_minimo_mw": pk})
     bat = pd.DataFrame(bat)
     bat.to_csv(saida / "lance_minimo.csv", index=False)
+
+    # Usina FV com eletrolisador, sem BESS: a conexão que o BESS compartilha no arranjo híbrido só existe se
+    # essa usina for construída. A receita bruta é aproximada pelo lucro somado ao custo variável do H2.
+    hosp = []
+    for i in eco["taxas_desconto"]:
+        pr = premissas(eco, taxa=i)
+        c = capex_om(base, eco, pr)
+        capex = c["pv"] + c["eletrolisador"]
+        om = c["pv"] * eco["om_fixo_frac"]["pv"] + c["eletrolisador"] * eco["om_fixo_frac"]["eletrolisador"]
+        rede = uso_rede(base, eco, pr, False)
+        h = base.hidrogenio
+        receita = q_sem / (1 - base.eletrolisador.custo_variavel_rs_kg / h.preco_venda_rs_kg)
+        fluxo = q_sem - om - rede - pr["trib"] * receita
+        hosp.append({"taxa": i, "capex_rs": capex, "lucro_operacional_rs": q_sem, "om_fixo_rs": om,
+                     "uso_rede_rs": rede, "tributos_rs": pr["trib"] * receita, "fluxo_anual_rs": fluxo,
+                     "vpl_rs": -capex + fator_anuidade(i, n) * fluxo})
+    hosp = pd.DataFrame(hosp)
+    hosp.to_csv(saida / "usina_sem_bess.csv", index=False)
 
     pr = premissas(eco)
     P, Qi = curva_investimento(curva, base, infos["base"], pr["aux"])
@@ -538,7 +583,9 @@ def main():
     print(bat.to_string(index=False))
     print("\nSensibilidade e parcelas do lance mínimo (caso de referência):")
     print(sens[["caso", "taxa", "capex_bess_rs", "lance_minimo_rs_mw_ano", "p_cap_mw", "capital", "om_augmentation",
-                "tust", "consumo_auxiliar", "uso_mercantil"]].to_string(index=False))
+                "tust", "consumo_auxiliar", "uso_mercantil", "tributos_reajuste"]].to_string(index=False))
+    print("\nUsina FV com eletrolisador, sem BESS:")
+    print(hosp.to_string(index=False))
     print("\nLance mínimo por caso:")
     print(lmc.pivot_table(index="caso", columns="taxa", values=["lance_minimo_rs_mw_ano", "p_cap_mw"]).to_string())
     print("\nLance mínimo do BESS dimensionado para o contrato (R$ mil/MW·ano):")

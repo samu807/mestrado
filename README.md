@@ -302,10 +302,10 @@ de 2021–2023 são 34% a 42% maiores. Sensibilidade marginal: toda compra vem d
 - **A bateria muda de papel.** Com o fator médio, a rede substitui a bateria à noite e os últimos MW
   ficam baratos (R\$ 474 mil). Com o fator marginal, cada MWh solar guardado "abre espaço" para
   comprar mais da rede: a bateria vale mais fora do leilão, e o ótimo cai para 50 MW.
-- **O lance mínimo da bateria a construir não muda** (R\$ 1,115 mi com o BESS de referência,
-  R\$ 1,064 mi dimensionado para o contrato): a regra de emissões altera a economia do H₂, não a
+- **O lance mínimo da bateria a construir não muda** (R\$ 1,157 mi com o BESS de referência,
+  R\$ 1,104 mi dimensionado para o contrato): a regra de emissões altera a economia do H₂, não a
   da bateria contratada.
-- O VPL do híbrido melhora (−R\$ 471 mi → −R\$ 434 mi com L = 7 marginal → −R\$ 330 mi com o fator
+- O VPL do híbrido melhora (−R\$ 489 mi → −R\$ 457 mi com L = 7 marginal → −R\$ 362 mi com o fator
   médio), mas continua negativo. Nos casos marginais, o H₂ de equilíbrio usa o volume na potência
   ótima da curva (50 e 52,5 MW), e o VPL, 55 MW: o preço está levemente subestimado.
 - As curvas "estrito" e "importação livre" são anteriores à fronteira LP (diferença de ~0,04%).
@@ -404,43 +404,51 @@ Quatro escolhas tornam a análise coerente:
 
 | Caso (CAPEX central, R\$ 600 mil/MW·ano) | CAPEX | Lucro operacional | VPL (12,1%) | VPL (8%) | TIR real | H₂ de equilíbrio (12,1%) |
 |---|---|---|---|---|---|---|
-| Referência (55 MW no LRCAP) | R\$ 781 mi | R\$ 72,1 mi/ano | **−R\$ 471 mi** | −R\$ 389 mi | −1,6% | R\$ 103/kg |
-| Contrato 3 t/dia | R\$ 781 mi | R\$ 69,5 mi/ano | −R\$ 488 mi | −R\$ 411 mi | −2,2% | R\$ 103/kg |
-| Importação da rede | R\$ 781 mi | R\$ 92,9 mi/ano | −R\$ 329 mi | −R\$ 210 mi | 3,3% | R\$ 54/kg |
-| Eletrolisador 10 MW | R\$ 700 mi | R\$ 64,2 mi/ano | −R\$ 426 mi | −R\$ 354 mi | −1,8% | R\$ 109/kg |
-| Eletrolisador 25 MW | R\$ 862 mi | R\$ 77,7 mi/ano | −R\$ 530 mi | −R\$ 442 mi | −1,9% | R\$ 102/kg |
+| Referência (55 MW no LRCAP) | R\$ 781 mi | R\$ 72,1 mi/ano | **−R\$ 489 mi** | −R\$ 412 mi | −2,3% | R\$ 108/kg |
+| Contrato 3 t/dia | R\$ 781 mi | R\$ 69,5 mi/ano | −R\$ 506 mi | −R\$ 434 mi | −3,0% | R\$ 108/kg |
+| Importação da rede | R\$ 781 mi | R\$ 92,9 mi/ano | −R\$ 362 mi | −R\$ 251 mi | 2,2% | R\$ 57/kg |
+| Eletrolisador 10 MW | R\$ 700 mi | R\$ 64,2 mi/ano | −R\$ 444 mi | −R\$ 376 mi | −2,5% | R\$ 115/kg |
+| Eletrolisador 25 MW | R\$ 862 mi | R\$ 77,7 mi/ano | −R\$ 550 mi | −R\$ 467 mi | −2,6% | R\$ 107/kg |
 
 - **Nenhum caso se paga.** Fluxo do caso de referência: R\$ 72,1 mi − O&M R\$ 18,3 mi − TUST
-  R\$ 7,9 mi = R\$ 45,8 mi/ano. Só a importação com CAPEX baixo e taxa de 8% empata (+R\$ 9 mi).
+  R\$ 7,9 mi − PIS/Cofins R\$ 2,7 mi = R\$ 43,1 mi/ano. Nem a importação com CAPEX baixo e taxa de 8%
+  empata (−R\$ 32 mi).
+- **Tributos e reajuste** (`config/economia.yaml`): PIS/Cofins de 3,65% (lucro presumido) sobre a receita
+  bruta, 9,25% como sensibilidade; receita fixa reajustada pelo IPCA (a confirmar no edital), sem reajuste
+  como sensibilidade.
+- **Usina FV + eletrolisador sem BESS:** investimento de R\$ 402 mi, fluxo de R\$ 18,6 mi/ano, VPL de
+  −R\$ 276 mi (12,1%) (`usina_sem_bess.csv`). A conexão que o BESS compartilha só existe se essa usina for
+  construída por outras razões.
 - **Valor da bateria:** lucro sem BESS = R\$ 35,4 mi/ano; com BESS e 55 MW a R\$ 600 mil,
-  R\$ 72,1 mi. O ganho de R\$ 36,7 mi/ano não cobre o custo anual do BESS (R\$ 66,8 mi a 12,1%:
+  R\$ 72,1 mi. O ganho de R\$ 35,5 mi/ano, após PIS/Cofins, não cobre o custo anual do BESS (R\$ 66,8 mi a 12,1%:
   capital 56,0 + O&M 9,5 + TUST 1,3). Sem o LRCAP, a bateria agrega só R\$ 8,8 mi/ano.
 
 **Curva de oferta com o investimento no BESS e lance mínimo.** Se a bateria ainda vai ser
 construída, para cada receita fixa R o proponente compara não construí-la (lucro sem BESS) com
-construí-la e contratar a melhor potência: max_P {R·d·P + Q_inv(P)} − custo anual do BESS.
+construí-la e contratar a melhor potência: max_P {R·k·P + Q_inv(P)} − custo anual do BESS, com k = disponibilidade × (1 − PIS/Cofins) × perda real sem reajuste.
 
 ![Curva de oferta com investimento](docs/figuras/curva_oferta_investimento.png)
 
 | Taxa | CAPEX de referência baixo (R\$ 5.000/kW) | central (R\$ 5.500/kW) | alto (R\$ 6.000/kW) |
 |---|---|---|---|
-| 12,1% (central) | R\$ 1,015 mi | **R\$ 1,115 mi** | R\$ 1,214 mi |
-| 8,0% | R\$ 838 mil | R\$ 919 mil | R\$ 1,001 mi |
+| 12,1% (central) | R\$ 1,054 mi | **R\$ 1,157 mi** | R\$ 1,260 mi |
+| 8,0% | R\$ 870 mil | R\$ 954 mil | R\$ 1,039 mi |
 
 - Com o BESS de referência (60 MW/300 MWh), a oferta é "tudo ou nada": zero abaixo do lance
   mínimo e 60 MW acima dele (ver o dimensionamento abaixo).
-- **O lance mínimo é o custo anual do BESS por MW:** capital R\$ 934 mil + O&M com augmentation
-  R\$ 158 mil + acréscimo de TUST R\$ 22 mil = R\$ 1,115 mi. Consumo auxiliar (cabe na folga da
+- **O lance mínimo é o custo anual do BESS por MW mais o PIS/Cofins:** capital R\$ 934 mil + O&M com
+  augmentation R\$ 158 mil + acréscimo de TUST R\$ 22 mil + PIS/Cofins R\$ 43 mil = R\$ 1,157 mi. Consumo auxiliar (cabe na folga da
   CONCAP) e uso mercantil (a 60 MW o módulo mercantil some) valem zero.
 - Sensibilidade (uma premissa por vez, `lance_sensibilidade.csv`): referência da EPE de 3 h +21%;
   taxa de 8% −18%; cobrança dupla de TUST +16%; conexão não compartilhada +10%; CAPEX de referência
   ±9%; O&M ±1 p.p. ±6%; parcela de energia 45–75% ±3%; disponibilidade de 97% +3%; TUST regional
   −1% a +2%; consumo auxiliar de 2% +1%. Degradação por MWh: 0%. 50 despachos/ano: +1%.
-  Contrato firme de 3 t/dia: −3% (−5% com tanque de 10 t).
-- **Papel do híbrido no lance:** dividir a conexão com a FV poupa R\$ 109 mil/MW·ano de TUST
-  (R\$ 131 mil com o BESS dimensionado para o contrato).
-- O lance central supera em 34% os R\$ 831 mil das térmicas existentes no LRCAP 3/2026 (mesmo o
-  cenário mais barato, R\$ 838 mil, fica acima) e é muito menor que os R\$ 2,33 mi do LRCAP 2/2026.
+  Contrato firme de 3 t/dia: −3% (−5% com tanque de 10 t). Sem PIS/Cofins −4%; PIS/Cofins não
+  cumulativo +6%; receita fixa sem reajuste pelo IPCA (4% a.a.) +25%.
+- **Papel do híbrido no lance:** dividir a conexão com a FV poupa R\$ 113 mil/MW·ano
+  (R\$ 136 mil com o BESS dimensionado para o contrato), desde que a usina FV exista.
+- O lance central supera em 39% os R\$ 831 mil das térmicas existentes no LRCAP 3/2026 (mesmo o
+  cenário mais barato, R\$ 870 mil, fica acima) e é muito menor que os R\$ 2,33 mi do LRCAP 2/2026.
 
 **Dimensionamento do BESS e bateria isolada** (`lance_dimensionamento.csv`). Com potência igual à
 contratada e 4,8 MWh/MW, o BESS não tem módulo mercantil e não altera a operação da FV e do
@@ -449,18 +457,18 @@ eletrolisador: o lucro operacional esperado mais a degradação do LRCAP é igua
 
 | Arranjo | Potência (MW) | Energia (MWh) | 12,1% | 8,0% |
 |---|---|---|---|---|
-| Híbrido, BESS de referência | 60 | 300 | R\$ 1,115 mi | R\$ 919 mil |
-| Híbrido, dimensionado para o contrato | 60 | 288 | R\$ 1,086 mi | R\$ 896 mil |
-| Híbrido, dimensionado para o contrato | 30 a 50 | 4,8/MW | **R\$ 1,064 mi** | R\$ 874 mil |
-| Bateria isolada (sem FV), dimensionada | 30 a 60 | 4,8/MW | R\$ 1,195 mi | R\$ 1,005 mi |
+| Híbrido, BESS de referência | 60 | 300 | R\$ 1,157 mi | R\$ 954 mil |
+| Híbrido, dimensionado para o contrato | 60 | 288 | R\$ 1,127 mi | R\$ 929 mil |
+| Híbrido, dimensionado para o contrato | 30 a 50 | 4,8/MW | **R\$ 1,104 mi** | R\$ 907 mil |
+| Bateria isolada (sem FV), dimensionada | 30 a 60 | 4,8/MW | R\$ 1,240 mi | R\$ 1,043 mi |
 
 - **A bateria do leilão deve ser dimensionada para o contrato:** no BESS de referência, ofertar
   57,5 MW e manter 2,5 MW/24 MWh mercantis rende R\$ 2,1 mi/ano, mas essa capacidade custa
-  R\$ 4,7 mi/ano; os 12 MWh além dos 288 MWh necessários custam R\$ 29 mil/MW·ano no lance.
+  R\$ 4,7 mi/ano; os 12 MWh além dos 288 MWh necessários custam R\$ 30 mil/MW·ano no lance.
 - **A oferta deixa de ser "tudo ou nada":** até 50 MW a bateria cabe no MUST da usina FV e o lance
-  por MW é constante (R\$ 1,064 mi); acima disso cada MW paga TUST e o lance sobe até R\$ 1,086 mi.
-- **Bateria isolada:** R\$ 131 mil/MW·ano acima do híbrido, inteiramente pela TUST sobre toda a
-  potência. No lance, o papel da FV com H₂ é dividir a conexão, não gerar receita para a bateria.
+  por MW é constante (R\$ 1,104 mi); acima disso cada MW paga TUST e o lance sobe até R\$ 1,127 mi.
+- **Bateria isolada:** R\$ 136 mil/MW·ano acima do híbrido, inteiramente pela TUST sobre toda a
+  potência (com PIS/Cofins). No lance, o papel da FV com H₂ é dividir a conexão, não gerar receita para a bateria.
 
 ## Próximos passos sugeridos
 
