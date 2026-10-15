@@ -147,7 +147,7 @@ Referências para a faixa de receita fixa (não há leilão anterior de baterias
 |---|---|---|
 | R\$ 330 mil/MW·ano | 1º leilão MACSE (Itália, Terna, 30/09/2025): € 12.959/MWh·ano, baterias de lítio, 15 anos | Convertido para 4 h com PTAX de 30/09/2025 (R\$ 6,2396/€) = R\$ 323 mil |
 | R\$ 830 mil/MW·ano | Leilão nº 3/2026-ANEEL (LRCAP, 20/03/2026): 501,3 MW de térmicas existentes a óleo e biodiesel, R\$ 831.251,52/MW·ano, deságio 50,1% | Piso: usinas existentes, sem investimento |
-| R\$ 1,0 e 1,5 mi/MW·ano | CAPEX de referência de BESS da EPE (Caderno de Parâmetros de Custos, PDE 2035): R\$ 5.000–6.000/kW | Anualizado a 10% a.a. em 15 anos = R\$ 657–789 mil/MW·ano só de capital; os valores somam O&M, encargos e reposição (estimativa própria) |
+| R\$ 1,0 e 1,5 mi/MW·ano | CAPEX de referência de BESS da EPE (Caderno de Parâmetros de Custos, PDE 2035): R\$ 5.000–6.000/kW | Anualizado a 12,1% a.a. (taxa central) em 15 anos = R\$ 738–886 mil/MW·ano só de capital; os valores somam O&M, encargos e reposição (estimativa própria) |
 | R\$ 2,33 mi/MW·ano | Leilão nº 2/2026-ANEEL (LRCAP, 18/03/2026): 18,97 GW de térmicas a gás, biometano e carvão e ampliações hidrelétricas, novas e existentes, R\$ 2,334 mi/MW·ano, deságio 5,5% | Teto: expansão térmica e hidrelétrica |
 
 Fontes: boletins InfoLeilão Expresso da CCEE (04º e 05º LRCAP 2026), comunicado da Terna de

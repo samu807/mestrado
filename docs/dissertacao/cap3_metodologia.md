@@ -98,6 +98,7 @@ Tabela 3.1 – Parâmetros do modelo e valores do caso de referência
 | $\alpha^{el}$ | Carga mínima do eletrolisador (fração de $\bar P^{el}$) | – | 0,10 |
 | $k^{el}$ | Consumo específico de energia | kWh/kg | 55 |
 | $c^{h2}$ | Custo variável de produção de H₂ | R\$/kg | 1,5 |
+| $c^{part}$ | Custo por partida do eletrolisador | R\$/partida | 0 (determinístico); 500 (estocástico) |
 | $\pi^{h2}$ | Preço de venda do H₂ | R\$/kg | 35 |
 | $\bar S, S_0$ | Capacidade e estoque inicial do tanque de H₂ | kg | 2.000; 0 |
 | $D^{h2}$ | Entrega mínima diária de H₂ (contrato) | kg/dia | 0 (sem contrato); 2.000 ou 3.000 |
@@ -143,6 +144,7 @@ Tabela 3.2 – Variáveis de decisão
 | $y^{bat}_t$ | Estado do módulo mercantil (1 = carregando) | $\{0, 1\}$ |
 | $y^{rede}_t$ | Sentido do intercâmbio (1 = exportando) | $\{0, 1\}$ |
 | $z_t$ | Estado do eletrolisador (1 = ligado) | $\{0, 1\}$ |
+| $u_t$ | Partida do eletrolisador no intervalo $t$ | $[0, 1]$ |
 
 ::: {custom-style="Fonte"}
 Fonte: elaborado pelo autor.
@@ -156,13 +158,14 @@ $$
 \max\; \sum_{t \in \mathcal{T}} \lambda_t\, p^{exp}_t\, \Delta t
 - \sum_{t \in \mathcal{T}} \left(\lambda_t + c^{imp}\right) p^{imp}_t\, \Delta t
 + \sum_{t \in \mathcal{T}} \left(\pi^{h2} v_t - c^{h2} m_t\right) \Delta t
+- \sum_{t \in \mathcal{T}} c^{part} u_t
 - \sum_{d \in \mathcal{D}} \pi^{def} q^{def}_d
 + R^{cap}\, \frac{N \Delta t}{8760}\, P^{cap}
 - \kappa\, P^{cap}
 - \sum_{t \in \mathcal{T}} c^{deg} \left(p^{dis}_t + \delta_t P^{cap}\right) \Delta t
 $$ {#eq:fo}
 
-Os termos correspondem, respectivamente, à receita da energia exportada ao MCP, ao custo da energia importada, à margem da comercialização do hidrogênio, à multa por déficit de entrega de hidrogênio, à receita fixa do LRCAP rateada no horizonte, ao custo da recarga excedente do módulo LRCAP e ao custo de degradação do BESS, aplicado à energia descarregada por ambos os módulos. Ressalta-se que a energia injetada pelo módulo LRCAP não compõe a receita do MCP do empreendedor, em conformidade com o art. 9º, § 6º, da Portaria.
+Os termos correspondem, respectivamente, à receita da energia exportada ao MCP, ao custo da energia importada, à margem da comercialização do hidrogênio, ao custo de partida do eletrolisador, à multa por déficit de entrega de hidrogênio, à receita fixa do LRCAP rateada no horizonte, ao custo da recarga excedente do módulo LRCAP e ao custo de degradação do BESS, aplicado à energia descarregada por ambos os módulos. Ressalta-se que a energia injetada pelo módulo LRCAP não compõe a receita do MCP do empreendedor, em conformidade com o art. 9º, § 6º, da Portaria.
 
 O coeficiente $\kappa$ representa o custo, por MW contratado, da energia de recarga que excede o quociente entre a energia injetada e a eficiência de referência, a qual deve ser custeada pelo empreendedor (BRASIL, 2026, art. 9º, §§ 7º e 8º). Como o perfil de despacho é exógeno e proporcional a $P^{cap}$, $\kappa$ é calculado previamente pela Equação {eq:kappa}:
 
@@ -316,7 +319,7 @@ Fonte: elaborado pelo autor com dados de CCEE (2026a) e do PVGIS.
 
 **Custo de degradação do BESS.** No modelo de operação, o desgaste da bateria é representado por um custo por MWh descarregado, $c^{deg}$, que mede o custo marginal de usar uma bateria existente: cada ciclo adicional antecipa a perda de capacidade e a reposição dos módulos. O custo integral de reposição dividido pela energia descarregada ao longo da vida útil é um limite superior desse custo marginal. Com o preço médio de *packs* de baterias de íons de lítio para armazenamento estacionário de US\$ 70/kWh em 2025 (BNEF, 2025), convertido pela taxa PTAX de 09/12/2025 (R\$ 5,4025/US\$) e acrescido de 74% de tributos incidentes no Brasil (EPE, 2024), e com vida útil de 4.000 a 6.000 ciclos a 90% de profundidade de descarga, esse limite fica entre R\$ 120 e R\$ 185 por MWh descarregado. Adota-se R\$ 50/MWh no caso de referência, e o efeito de valores de R\$ 100 e R\$ 200/MWh é avaliado na Seção 3.8.4. Na decisão de construir o BESS (Seção 3.8.2), porém, o desgaste do uso contratado não é cobrado por MWh: o investimento é amortizado no prazo do contrato, sem valor residual, e o O&M fixo inclui a reposição parcial de módulos (*augmentation*) que mantém a capacidade nominal durante a vida útil, com cerca de um ciclo por dia (NREL, 2024). Cobrar também o desgaste por MWh pagaria a bateria duas vezes.
 
-**Receita fixa do LRCAP.** Como ainda não houve leilão de armazenamento em baterias no Brasil, a receita fixa foi delimitada por quatro referências. A inferior é o primeiro leilão do mecanismo italiano de contratação de capacidade de armazenamento (MACSE), realizado em setembro de 2025 com contratos de 15 anos e desenho semelhante ao do LRCAP, cujo preço médio de € 12.959/(MWh·ano) (TERNA, 2025) corresponde, para um sistema de 4 h e com a taxa de câmbio PTAX de 30/09/2025 (R\$ 6,2396/€), a cerca de R\$ 323 mil/(MW·ano). No LRCAP de março de 2026, que contratou o mesmo produto — potência disponível ao ONS —, termelétricas existentes a óleo e biodiesel obtiveram preço médio de R\$ 831 mil/(MW·ano) (CCEE, 2026c), e o conjunto de termelétricas a gás natural, biometano e carvão e de ampliações de hidrelétricas, novas e existentes, R\$ 2,334 milhões/(MW·ano) (CCEE, 2026b). Por fim, o custo de investimento de referência de sistemas de baterias, de R\$ 5.000 a R\$ 6.000/kW (BRASIL; EPE, 2025), corresponde, anualizado a 10% ao ano em 15 anos, a R\$ 657 mil a R\$ 789 mil/(MW·ano), sem considerar operação e manutenção, encargos e reposição de módulos. Com base nessas referências, a análise de sensibilidade abrange receitas fixas de R\$ 330 mil a R\$ 2,33 milhões/(MW·ano). O valor de R\$ 600 mil/(MW·ano) adotado no caso de referência situa-se no extremo inferior dessa faixa, abaixo do preço obtido por usinas existentes e do custo anualizado de investimento em baterias, e constitui, portanto, uma hipótese conservadora quanto à atratividade do leilão.
+**Receita fixa do LRCAP.** Como ainda não houve leilão de armazenamento em baterias no Brasil, a receita fixa foi delimitada por quatro referências. A inferior é o primeiro leilão do mecanismo italiano de contratação de capacidade de armazenamento (MACSE), realizado em setembro de 2025 com contratos de 15 anos e desenho semelhante ao do LRCAP, cujo preço médio de € 12.959/(MWh·ano) (TERNA, 2025) corresponde, para um sistema de 4 h e com a taxa de câmbio PTAX de 30/09/2025 (R\$ 6,2396/€), a cerca de R\$ 323 mil/(MW·ano). No LRCAP de março de 2026, que contratou o mesmo produto — potência disponível ao ONS —, termelétricas existentes a óleo e biodiesel obtiveram preço médio de R\$ 831 mil/(MW·ano) (CCEE, 2026c), e o conjunto de termelétricas a gás natural, biometano e carvão e de ampliações de hidrelétricas, novas e existentes, R\$ 2,334 milhões/(MW·ano) (CCEE, 2026b). Por fim, o custo de investimento de referência de sistemas de baterias, de R\$ 5.000 a R\$ 6.000/kW (BRASIL; EPE, 2025), corresponde, anualizado à taxa central de 12,1% ao ano em 15 anos (Seção 3.8.2), a R\$ 738 mil a R\$ 886 mil/(MW·ano), sem considerar operação e manutenção, encargos e reposição de módulos. Com base nessas referências, a análise de sensibilidade abrange receitas fixas de R\$ 330 mil a R\$ 2,33 milhões/(MW·ano). O valor de R\$ 600 mil/(MW·ano) adotado no caso de referência situa-se no extremo inferior dessa faixa, abaixo do preço obtido por usinas existentes e do custo anualizado de investimento em baterias, e constitui, portanto, uma hipótese conservadora quanto à atratividade do leilão.
 
 ## 3.6 Método de solução
 
@@ -426,7 +429,7 @@ b) a série de fator de capacidade FV obtida no PVGIS a partir da base de satél
 
 c) o perfil de despacho do ONS, que, em lugar do perfil fixo da Seção 3.5, passa a depender do preço do cenário: em cada dia, a descarga ocorre no bloco de $H^{cap} = 4$ horas consecutivas de maior PLD médio após o período de geração solar, e a recarga, nas horas de menor PLD da janela entre 8 h e 16 h, até a restauração do estado de carga. Trata-se de uma aproximação do despacho por mínimo custo previsto na Portaria (BRASIL, 2026, art. 4º, § 14), que preserva a correlação entre o despacho e o preço em cada cenário.
 
-No caso estocástico, considera-se ainda um custo por partida do eletrolisador, $c^{part}$, associado a uma variável $u_t \geq z_t - z_{t-1}$, que penaliza ligamentos frequentes.
+No caso estocástico, o custo por partida do eletrolisador da Equação {eq:fo}, $c^{part}$, é de R\$ 500 (valor de referência, a calibrar com o fabricante) e incide sobre a variável $u_t \geq z_t - z_{t-1}$, que penaliza ligamentos frequentes; no caso determinístico, $c^{part} = 0$.
 
 Com cinco cenários equiprováveis e $\alpha = 0{,}8$, a cauda de probabilidade $1 - \alpha = 0{,}2$ contém exatamente um cenário, de modo que o CVaR coincide com o lucro do pior ano. Ressalta-se que cinco anos constituem uma amostra pequena da variabilidade hidrológica e de preços, de forma que os resultados refletem a amostra histórica disponível e não uma distribuição de probabilidade ajustada.
 
@@ -516,7 +519,7 @@ $$
 Q(P) = \sum_{s \in \mathcal{S}} \pi_s\, \Pi_s(P) - R^{cap} P
 $$ {#eq:q}
 
-A diferença $Q(0) - Q(P)$ mede quanto lucro operacional o empreendedor deixa de obter — no MCP e na venda de hidrogênio — por comprometer $P$ MW com o leilão, isto é, o custo de oportunidade da contratação. Seu valor por MW adicional, $c^{op}(P) = -\mathrm{d}Q/\mathrm{d}P$, é o custo de oportunidade marginal. Como a decisão envolve uma única variável e o interesse está na curva inteira, e não apenas no seu máximo, $Q$ é avaliada numa grade $\mathcal{X}_h = \{0\} \cup \{\underline P^{cap}, \underline P^{cap} + h, \dots, \bar P^{cap}\}$, com $h = 2{,}5$ MW, resolvendo-se para cada ponto os subproblemas de todos os pares (cenário, bloco) com $P^{cap}$ fixo e com os estados de fronteira dos blocos dados pela relaxação linear de cada ano (Seção 3.6.2). O custo de oportunidade marginal é aproximado pelas diferenças finitas da Equação {eq:custo-op}:
+A diferença $Q(0) - Q(P)$ mede quanto lucro operacional o empreendedor perde por comprometer $P$ MW com o leilão. Ela reúne duas parcelas: o lucro que deixa de obter no MCP e na venda de hidrogênio, que é o custo de oportunidade em sentido estrito, e o custo de degradação do módulo LRCAP pelo despacho do ONS, de $c^{deg} E^{ons}$ por MW contratado, em que $E^{ons}$ é a energia injetada pelo módulo por MW em um ano (Seção 3.8.2). Neste trabalho, denomina-se custo de oportunidade da contratação a soma das duas parcelas, pois é ela que a receita fixa precisa cobrir quando o BESS já existe. Seu valor por MW adicional, $c^{op}(P) = -\mathrm{d}Q/\mathrm{d}P$, é o custo de oportunidade marginal. Como a decisão envolve uma única variável e o interesse está na curva inteira, e não apenas no seu máximo, $Q$ é avaliada numa grade $\mathcal{X}_h = \{0\} \cup \{\underline P^{cap}, \underline P^{cap} + h, \dots, \bar P^{cap}\}$, com $h = 2{,}5$ MW, resolvendo-se para cada ponto os subproblemas de todos os pares (cenário, bloco) com $P^{cap}$ fixo e com os estados de fronteira dos blocos dados pela relaxação linear de cada ano (Seção 3.6.2). O custo de oportunidade marginal é aproximado pelas diferenças finitas da Equação {eq:custo-op}:
 
 $$
 c^{op}_j = -\,\frac{Q(P_{j+1}) - Q(P_j)}{P_{j+1} - P_j}, \qquad P_j,\, P_{j+1} \in \mathcal{X}_h, \;\; P_j \geq \underline P^{cap}
