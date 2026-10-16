@@ -402,8 +402,8 @@ Tabela 4.10 – Efeito da frequência do despacho do ONS (receita fixa de R\$ 60
 
 | Despachos por ano | Potência ótima (MW) | Lucro esperado (R\$ mi/ano) | Degradação do BESS (R\$ mi/ano) | Receita mínima de entrada (R\$ mil/MW·ano) |
 |--------------------|--------------------|--------------------|--------------------|--------------------|
-| 50 | 55 | 71,6 | 1,0 | 13 |
-| 150 | 55 | 70,5 | 2,1 | 33 |
+| 50 | 55 | 71,4 | 1,0 | 16 |
+| 150 | 55 | 70,3 | 2,1 | 37 |
 | 365 | 55 | 68,1 | 4,4 | 76 |
 
 ::: {custom-style="Fonte"}
@@ -440,7 +440,7 @@ Tabela 4.11 – Efeito do custo de degradação do BESS (receita fixa de R\$ 600
 |------------------|------------------|------------------|------------------|------------------|
 | 50 | 55 | 68,1 | 76 | 895 |
 | 100 | 55 | 63,7 | 149 | 881 |
-| 200 | 52,5 | 54,9 | 295 | 854 |
+| 200 | 52,5 | 54,9 | 295 | 855 |
 
 ::: {custom-style="Fonte"}
 Fonte: elaborado pelo autor.

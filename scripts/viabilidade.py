@@ -256,7 +256,12 @@ def lucro_sem_bess(base, processos):
     p = copy.deepcopy(base)
     p.lrcap.habilitado = False
     p.bess.energia_mwh, p.bess.potencia_carga_mw, p.bess.potencia_descarga_mw = 1e-6, 0.0, 0.0
-    return avaliar_potencia(p, 0.0, processos=processos).esperado
+    # Maior dos limites inferiores das duas fronteiras de bloco, por cenário (scripts/combinar_fronteiras.py)
+    lucros = []
+    for fronteira in ("lp", "ciclica"):
+        p.estocastico.fronteira_blocos = fronteira
+        lucros.append(avaliar_potencia(p, 0.0, processos=processos).lucro_cenarios)
+    return float(np.dot(p.estocastico.probabilidades(), np.maximum(*map(np.asarray, lucros))))
 
 
 # ------------------------------------------------------------------------------------------ gráficos

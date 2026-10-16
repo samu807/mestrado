@@ -258,8 +258,8 @@ entregue custa R\$ 70, e o contrato é praticamente firme.
 
 | Despachos/ano | Ótimo | Lucro esperado | Receita mínima para entrar |
 |---|---|---|---|
-| 50 | 55 MW | R\$ 71,6 mi | R\$ 13 mil/MW·ano |
-| 150 | 55 MW | R\$ 70,5 mi | R\$ 33 mil |
+| 50 | 55 MW | R\$ 71,4 mi | R\$ 16 mil/MW·ano |
+| 150 | 55 MW | R\$ 70,3 mi | R\$ 37 mil |
 | 365 | 55 MW | R\$ 68,1 mi | R\$ 76 mil |
 
 - A frequência só desloca a curva de custo marginal em paralelo, exatamente pelo custo de
@@ -331,7 +331,7 @@ Viabilidade), para não pagar a bateria duas vezes.
 |---|---|---|---|---|
 | R\$ 50/MWh | 55 MW | R\$ 68,1 mi | R\$ 76 mil/MW·ano | R\$ 895 mil |
 | R\$ 100/MWh | 55 MW | R\$ 63,7 mi | R\$ 149 mil | R\$ 881 mil |
-| R\$ 200/MWh | 52,5 MW | R\$ 54,9 mi | R\$ 295 mil | R\$ 854 mil |
+| R\$ 200/MWh | 52,5 MW | R\$ 54,9 mi | R\$ 295 mil | R\$ 855 mil |
 
 - A potência ótima quase não muda (55 → 52,5 MW com 4× a degradação): o custo maior também
   encarece o uso mercantil da bateria, e os dois efeitos se compensam no alto da curva.

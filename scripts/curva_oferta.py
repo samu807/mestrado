@@ -148,12 +148,17 @@ def main():
     ap.add_argument("--so-graficos", action="store_true")
     ap.add_argument("--rotulo", default="curva_oferta", help="nome da figura e do resumo")
     ap.add_argument("--nome-base", help="legenda do caso base na figura")
+    ap.add_argument("--fronteira", choices=["ciclica", "lp"],
+                    help="estados na fronteira dos blocos (padrão: estocastico.fronteira_blocos)")
+    ap.add_argument("--subdir", help="subpasta de resultados/curva_oferta para as curvas desta rodada")
     args = ap.parse_args()
     warnings.filterwarnings("ignore", category=UserWarning)
 
     base = carregar_parametros(args.config)
     r_ref = base.lrcap.receita_fixa_rs_mw_ano
-    saida = RAIZ / "resultados" / "curva_oferta"
+    if args.fronteira:
+        base.estocastico.fronteira_blocos = args.fronteira
+    saida = RAIZ / "resultados" / "curva_oferta" / (args.subdir or "")
     saida.mkdir(parents=True, exist_ok=True)
     nomes = {k: CASOS[k][0] for k in args.casos}
     if args.nome_base and "base" in nomes:
