@@ -233,7 +233,7 @@ entregue custa R\$ 70, e o contrato é praticamente firme.
 | H₂ ilimitado, sem importação | 55 MW | R\$ 68,1 mi | R\$ 76 mil/MW·ano | R\$ 895 mil |
 | Contrato 2 t/dia | 60 MW | R\$ 61,8 mi | R\$ 84 mil | R\$ 172 mil |
 | Contrato 3 t/dia | 55 MW | R\$ 65,5 mi | R\$ 95 mil | ~R\$ 2,0 mi |
-| H₂ ilimitado, com importação | 60 MW | R\$ 88,5 mi | R\$ 97 mil | R\$ 475 mil |
+| H₂ ilimitado, com importação | 60 MW | R\$ 88,5 mi | R\$ 97 mil | R\$ 474 mil |
 | Contrato 3 t/dia, com importação | 60 MW | R\$ 68,9 mi | R\$ 86 mil | R\$ 406 mil |
 
 - Os primeiros 35–40 MW custam R\$ 80–100 mil/MW·ano em todos os casos: participar é robusto;
@@ -258,8 +258,8 @@ entregue custa R\$ 70, e o contrato é praticamente firme.
 
 | Despachos/ano | Ótimo | Lucro esperado | Receita mínima para entrar |
 |---|---|---|---|
-| 50 | 55 MW | R\$ 71,4 mi | R\$ 16 mil/MW·ano |
-| 150 | 55 MW | R\$ 70,3 mi | R\$ 37 mil |
+| 50 | 55 MW | R\$ 71,6 mi | R\$ 13 mil/MW·ano |
+| 150 | 55 MW | R\$ 70,5 mi | R\$ 33 mil |
 | 365 | 55 MW | R\$ 68,1 mi | R\$ 76 mil |
 
 - A frequência só desloca a curva de custo marginal em paralelo, exatamente pelo custo de
@@ -411,7 +411,7 @@ Quatro escolhas tornam a análise coerente:
 
 | Caso (CAPEX central, R\$ 600 mil/MW·ano) | CAPEX | Lucro operacional | VPL (12,1%) | VPL (8%) | TIR real | H₂ de equilíbrio (12,1%) |
 |---|---|---|---|---|---|---|
-| Referência (55 MW no LRCAP) | R\$ 792 mi | R\$ 72,0 mi/ano | **−R\$ 546 mi** | −R\$ 454 mi | −3,1% | R\$ 116/kg |
+| Referência (55 MW no LRCAP) | R\$ 792 mi | R\$ 72,1 mi/ano | **−R\$ 546 mi** | −R\$ 454 mi | −3,1% | R\$ 116/kg |
 | Contrato 3 t/dia | R\$ 792 mi | R\$ 69,5 mi/ano | −R\$ 564 mi | −R\$ 475 mi | −3,8% | R\$ 117/kg |
 | Contrato 3 t/dia, tanque de 10 t | R\$ 835 mi | R\$ 71,1 mi/ano | −R\$ 599 mi | −R\$ 507 mi | −3,9% | R\$ 120/kg |
 | Importação da rede (c_imp R\$ 250/MWh) | R\$ 792 mi | R\$ 92,9 mi/ano | −R\$ 450 mi | −R\$ 334 mi | 0,8% | R\$ 62/kg |
@@ -420,7 +420,7 @@ Quatro escolhas tornam a análise coerente:
 | Eletrolisador 10 MW | R\$ 711 mi | R\$ 64,2 mi/ano | −R\$ 506 mi | −R\$ 430 mi | −3,5% | R\$ 126/kg |
 | Eletrolisador 25 MW | R\$ 873 mi | R\$ 77,7 mi/ano | −R\$ 612 mi | −R\$ 512 mi | −3,4% | R\$ 115/kg |
 
-- **Nenhum caso central se paga.** Fluxo do caso de referência: R\$ 72,0 mi − O&M R\$ 18,3 mi − TUST
+- **Nenhum caso central se paga.** Fluxo do caso de referência: R\$ 72,1 mi − O&M R\$ 18,3 mi − TUST
   R\$ 7,9 mi − PIS/Cofins R\$ 2,7 mi = R\$ 43,1 mi/ano. Nem a importação com CAPEX baixo e taxa de 8%
   empata (−R\$ 86 mi); só com c_imp de R\$ 100/MWh, CAPEX baixo e 8% o VPL fica positivo (+R\$ 34 mi).
 - **Investimento completo** (`config/economia.yaml`): CAPEX inclui o tanque de H₂ (US\$ 1.000/kg a 160 bar,
@@ -435,7 +435,7 @@ Quatro escolhas tornam a análise coerente:
   fluxo de R\$ 18,6 mi/ano, VPL de −R\$ 311 mi (12,1%) (`usina_sem_bess.csv`). A conexão que o BESS compartilha só existe se essa usina for
   construída por outras razões.
 - **Valor da bateria:** lucro sem BESS = R\$ 35,4 mi/ano; com BESS e 55 MW a R\$ 600 mil,
-  R\$ 72,0 mi. O ganho de R\$ 35,5 mi/ano, após PIS/Cofins, não cobre o custo anual do BESS (R\$ 70,1 mi a 12,1%:
+  R\$ 72,1 mi. O ganho de R\$ 35,5 mi/ano, após PIS/Cofins, não cobre o custo anual do BESS (R\$ 70,1 mi a 12,1%:
   capital com juros na construção 59,3 + O&M 9,5 + TUST 1,3). Sem o LRCAP, a bateria agrega só R\$ 8,8 mi/ano.
 
 **Curva de oferta com o investimento no BESS e lance mínimo.** Se a bateria ainda vai ser
