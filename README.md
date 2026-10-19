@@ -190,6 +190,24 @@ R\$ 600 mil/MW·ano, H₂ a R\$ 35/kg, partida a R\$ 500 — provisórios).
   entre eles é de cerca de R\$ 8 mi/ano, pequena perto do ganho de contratar no LRCAP.
 - O ótimo estocástico (54,4 MW) coincide com o determinístico de 2025 (54,4 MW).
 
+#### Previsão perfeita dentro do ano: operação em horizonte rolante
+
+`scripts/operacao_rolante.py`: a cada hora, MILP numa janela de 48 h com PLD conhecido (D-1), perfil
+do ONS, FV medida na hora e prevista por persistência adiante, estados reais; executa só a hora.
+Lucro operacional de 2025 (sem receita fixa), contra a operação de previsão perfeita:
+
+| P_cap | Previsão perfeita | Rolante (persistência) | Perda | Partidas do eletrolisador |
+|---|---|---|---|---|
+| 30 MW | R\$ 42,08 mi | R\$ 42,07 mi | −0,03% | 11 → 84 |
+| 55 MW | R\$ 34,77 mi | R\$ 34,58 mi | −0,54% | 75 → 163 |
+| 60 MW | R\$ 30,80 mi | R\$ 30,80 mi | 0 | 375 → 375 |
+
+- Com a FV conhecida, a janela de 48 h reproduz o ótimo anual (+0,02%): o viés vem só da previsão.
+- O viés fica no módulo mercantil: máximo quando ele é escasso (55 MW, 36 MWh), nulo sem ele
+  (60 MW). Superestima o custo dos últimos 5 MW em ≈ R\$ 38 mil/MW·ano (~5%); o ótimo a R\$ 600 mil
+  segue em 55 MW, e o lance (BESS inteiro) não muda. Muito menor que os 18% de García-Miguel
+  et al. (2024), com eólica e desvios penalizados no mercado do dia seguinte.
+
 #### VSS e EVPI (β = 0)
 
 `python scripts/vss_evpi.py` (~45 min em 4 núcleos; tolerância de Benders 0,01%). O ano médio
