@@ -190,6 +190,12 @@ R\$ 600 mil/MW·ano, H₂ a R\$ 35/kg, partida a R\$ 500 — provisórios).
   entre eles é de cerca de R\$ 8 mi/ano, pequena perto do ganho de contratar no LRCAP.
 - O ótimo estocástico (54,4 MW) coincide com o determinístico de 2025 (54,4 MW).
 
+#### Fora da amostra (retirando um ano de cada vez)
+
+Decisão na grade da curva de oferta com 4 anos, avaliada no 5º. Com R\$ 600 mil, a decisão só muda
+sem 2021 (52,5 em vez de 55 MW; custaria R\$ 572 mil em 2021). Perda média fora da amostra:
+R\$ 259 mil/ano (0,38%), da ordem do EVPI; com R\$ 330 mil a 1,0 mi, R\$ 36–342 mil/ano.
+
 #### Previsão perfeita dentro do ano: operação em horizonte rolante
 
 `scripts/operacao_rolante.py`: a cada hora, MILP numa janela de 48 h com PLD conhecido (D-1), perfil
