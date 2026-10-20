@@ -144,7 +144,7 @@ def uso_rede(p, eco, pr, com_bess=True):
 def capex_bess(p, eco, pr):
     """Investimento no BESS com parcelas de potência e de energia:
     C = c_ref [(1 - f) P + f E / h_ref], com c_ref em R$/kW para um sistema de h_ref horas."""
-    c_ref = eco["capex"]["bess_rs_kw"][NIVEIS.index(pr["capex"])]
+    c_ref = pr.get("c_ref") or eco["capex"]["bess_rs_kw"][NIVEIS.index(pr["capex"])]
     f = pr["f_energia"]
     return c_ref * ((1 - f) * potencia_bess(p) * 1e3 + f * p.bess.energia_mwh * 1e3 / pr["h_ref"])
 

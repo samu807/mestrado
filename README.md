@@ -93,6 +93,13 @@ cada cenário). A curva de oferta e o lance coincidem com os do perfil por PLD (
 os perfis coincidem em 83–94% das horas de descarga, e o perfil só afeta o empreendedor pela
 degradação (número de ciclos) e pela conexão, que não é ativa.
 
+**Lance como distribuição (Monte Carlo).** `python scripts/lance_monte_carlo.py` sorteia as premissas de
+custo e de regra (`config/economia.yaml`, `monte_carlo`; probabilidades das regras não confirmadas são
+hipóteses) e recalcula o lance. BESS dimensionado (60 MW/288 MWh): mediana R$ 1,44 mi/(MW·ano), P10–P90
+R$ 1,17–1,78 mi; o valor central (R$ 1,18 mi) é o P11. Explicam a variância: duração de referência da EPE
+(30%), reajuste pelo IPCA (22%), cobrança dupla da TUST (17%) e taxa (12%). Com essas três regras
+confirmadas como no caso central, P10–P90 de R$ 1,06–1,33 mi.
+
 **Validação contra o MILP monolítico.** `python scripts/validacao_monolitico.py [--dias 28]` resolve o
 problema com P_cap livre como um único MILP e por Benders em blocos semanais (cenário de 2025). Sem contrato,
 mesmo lucro (≤ 0,01%) e P até 0,13 MW de diferença; o monolítico leva 38 s (28 dias), 21 min (91 dias) e

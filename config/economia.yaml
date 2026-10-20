@@ -92,3 +92,24 @@ reposicao:
   soh_fim_vida: 0.80
   vida_ciclos: [4000, 5000, 6000]
   calendario_frac_ano: [0.005, 0.01, 0.02]
+# Monte Carlo do lance mínimo (scripts/lance_monte_carlo.py): distribuições das premissas de custo e de regra,
+# sorteadas de forma independente. Faixas iguais às da análise de sensibilidade; as probabilidades das
+# premissas discretas (regras ainda não confirmadas) são hipóteses do autor.
+monte_carlo:
+  amostras: 5000
+  semente: 2026
+  bess_rs_kw: [triangular, 5000, 5500, 6000]
+  duracao_referencia_3h_prob: 0.5            # EPE para 3 h (e não 4 h)
+  fracao_energia: [uniforme, 0.45, 0.75]
+  taxa: [triangular, 0.08, 0.1211, 0.14]
+  om_bess: [uniforme, 0.015, 0.035]
+  tust_rs_kw_mes: [triangular, 5.68, 10.93, 19.49]
+  cobranca_dupla_prob: 0.5                   # TUST também na recarga (REN ANEEL 1.162/2026)
+  consumo_auxiliar: [uniforme, 0.0, 0.02]
+  sem_folga_concap_prob: 0.5                 # consumo auxiliar fora da recarga custeada pela CONCAP
+  disponibilidade: [uniforme, 0.97, 1.0]
+  pis_cofins_nao_cumulativo_prob: 0.25       # 9,25% em vez de 3,65%
+  sem_reajuste_ipca_prob: 0.1
+  implantacao_anos: {0: 0.25, 1: 0.5, 2: 0.25}
+  dois_ciclos_dia_prob: 0.2                  # despacho de 2 ciclos/dia: reposição acima da de 1 ciclo/dia
+  referencias_rs_mw_ano: [831000, 2334000]   # LRCAP 2026: térmicas existentes; térmicas e hidrelétricas
