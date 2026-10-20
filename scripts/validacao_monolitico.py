@@ -2,8 +2,9 @@
 
 Para um horizonte de N dias (padrão: 28) com as mesmas condições de contorno nas pontas, compara:
   1. o MILP monolítico do horizonte inteiro, com P_cap livre (ótimo exato, até o gap do solver);
-  2. Benders com um único bloco do tamanho do horizonte: mesmo problema, resolvido pelo método
-     (valida os cortes reforçados e o critério de parada);
+  2. (opcional, --bloco-unico) Benders com um único bloco do tamanho do horizonte: mesmo problema,
+     resolvido pelo método; com um bloco só, o MILP lagrangiano do corte reforçado é tão difícil quanto
+     o monolítico, e a função valor não côncava impede o fechamento do gap;
   3. Benders com blocos semanais, como no restante do trabalho: acrescenta a aproximação das
      condições cíclicas em cada semana.
 
@@ -65,6 +66,8 @@ def main():
     ap.add_argument("--dias", type=int, default=28)
     ap.add_argument("--tempo-max", type=float, default=3600)
     ap.add_argument("--sem-benders", action="store_true", help="só o monolítico (teste de escala)")
+    ap.add_argument("--bloco-unico", action="store_true",
+                    help="também Benders com um só bloco (lento: o MILP lagrangiano do horizonte é difícil)")
     ap.add_argument("--processos", type=int, default=4)
     args = ap.parse_args()
     warnings.filterwarnings("ignore")
@@ -86,7 +89,10 @@ def main():
             print(linhas[-1], flush=True)
             if args.sem_benders:
                 continue
-            for nome, db in (("Benders, bloco único", args.dias), ("Benders, blocos semanais", 7)):
+            metodos = [("Benders, blocos semanais", 7)]
+            if args.bloco_unico:
+                metodos.insert(0, ("Benders, bloco único", args.dias))
+            for nome, db in metodos:
                 t0 = time.time()
                 x, lb, hist, _ = resolver_benders(p, ini, args.dias, dias_bloco=db, tol=GAP, gap_sub=GAP,
                                                   processos=args.processos, verbose=True)
