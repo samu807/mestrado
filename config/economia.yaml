@@ -84,3 +84,11 @@ tanque_h2_usd_kg: [700, 1000, 1100]
 # operação na potência nominal (EPRI, 2022: 35-45% e 60-80 mil horas). Trocas após o último ano não contam.
 pilha_troca_frac: 0.40
 pilha_vida_h: 60000
+# Reposição explícita de módulos do BESS (augmentation), só para avaliar o O&M de referência, que já a inclui
+# (scripts/viabilidade.py, reposicao_modulos). Perda de capacidade por ciclagem: (1 - SOH de fim de vida) ao
+# longo da vida em ciclos a 90% de profundidade (4.000 a 6.000 ciclos, faixa usada no custo de degradação);
+# por calendário: fração fixa ao ano (hipótese). Preço: parcela do investimento que escala com a energia.
+reposicao:
+  soh_fim_vida: 0.80
+  vida_ciclos: [4000, 5000, 6000]
+  calendario_frac_ano: [0.005, 0.01, 0.02]

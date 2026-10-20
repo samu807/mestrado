@@ -163,13 +163,77 @@ def capex_om(p, eco, pr):
             "om": pv * om["pv"] + om_b + el * om["eletrolisador"], "om_bess": om_b}
 
 
+def energia_exigida(p):
+    """Energia nominal [MWh] que entrega duracao_h horas na potência do BESS dentro da faixa de SOC."""
+    b = p.bess
+    return potencia_bess(p) * p.lrcap.duracao_h / (b.eficiencia_descarga * (b.soc_max_frac - b.soc_min_frac))
+
+
+def reposicao_modulos(p, eco, i, ciclos_dia, vida_ciclos=None, calendario=None, preco=None, intervalo=1):
+    """Reposição explícita de módulos (augmentation) para manter a entrega de duracao_h horas na potência do BESS.
+
+    A capacidade cai, a cada ano, por calendário (fração fixa) e por ciclagem: (1 - SOH de fim de vida) /
+    vida em ciclos por ciclo equivalente, com ciclos = energia retirada da bateria / (E x faixa de SOC). O
+    despacho é de `ciclos_dia` ciclos completos por dia na potência do BESS. Quando a capacidade ao fim do
+    ano ficaria abaixo da exigida, compram-se, no início do ano, módulos que a mantêm acima dela por `intervalo`
+    anos (ou até o fim do contrato), ao preço da parcela do investimento que escala com a energia; no ano 0, a
+    compra é um sobredimensionamento inicial. Retorna o valor presente na entrada em operação e o calendário de compras."""
+    b, n = p.bess, eco["vida_anos"]
+    r = eco["reposicao"]
+    vida = vida_ciclos or r["vida_ciclos"][1]
+    cal = r["calendario_frac_ano"][1] if calendario is None else calendario
+    if preco is None:
+        k = NIVEIS.index("central")
+        preco = eco["capex"]["bess_rs_kw"][k] * eco["bess_fracao_energia"][1] / eco["bess_duracao_referencia_h"] * 1e3
+    dod = b.soc_max_frac - b.soc_min_frac
+    retirada = ciclos_dia * 365 * potencia_bess(p) * p.lrcap.duracao_h / b.eficiencia_descarga
+    f_ciclo = (1 - r["soh_fim_vida"]) / vida
+    e_req = energia_exigida(p)
+
+    def ano(e):
+        return e * (1 - cal) - f_ciclo * retirada / dod
+
+    def minimo(e, anos):
+        m = np.inf
+        for _ in range(anos):
+            e = ano(e)
+            m = min(m, e)
+        return m
+
+    e, vp, compras = b.energia_mwh, 0.0, []
+    for t in range(n):   # compra no início do ano t + 1 (t = 0: sobredimensionamento inicial)
+        if ano(e) < e_req:
+            anos = min(intervalo, n - t)
+            lo, hi = 0.0, e_req
+            while minimo(e + hi, anos) < e_req:
+                hi *= 2
+            for _ in range(60):
+                mid = (lo + hi) / 2
+                lo, hi = (mid, hi) if minimo(e + mid, anos) < e_req else (lo, mid)
+            e += hi
+            vp += hi * preco / (1 + i) ** t
+            compras.append((t, hi))
+        e = ano(e)
+    return {"vp_rs": vp, "anual_rs": vp / fator_anuidade(i, n), "compras": compras, "energia_exigida_mwh": e_req,
+            "ciclos_ano": retirada / (b.energia_mwh * dod), "preco_rs_mwh": preco}
+
+
 def custo_anual_bess(p, eco, pr):
     """Custo anual equivalente do BESS: capital (com os juros durante a construção), O&M fixo (com
-    augmentation) e acréscimo de uso da rede."""
+    augmentation) e acréscimo de uso da rede. Com pr["reposicao"], soma-se ao O&M a reposição explícita de
+    módulos: inteira (limite superior, pois o O&M de referência já a inclui) ou só a parcela acima da de um
+    despacho de referência (descontar_ciclos_dia)."""
     c = capex_om(p, eco, pr)
     capital = c["bess"] * fator_implantacao(pr["taxa"], pr["implantacao"]) / fator_anuidade(pr["taxa"], eco["vida_anos"])
     rede = uso_rede(p, eco, pr, True) - uso_rede(p, eco, pr, False)
-    return {"capital": capital, "om": c["om_bess"], "tust": rede, "total": capital + c["om_bess"] + rede}
+    om = c["om_bess"]
+    if pr.get("reposicao"):   # {"ciclos_dia": N[, "descontar_ciclos_dia": M]}: reposição de N menos a de M
+        rep = dict(pr["reposicao"])
+        m = rep.pop("descontar_ciclos_dia", 0)
+        om += reposicao_modulos(p, eco, pr["taxa"], **rep)["anual_rs"]
+        if m:
+            om -= reposicao_modulos(p, eco, pr["taxa"], **{**rep, "ciclos_dia": m})["anual_rs"]
+    return {"capital": capital, "om": om, "tust": rede, "total": capital + om + rede}
 
 
 def info_despacho(p):
@@ -455,6 +519,31 @@ def dimensionamento(base, eco, info, saida):
     return df
 
 
+def reposicao(base, eco, saida):
+    """Reposição explícita de módulos comparada com o O&M de referência, para o BESS de referência e o
+    dimensionado para o contrato, com 1 e 2 ciclos por dia e as faixas de vida em ciclos e de calendário."""
+    r, i = eco["reposicao"], eco["taxa_central"]
+    variantes = [("central", {}),
+                 *[(f"vida de {v} ciclos", {"vida_ciclos": v}) for v in (r["vida_ciclos"][0], r["vida_ciclos"][2])],
+                 *[(f"calendário de {c:.1%}/ano".replace(".", ","), {"calendario": c})
+                   for c in (r["calendario_frac_ano"][0], r["calendario_frac_ano"][2])],
+                 ("compras a cada 5 anos", {"intervalo": 5})]
+    linhas = []
+    for nome, p in (("referencia", base), ("dimensionado", dimensionada(base, potencia_bess(base)))):
+        om = capex_om(p, eco, premissas(eco))
+        for cd in (1, 2):
+            for var, kw in variantes:
+                x = reposicao_modulos(p, eco, i, cd, **kw)
+                linhas.append({"bess": nome, "energia_mwh": p.bess.energia_mwh,
+                               "energia_exigida_mwh": x["energia_exigida_mwh"], "ciclos_dia": cd, "variante": var,
+                               "ciclos_ano": x["ciclos_ano"], "energia_reposta_mwh": sum(e for _, e in x["compras"]),
+                               "custo_anual_rs": x["anual_rs"], "om_bess_rs": om["om_bess"],
+                               "fracao_do_om": x["anual_rs"] / om["om_bess"], "fracao_do_capex": x["anual_rs"] / om["bess"]})
+    df = pd.DataFrame(linhas)
+    df.to_csv(saida / "reposicao_modulos.csv", index=False)
+    return df
+
+
 def sensibilidade(base, eco, curva, info, q_sem, saida):
     """Lance mínimo do caso de referência com uma premissa alterada de cada vez."""
     t, a = eco["tust_geracao_rs_kw_mes"], eco["consumo_auxiliar_frac"]
@@ -485,7 +574,10 @@ def sensibilidade(base, eco, curva, info, q_sem, saida):
               {"trib": eco["tributos_receita_sensibilidade"]}),
              (f"Receita fixa sem reajuste (IPCA de {eco['ipca_anual']:.0%} a.a.)", {"reajuste": False}),
              *[(f"Implantação em {m} ano(s)" if m else "Sem juros durante a construção", {"implantacao": m})
-               for m in eco["prazo_implantacao_sensibilidade_anos"]]]
+               for m in eco["prazo_implantacao_sensibilidade_anos"]],
+             ("Reposição explícita de módulos além do O&M, 1 ciclo/dia", {"reposicao": {"ciclos_dia": 1}}),
+             ("Despacho de 2 ciclos/dia: reposição acima da de 1 ciclo/dia",
+              {"reposicao": {"ciclos_dia": 2, "descontar_ciclos_dia": 1}})]
     linhas = []
     for nome, troca in casos:
         pr = premissas(eco, **troca)
@@ -615,6 +707,7 @@ def main():
     grafico_oferta(curva, P, Qi, q_sem, eco, base, dec, saida)
     lmc = lance_minimo_por_caso(base, eco, saida, args.processos, infos)
     dim = dimensionamento(base, eco, infos["base"], saida)
+    rep = reposicao(base, eco, saida)
     pd.DataFrame({c: {k: float(np.dot(probs, [d[k] for d in linhas])) for k in ["e_inj", "pld_medio", "horas"]}
                   for c, (linhas, probs) in infos.items()}).T.to_csv(saida / "despacho_ons_casos.csv")
 
@@ -637,6 +730,8 @@ def main():
     print("\nLance mínimo do BESS dimensionado para o contrato (R$ mil/MW·ano):")
     print(dim.pivot_table(index="potencia_mw", columns=["arranjo", "taxa"], values="lance_minimo_rs_mw_ano")
           .div(1e3).round(0).to_string())
+    print("\nReposição explícita de módulos (taxa central):")
+    print(rep.to_string(index=False))
     print(f"\nResultados salvos em {saida}")
 
 

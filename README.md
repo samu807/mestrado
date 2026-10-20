@@ -93,6 +93,14 @@ cada cenário). A curva de oferta e o lance coincidem com os do perfil por PLD (
 os perfis coincidem em 83–94% das horas de descarga, e o perfil só afeta o empreendedor pela
 degradação (número de ciclos) e pela conexão, que não é ativa.
 
+**Reposição de módulos do BESS.** `scripts/viabilidade.py` (função `reposicao_modulos`, parâmetros em
+`config/economia.yaml`, `reposicao`) modela a perda de capacidade por ciclagem (20% em 5.000 ciclos) e por
+calendário (1%/ano) e compra módulos, ao preço da parcela de energia do investimento, sempre que a capacidade
+cairia abaixo da necessária para 4 h na potência do BESS. Com 1 ciclo/dia, custa 46% do O&M fixo do BESS de
+referência (32–73% nas faixas); com 2 ciclos/dia, 85% (71–113%). No lance: +6% somando toda a reposição ao
+O&M (limite superior) e +5% com 2 ciclos/dia (só a reposição acima da de 1 ciclo/dia). Saída:
+`resultados/viabilidade/reposicao_modulos.csv`.
+
 **Dias representativos.** `python scripts/dias_representativos.py [--casos base contrato_3t]` resolve o
 MILP de 24 h de cada dia dos cenários (condição cíclica diária) em cada potência da grade e compara a curva de
 oferta com a dos blocos semanais, também com K = 6, 12, 24 e 48 dias representativos (k-medoids sobre PLD e
