@@ -486,6 +486,8 @@ construí-la e contratar a melhor potência: max_P {R·k·P + Q_inv(P)} − cust
   Contrato firme de 3 t/dia: −3% (−5% com tanque de 10 t). Sem PIS/Cofins −4%; PIS/Cofins não
   cumulativo +6%; receita fixa sem reajuste pelo IPCA (4% a.a.) +25%. O tanque de 10 t reduz o lance,
   mas não se paga: custa R\$ 6,8 mi/ano contra +R\$ 1,6 mi/ano de lucro.
+- **Taxa de desconto (BESS dimensionado):** 6% → R\$ 838 mil; 8% → 936; 10% → 1.041; 12,1% → 1.160;
+  14% → 1.271 (≈ R\$ 54 mil, 5%, por ponto percentual).
 - **Custo internacional:** os R\$ 5.500/kW da EPE (4 h) ≈ US\$ 254/kWh, acima de BNEF 2025 (US\$ 110/kWh
   mundo, 177 Europa, 219 EUA) e Ember out./2025 (US\$ 125/kWh fora de China/EUA, com instalação e
   conexão). Com esses custos, o lance do BESS dimensionado seria R\$ 501–570 mil (mundo), 806 mil
