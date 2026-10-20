@@ -216,6 +216,32 @@ Essa vantagem, porém, pressupõe que a usina FV com o eletrolisador seja constr
 
 Esta seção supõe que o BESS está disponível — porque já existe ou porque foi construído com receita fixa acima do lance mínimo — e analisa quanto de sua potência contratar no leilão e como o sistema opera. Os resultados utilizam a receita fixa de referência de R\$ 600 mil/(MW·ano), inferior ao lance mínimo da Seção 4.2, mas a curva de oferta fornece a decisão para qualquer receita; acima do lance mínimo, ela indica a oferta de 57,5 a 60 MW. A análise identifica os mecanismos que determinam o custo de oportunidade da contratação e a sensibilidade da decisão às hipóteses de operação e de mercado.
 
+A receita de referência, de R\$ 600 mil/(MW·ano), é inferior ao lance mínimo de R\$ 1,214 milhão calculado na Seção 4.2: com ela, um proponente não construiria o BESS. Os resultados desta seção valem, portanto, para quem já dispõe da bateria, e a curva de oferta da Subseção 4.3.3 fornece a decisão para qualquer receita. Para um BESS construído com receita igual ao lance mínimo, o proponente oferta toda a potência, e a operação é a da Tabela 4.6.
+
+::: {custom-style="Legenda"}
+Tabela 4.6 – Operação média nos cenários com a receita de referência e com a receita igual ao lance mínimo
+:::
+
+| Indicador | R\$ 600 mil/(MW·ano): 55 MW | R\$ 1,214 mi/(MW·ano): 60 MW |
+|------------------------------|--------------------|--------------------|
+| Receita fixa (R\$ mi/ano) | 33,0 | 72,8 |
+| Lucro operacional sem a receita fixa (R\$ mi/ano) | 35,1 | 31,0 |
+| Lucro total (R\$ mi/ano) | 68,1 | 103,8 |
+| Receita de H₂ (R\$ mi/ano) | 36,0 | 30,7 |
+| Receita no MCP (R\$ mi/ano) | 5,1 | 6,1 |
+| H₂ vendido (t/ano) | 1.029 | 878 |
+| Fator de capacidade do eletrolisador | 0,37 | 0,32 |
+| Horas com o eletrolisador ligado | 7.459 | 3.458 |
+| Partidas do eletrolisador por ano | 78 | 358 |
+| Energia exportada (GWh/ano) | 19,4 | 28,6 |
+| Descarga do módulo mercantil (GWh/ano) | 8,1 | 0 |
+
+::: {custom-style="Fonte"}
+Fonte: elaborado pelo autor. Média dos cinco cenários; lucros sem O&M fixo, uso da rede e tributos.
+:::
+
+Com a oferta de toda a potência, o módulo mercantil desaparece e, com ele, o suprimento noturno do eletrolisador: a produção de hidrogênio cai 15%, o eletrolisador passa a operar só nas horas de sol, com metade das horas de operação e uma partida por dia, e a energia que antes ia para o eletrolisador à noite passa a ser exportada ao MCP. O lucro operacional cai R\$ 4,1 milhões por ano, mais do que compensado pelos R\$ 39,8 milhões de receita fixa adicional. As conclusões sobre a operação desta seção referem-se, assim, ao BESS disponível; para o BESS a construir, a operação de referência é a de 60 MW.
+
 ### 4.3.1 Decisão de contratação no modelo estocástico
 
 A Figura 4.4(a) apresenta o lucro anual de cada cenário, o lucro esperado e o CVaR em função da potência contratada no LRCAP. Participar do leilão é vantajoso em todos os cenários: a contratação do mínimo regulatório de 30 MW eleva o lucro esperado de R\$ 45,0 milhões para R\$ 60,7 milhões por ano, um acréscimo de 35%. A partir desse ponto, o lucro esperado continua a crescer, porém a taxas decrescentes, até um máximo e decresce em seguida, quando a potência contratada passa a retirar do módulo mercantil a capacidade que abastece o eletrolisador durante a noite.
@@ -234,10 +260,10 @@ Fonte: elaborado pelo autor.
 
 O ótimo, assinalado na Figura 4.4, é $P^{cap} = 54{,}4$ MW, com lucro esperado de R\$ 68,12 milhões por ano, obtido com tolerância de convergência de 0,01%. Com a tolerância de 0,1% usada inicialmente, o algoritmo de Benders havia encerrado em 53,4 MW, com lucro esperado apenas R\$ 20 mil inferior. A diferença ilustra uma característica central do problema: a função de lucro é muito plana na vizinhança do ótimo, com variação inferior a 0,4% entre 50 e 56 MW. Do ponto de vista prático, a decisão relevante é contratar entre 50 e 55 MW; a localização exata do máximo é menos importante do que as hipóteses que o determinam, examinadas nas subseções seguintes.
 
-O lucro por cenário na potência ótima é apresentado na Tabela 4.6. O pior cenário é 2022, ano em que o PLD permaneceu próximo do piso regulatório, e o melhor, 2021, ano da crise hídrica. A diferença entre eles, de cerca de R\$ 8 milhões por ano, é pequena diante do ganho proporcionado pela participação no leilão.
+O lucro por cenário na potência ótima é apresentado na Tabela 4.7. O pior cenário é 2022, ano em que o PLD permaneceu próximo do piso regulatório, e o melhor, 2021, ano da crise hídrica. A diferença entre eles, de cerca de R\$ 8 milhões por ano, é pequena diante do ganho proporcionado pela participação no leilão.
 
 ::: {custom-style="Legenda"}
-Tabela 4.6 – Lucro anual por cenário na potência ótima (54,4 MW)
+Tabela 4.7 – Lucro anual por cenário na potência ótima (54,4 MW)
 :::
 
 | Cenário | 2021 | 2022 | 2023 | 2024 | 2025 | Esperado | CVaR ($\alpha = 0{,}8$) |
@@ -248,16 +274,16 @@ Tabela 4.6 – Lucro anual por cenário na potência ótima (54,4 MW)
 Fonte: elaborado pelo autor.
 :::
 
-A fronteira entre risco e retorno foi obtida com pesos $\beta \in \{0;\ 0{,}5;\ 1;\ 2;\ 5\}$ para o CVaR e tolerância de 0,01%, com *gap* final inferior a 0,01% em todos os casos. Com cinco cenários equiprováveis e $\alpha = 0{,}8$, o CVaR coincide com o lucro do pior ano, 2022. À medida que $\beta$ aumenta, a potência ótima recua de 54,4 MW ($\beta = 0$) para 53,4 MW ($\beta = 0{,}5$ e 1), 52,7 MW ($\beta = 2$) e 52,1 MW ($\beta = 5$). Entre os extremos, o lucro esperado cai R\$ 81 mil por ano (0,12%) e o CVaR sobe R\$ 85 mil (0,13%). Há, portanto, troca entre risco e retorno, mas ela é pequena. O CVaR desloca a decisão em direção ao ótimo do pior ano, de 51,5 MW (Tabela 4.7): com $\beta = 5$, o lucro de 2022 fica a apenas R\$ 1,4 mil do máximo possível naquele cenário. A troca é pequena porque a dispersão entre os cenários pouco depende da decisão de contratação, como se observa na Figura 4.4(b): as barras de cada decisão se deslocam praticamente em paralelo entre os anos. Com a tolerância de 0,1% usada inicialmente, a fronteira parecia degenerar em um único ponto (53,4 MW para todos os pesos), pois as diferenças entre os seus pontos, de até R\$ 85 mil por ano, são da mesma ordem que essa tolerância, cerca de R\$ 68 mil.
+A fronteira entre risco e retorno foi obtida com pesos $\beta \in \{0;\ 0{,}5;\ 1;\ 2;\ 5\}$ para o CVaR e tolerância de 0,01%, com *gap* final inferior a 0,01% em todos os casos. Com cinco cenários equiprováveis e $\alpha = 0{,}8$, o CVaR coincide com o lucro do pior ano, 2022. À medida que $\beta$ aumenta, a potência ótima recua de 54,4 MW ($\beta = 0$) para 53,4 MW ($\beta = 0{,}5$ e 1), 52,7 MW ($\beta = 2$) e 52,1 MW ($\beta = 5$). Entre os extremos, o lucro esperado cai R\$ 81 mil por ano (0,12%) e o CVaR sobe R\$ 85 mil (0,13%). Há, portanto, troca entre risco e retorno, mas ela é pequena. O CVaR desloca a decisão em direção ao ótimo do pior ano, de 51,5 MW (Tabela 4.8): com $\beta = 5$, o lucro de 2022 fica a apenas R\$ 1,4 mil do máximo possível naquele cenário. A troca é pequena porque a dispersão entre os cenários pouco depende da decisão de contratação, como se observa na Figura 4.4(b): as barras de cada decisão se deslocam praticamente em paralelo entre os anos. Com a tolerância de 0,1% usada inicialmente, a fronteira parecia degenerar em um único ponto (53,4 MW para todos os pesos), pois as diferenças entre os seus pontos, de até R\$ 85 mil por ano, são da mesma ordem que essa tolerância, cerca de R\$ 68 mil.
 
 A composição do lucro médio na potência de 55 MW, ponto da grade da Seção 3.8 mais próximo do ótimo, é: R\$ 33,0 milhões de receita fixa do LRCAP, R\$ 36,0 milhões de receita com hidrogênio e R\$ 5,1 milhões no MCP, deduzidos R\$ 4,4 milhões de degradação do BESS e R\$ 1,6 milhão de custos variáveis de produção de hidrogênio. O eletrolisador consome 56,6 GWh por ano, cerca de três quartos da energia FV disponível, com fator de capacidade de 0,37, e produz 1.029 t de hidrogênio; os 19,4 GWh restantes são exportados ao MCP. Esse resultado antecipa a principal conclusão da Subseção 4.3.4: com o hidrogênio vendido sem limite de volume a R\$ 35/kg, cada MWh destinado ao eletrolisador vale cerca de R\$ 609, e o MCP tem papel secundário na operação.
 
 ### 4.3.2 Valor da solução estocástica e valor esperado da informação perfeita
 
-A Tabela 4.7 compara a decisão estocástica (RP) com a decisão obtida no ano médio (EV) e com a solução espera-e-vê (WS), calculadas segundo a Seção 3.7.4.
+A Tabela 4.8 compara a decisão estocástica (RP) com a decisão obtida no ano médio (EV) e com a solução espera-e-vê (WS), calculadas segundo a Seção 3.7.4.
 
 ::: {custom-style="Legenda"}
-Tabela 4.7 – Decisões e lucro anual por cenário para o cálculo do VSS e do EVPI
+Tabela 4.8 – Decisões e lucro anual por cenário para o cálculo do VSS e do EVPI
 :::
 
 | Decisão | $P^{cap}$ (MW) | 2021 | 2022 | 2023 | 2024 | 2025 | Esperado |
@@ -302,10 +328,10 @@ Esse resultado tem duas implicações para o proponente. A decisão de participa
 
 ### 4.3.4 Contrato de hidrogênio e importação de energia
 
-A Tabela 4.8 resume, para a receita fixa de referência, a potência ótima, o lucro e a operação média de cada caso.
+A Tabela 4.9 resume, para a receita fixa de referência, a potência ótima, o lucro e a operação média de cada caso.
 
 ::: {custom-style="Legenda"}
-Tabela 4.8 – Potência ótima, lucro e operação média nos casos de contrato de hidrogênio e de importação (receita fixa de R\$ 600 mil/(MW·ano))
+Tabela 4.9 – Potência ótima, lucro e operação média nos casos de contrato de hidrogênio e de importação (receita fixa de R\$ 600 mil/(MW·ano))
 :::
 
 | Indicador | Referência | Contrato 2 t/dia | Contrato 3 t/dia | Importação | Importação e contrato 3 t/dia |
@@ -341,7 +367,7 @@ Esses resultados indicam que a troca entre o LRCAP e o MCP só se manifesta plen
 
 ### 4.3.5 Limite de emissões do hidrogênio
 
-Os casos com importação supõem que o eletrolisador possa ser suprido pela rede sem restrição. Esta subseção avalia o critério intermediário da Seção 3.4.5, em que a energia da rede supre o eletrolisador desde que a intensidade de emissões semanal do hidrogênio não exceda o limite $L$: 7 kgCO₂/kgH₂, valor inicial do marco legal (BRASIL, 2024), ou 3,4 kgCO₂/kgH₂, próximo do limiar de emissões europeu, sem as exigências de adicionalidade e de correlação temporal e geográfica do Regulamento Delegado (UE) 2023/1184 (Seção 3.4.5). Para cada limite, consideram-se o fator de emissão horário médio do SIN e o fator marginal de uma termelétrica a gás natural (Seção 3.5). A Figura 4.6 e a Tabela 4.9 comparam esses casos com o caso de referência, em que a importação é vedada, e com o de importação livre.
+Os casos com importação supõem que o eletrolisador possa ser suprido pela rede sem restrição. Esta subseção avalia o critério intermediário da Seção 3.4.5, em que a energia da rede supre o eletrolisador desde que a intensidade de emissões semanal do hidrogênio não exceda o limite $L$: 7 kgCO₂/kgH₂, valor inicial do marco legal (BRASIL, 2024), ou 3,4 kgCO₂/kgH₂, próximo do limiar de emissões europeu, sem as exigências de adicionalidade e de correlação temporal e geográfica do Regulamento Delegado (UE) 2023/1184 (Seção 3.4.5). Para cada limite, consideram-se o fator de emissão horário médio do SIN e o fator marginal de uma termelétrica a gás natural (Seção 3.5). A Figura 4.6 e a Tabela 4.10 comparam esses casos com o caso de referência, em que a importação é vedada, e com o de importação livre.
 
 ::: {custom-style="Legenda"}
 Figura 4.6 – Curva de oferta no LRCAP com limite de emissões do hidrogênio: (a) perda de lucro operacional esperado; (b) custo de oportunidade marginal; (c) potência ótima em função da receita fixa
@@ -356,7 +382,7 @@ Fonte: elaborado pelo autor.
 :::
 
 ::: {custom-style="Legenda"}
-Tabela 4.9 – Potência ótima, lucro e operação média nos casos de limite de emissões do hidrogênio (receita fixa de R\$ 600 mil/(MW·ano))
+Tabela 4.10 – Potência ótima, lucro e operação média nos casos de limite de emissões do hidrogênio (receita fixa de R\$ 600 mil/(MW·ano))
 :::
 
 | Indicador | Referência | $L$ = 3,4, marginal | $L$ = 7, marginal | $L$ = 3,4, médio | $L$ = 7, médio | Importação livre |
@@ -388,7 +414,7 @@ Esses resultados indicam que, sob o critério de intensidade de emissões, a inf
 
 ### 4.3.6 Frequência do despacho do ONS
 
-A Figura 4.7 e a Tabela 4.10 apresentam a curva de oferta do caso de referência para 50, 150 e 365 despachos por ano.
+A Figura 4.7 e a Tabela 4.11 apresentam a curva de oferta do caso de referência para 50, 150 e 365 despachos por ano.
 
 ::: {custom-style="Legenda"}
 Figura 4.7 – Curva de oferta no LRCAP para diferentes frequências de despacho do ONS: (a) perda de lucro operacional esperado; (b) custo de oportunidade marginal; (c) potência ótima em função da receita fixa
@@ -403,7 +429,7 @@ Fonte: elaborado pelo autor.
 :::
 
 ::: {custom-style="Legenda"}
-Tabela 4.10 – Efeito da frequência do despacho do ONS (receita fixa de R\$ 600 mil/(MW·ano))
+Tabela 4.11 – Efeito da frequência do despacho do ONS (receita fixa de R\$ 600 mil/(MW·ano))
 :::
 
 | Despachos por ano | Potência ótima (MW) | Lucro esperado (R\$ mi/ano) | Degradação do BESS (R\$ mi/ano) | Receita mínima de entrada (R\$ mil/MW·ano) |
@@ -424,7 +450,7 @@ Em consequência, a frequência do despacho, embora desconhecida, não altera a 
 
 Esta subseção avalia duas hipóteses que poderiam alterar as conclusões anteriores: o custo de degradação do BESS e o dimensionamento do eletrolisador e do tanque de hidrogênio.
 
-**Custo de degradação.** A Figura 4.8 e a Tabela 4.11 apresentam a curva de oferta para custos de degradação de R\$ 50, R\$ 100 e R\$ 200/MWh, os dois últimos próximos da faixa estimada a partir do custo de reposição dos módulos (Seção 3.5).
+**Custo de degradação.** A Figura 4.8 e a Tabela 4.12 apresentam a curva de oferta para custos de degradação de R\$ 50, R\$ 100 e R\$ 200/MWh, os dois últimos próximos da faixa estimada a partir do custo de reposição dos módulos (Seção 3.5).
 
 ::: {custom-style="Legenda"}
 Figura 4.8 – Curva de oferta no LRCAP para diferentes custos de degradação do BESS: (a) perda de lucro operacional esperado; (b) custo de oportunidade marginal; (c) potência ótima em função da receita fixa
@@ -439,7 +465,7 @@ Fonte: elaborado pelo autor.
 :::
 
 ::: {custom-style="Legenda"}
-Tabela 4.11 – Efeito do custo de degradação do BESS (receita fixa de R\$ 600 mil/(MW·ano))
+Tabela 4.12 – Efeito do custo de degradação do BESS (receita fixa de R\$ 600 mil/(MW·ano))
 :::
 
 | Custo de degradação (R\$/MWh) | Potência ótima (MW) | Lucro esperado (R\$ mi/ano) | Receita mínima de entrada (R\$ mil/MW·ano) | Custo marginal do último MW (R\$ mil/MW·ano) |
@@ -454,7 +480,7 @@ Fonte: elaborado pelo autor.
 
 Quadruplicar o custo de degradação reduz o lucro em R\$ 13,2 milhões por ano e quase quadruplica a receita mínima de entrada, mas desloca a potência ótima em apenas 2,5 MW. A razão está na Figura 4.8(b): o custo maior eleva o custo de oportunidade na faixa inferior da curva, onde predomina o desgaste do módulo LRCAP, despachado diariamente; na faixa superior, porém, também torna mais caro o uso mercantil da bateria, que é justamente o uso perdido ao se contratar mais potência, e os dois efeitos praticamente se compensam. A decisão de quanto ofertar é, portanto, robusta ao custo de degradação, enquanto a decisão de participar e o lucro esperado são sensíveis a ele.
 
-**Tamanho do eletrolisador.** A Figura 4.9 e a Tabela 4.12 comparam eletrolisadores de 10, 17,5 e 25 MW, mantida a usina FV de 50 MWp.
+**Tamanho do eletrolisador.** A Figura 4.9 e a Tabela 4.13 comparam eletrolisadores de 10, 17,5 e 25 MW, mantida a usina FV de 50 MWp.
 
 ::: {custom-style="Legenda"}
 Figura 4.9 – Curva de oferta no LRCAP para diferentes potências do eletrolisador: (a) perda de lucro operacional esperado; (b) custo de oportunidade marginal; (c) potência ótima em função da receita fixa
@@ -469,7 +495,7 @@ Fonte: elaborado pelo autor.
 :::
 
 ::: {custom-style="Legenda"}
-Tabela 4.12 – Efeito da potência do eletrolisador (receita fixa de R\$ 600 mil/(MW·ano))
+Tabela 4.13 – Efeito da potência do eletrolisador (receita fixa de R\$ 600 mil/(MW·ano))
 :::
 
 | Eletrolisador (MW) | Potência ótima (MW) | Lucro esperado (R\$ mi/ano) | H₂ vendido (t/ano) | Fator de capacidade do eletrolisador | Energia exportada (GWh/ano) |
