@@ -99,7 +99,7 @@ Tabela 3.1 – Parâmetros do modelo e valores do caso de referência
 | $k^{el}$ | Consumo específico de energia | kWh/kg | 55 |
 | $c^{h2}$ | Custo variável de produção de H₂ | R\$/kg | 1,5 |
 | $c^{part}$ | Custo por partida do eletrolisador | R\$/partida | 0 (determinístico); 500 (estocástico) |
-| $\pi^{h2}$ | Preço de venda do H₂ | R\$/kg | 35 |
+| $\pi^{h2}$ | Preço de venda do H₂ (hipótese; Seção 3.5) | R\$/kg | 35 |
 | $\bar S, S_0$ | Capacidade e estoque inicial do tanque de H₂ | kg | 2.000; 0 |
 | $D^{h2}$ | Entrega mínima diária de H₂ (contrato) | kg/dia | 0 (sem contrato); 2.000 ou 3.000 |
 | $\bar D^{h2}$ | Entrega máxima diária de H₂ (demanda do comprador) | kg/dia | ilimitada (sem contrato); igual a $D^{h2}$ |
@@ -320,6 +320,8 @@ Fonte: elaborado pelo autor com dados de CCEE (2026a) e do PVGIS.
 **Custo de degradação do BESS.** No modelo de operação, o desgaste da bateria é representado por um custo por MWh descarregado, $c^{deg}$, que mede o custo marginal de usar uma bateria existente: cada ciclo adicional antecipa a perda de capacidade e a reposição dos módulos. O custo integral de reposição dividido pela energia descarregada ao longo da vida útil é um limite superior desse custo marginal. Com o preço médio de *packs* de baterias de íons de lítio para armazenamento estacionário de US\$ 70/kWh em 2025 (BNEF, 2025), convertido pela taxa PTAX de 09/12/2025 (R\$ 5,4025/US\$) e acrescido de 74% de tributos incidentes no Brasil (EPE, 2024), e com vida útil de 4.000 a 6.000 ciclos a 90% de profundidade de descarga, esse limite fica entre R\$ 120 e R\$ 185 por MWh descarregado. Adota-se R\$ 50/MWh no caso de referência, e o efeito de valores de R\$ 100 e R\$ 200/MWh é avaliado na Seção 3.8.4. Na decisão de construir o BESS (Seção 3.8.2), porém, o desgaste do uso contratado não é cobrado por MWh: o investimento é amortizado no prazo do contrato, sem valor residual, e o O&M fixo inclui a reposição parcial de módulos (*augmentation*) que mantém a capacidade nominal durante a vida útil, com cerca de um ciclo por dia (NREL, 2024). Cobrar também o desgaste por MWh pagaria a bateria duas vezes.
 
 **Receita fixa do LRCAP.** Como ainda não houve leilão de armazenamento em baterias no Brasil, a receita fixa foi delimitada por quatro referências. A inferior é o primeiro leilão do mecanismo italiano de contratação de capacidade de armazenamento (MACSE), realizado em setembro de 2025 com contratos de 15 anos e desenho semelhante ao do LRCAP, cujo preço médio de € 12.959/(MWh·ano) (TERNA, 2025) corresponde, para um sistema de 4 h e com a taxa de câmbio PTAX de 30/09/2025 (R\$ 6,2396/€), a cerca de R\$ 323 mil/(MW·ano). No LRCAP de março de 2026, que contratou o mesmo produto — potência disponível ao ONS —, termelétricas existentes a óleo e biodiesel obtiveram preço médio de R\$ 831 mil/(MW·ano) (CCEE, 2026c), e o conjunto de termelétricas a gás natural, biometano e carvão e de ampliações de hidrelétricas, novas e existentes, R\$ 2,334 milhões/(MW·ano) (CCEE, 2026b). Por fim, o custo de investimento de referência de sistemas de baterias, de R\$ 5.000 a R\$ 6.000/kW (BRASIL; EPE, 2025), corresponde, anualizado à taxa central de 12,1% ao ano em 15 anos (Seção 3.8.2), a R\$ 738 mil a R\$ 886 mil/(MW·ano), sem considerar operação e manutenção, encargos e reposição de módulos. Com base nessas referências, a análise de sensibilidade abrange receitas fixas de R\$ 330 mil a R\$ 2,33 milhões/(MW·ano). O valor de R\$ 600 mil/(MW·ano) adotado no caso de referência situa-se no extremo inferior dessa faixa, abaixo do preço obtido por usinas existentes e do custo anualizado de investimento em baterias, e constitui, portanto, uma hipótese conservadora quanto à atratividade do leilão.
+
+**Preço do hidrogênio.** Não há mercado de hidrogênio renovável consolidado no Brasil, nem preço de referência publicado. O preço de R\$ 35/kg, cerca de US\$ 6,5/kg pela PTAX de 09/12/2025, foi adotado como o de um comprador disposto a pagar pelo hidrogênio de origem renovável e situa-se acima das referências de custo: a Agência Internacional de Energia indicou custos de US\$ 1 a 3/kg para o hidrogênio de origem fóssil e de US\$ 3,0 a 7,5/kg para o de origem renovável (IEA, 2023), e estimativas para projetos brasileiros em localidades favoráveis indicam custos nivelados de US\$ 2,9 a 3,6/kg (NOVACANA, 2023). O valor adotado corresponde, assim, ao extremo superior do custo do hidrogênio renovável e a cerca de duas vezes o custo estimado em projetos brasileiros de grande escala, e deve ser lido como hipótese otimista quanto à receita do hidrogênio. Por isso, o preço é tratado como parâmetro: o mapa de sensibilidade abrange preços de R\$ 10 a R\$ 45/kg, e o preço de equilíbrio que anularia o VPL é calculado para cada caso (Seção 3.8.2).
 
 ## 3.6 Método de solução
 
@@ -824,6 +826,10 @@ IBGE – INSTITUTO BRASILEIRO DE GEOGRAFIA E ESTATÍSTICA. **Índice Nacional de
 :::
 
 ::: {custom-style="Referencia"}
+IEA – INTERNATIONAL ENERGY AGENCY. **Global Hydrogen Review 2023**. Paris: IEA, set. 2023.
+:::
+
+::: {custom-style="Referencia"}
 IEA – INTERNATIONAL ENERGY AGENCY. **Global Hydrogen Review 2025**. Paris: IEA, out. 2025.
 :::
 
@@ -837,6 +843,10 @@ MCTI – MINISTÉRIO DA CIÊNCIA, TECNOLOGIA E INOVAÇÃO. **Fatores de emissão
 
 ::: {custom-style="Referencia"}
 MOVIMENTO ECONÔMICO. **Aneel conclui tarifas de transmissão e NE sai favorecido no ciclo 2026/2027**. 29 jun. 2026. Disponível em: https://movimentoeconomico.com.br/economia/energia/2026/06/29/aneel-conclui-tarifas-de-transmissao-e-ne-sai-favorecido-no-ciclo-2026-2027/. Acesso em: 13 out. 2026.
+:::
+
+::: {custom-style="Referencia"}
+NOVACANA. **Custo de produzir hidrogênio verde no Brasil pode cair 51% com incentivos, diz Cela**. 1 set. 2023. Disponível em: https://www.novacana.com/noticias/custo-produzir-hidrogenio-verde-brasil-cair-51-incentivos-cela-010923. Acesso em: 20 out. 2026.
 :::
 
 ::: {custom-style="Referencia"}
