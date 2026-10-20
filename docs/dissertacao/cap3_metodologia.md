@@ -327,7 +327,7 @@ Fonte: elaborado pelo autor com dados de CCEE (2026a) e do PVGIS.
 
 ### 3.6.1 Solução por ramificação e limitação
 
-Problemas MILP são usualmente resolvidos por algoritmos de ramificação e limitação (*branch-and-bound*) combinados à geração de planos de corte, nos quais relaxações lineares sucessivas fornecem limites para o valor ótimo e permitem certificar a qualidade da solução por meio do *gap* de otimalidade. Neste trabalho utiliza-se o *solver* de código aberto HiGHS (HUANGFU; HALL, 2018). Para o horizonte de uma semana, o problema é resolvido em menos de um segundo. Para o horizonte anual, entretanto, a solução direta não foi obtida em 15 minutos de processamento, o que motivou a adoção de uma estratégia de decomposição.
+Problemas MILP são usualmente resolvidos por algoritmos de ramificação e limitação (*branch-and-bound*) combinados à geração de planos de corte, nos quais relaxações lineares sucessivas fornecem limites para o valor ótimo e permitem certificar a qualidade da solução por meio do *gap* de otimalidade. Neste trabalho utiliza-se o *solver* de código aberto HiGHS (HUANGFU; HALL, 2018). Para o horizonte de uma semana, o problema é resolvido em menos de um segundo. Para o horizonte anual, entretanto, a solução direta não foi obtida em 15 minutos de processamento e, com 30 minutos, terminou com *gap* de 0,09% e solução inferior à da decomposição (Seção 4.1), o que motivou a adoção de uma estratégia de decomposição.
 
 ### 3.6.2 Decomposição de Benders
 

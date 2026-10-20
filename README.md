@@ -93,6 +93,13 @@ cada cenário). A curva de oferta e o lance coincidem com os do perfil por PLD (
 os perfis coincidem em 83–94% das horas de descarga, e o perfil só afeta o empreendedor pela
 degradação (número de ciclos) e pela conexão, que não é ativa.
 
+**Validação contra o MILP monolítico.** `python scripts/validacao_monolitico.py [--dias 28]` resolve o
+problema com P_cap livre como um único MILP e por Benders em blocos semanais (cenário de 2025). Sem contrato,
+mesmo lucro (≤ 0,01%) e P até 0,13 MW de diferença; o monolítico leva 38 s (28 dias), 21 min (91 dias) e
+não converge em 30 min com 182 e 365 dias (ano: 53,2 MW e R$ 67,72 mi, gap 0,09%), contra 54,6 MW e
+R$ 67,77 mi em 4,4 min pelo Benders, a < 0,02% do limite superior do MILP. Com contrato de 3 t/dia, a
+condição cíclica semanal custa 0,5–2,2% do lucro do mês. Saída: `resultados/validacao_monolitico/`.
+
 **Reposição de módulos do BESS.** `scripts/viabilidade.py` (função `reposicao_modulos`, parâmetros em
 `config/economia.yaml`, `reposicao`) modela a perda de capacidade por ciclagem (20% em 5.000 ciclos) e por
 calendário (1%/ano) e compra módulos, ao preço da parcela de energia do investimento, sempre que a capacidade
