@@ -221,7 +221,13 @@ def _perfil_ciclico(p: Parametros, idx: pd.DatetimeIndex, pld: np.ndarray | None
     """
     e_max = p.bess.soc_max_frac * p.lrcap.energia_por_mw_h
     if p.lrcap.despacho_ons.arquivo:   # perfil informado: recarga dada, só se verifica o SOC
-        return _perfil_ons(p, idx, pld, e_max)
+        # Parte do maior estado compatível com o perfil: com recarga diária antes da descarga,
+        # o módulo começa o dia vazio da descarga da véspera, e não cheio.
+        b, dt, arq = p.bess, p.horizonte.dt_h, p.lrcap.despacho_ons.arquivo
+        desc = _ler_serie(arq, p.base_dir, "descarga_pu", idx).to_numpy()
+        rec = _ler_serie(arq, p.base_dir, "recarga_pu", idx).to_numpy()
+        cum = np.cumsum((b.eficiencia_carga * rec - desc / b.eficiencia_descarga) * dt)
+        return _perfil_ons(p, idx, pld, e_max - max(0.0, float(cum.max())))
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         e_fim = _perfil_ons(p, idx, pld, e_max)["soc_pu"].iat[-1]

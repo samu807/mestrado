@@ -54,6 +54,9 @@ CASOS = {
     # Frequência do despacho do ONS (H2 ilimitado, sem importação)
     **{f"ciclos_{n}": (f"{n} despachos/ano", {"lrcap.despacho_ons": {"ciclos_ano": float(n)}})
        for n in (50, 150, 365)},
+    # Perfil do ONS na ponta da carga líquida (scripts/importar_carga_liquida.py), em vez do PLD
+    "despacho_carga_liquida": ("Despacho na ponta da carga líquida",
+                               {"lrcap.despacho_ons": {"arquivo": "data/ons_carga_liquida_{ano}.csv"}}),
     # Custo de degradação do BESS (H2 ilimitado, sem importação; base = R$ 50/MWh)
     **{f"deg_{c}": (f"Degradação R$ {c}/MWh", {"bess": {"custo_degradacao_rs_mwh": float(c)}})
        for c in (100, 200)},

@@ -47,7 +47,7 @@ NIVEIS = ["baixo", "central", "alto"]
 PASSO = 1e3                       # resolução do lance [R$/MW·ano]
 RECEITAS = np.arange(0, 3e6 + 1, PASSO)
 # Casos cujo lucro sem bateria é igual ao do caso base (só alteram o BESS ou o LRCAP)
-SEM_BESS_IGUAL_BASE = ("deg_", "ciclos_")
+SEM_BESS_IGUAL_BASE = ("deg_", "ciclos_", "despacho_")
 
 
 def fator_anuidade(i, n):
