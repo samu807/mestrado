@@ -93,6 +93,13 @@ cada cenário). A curva de oferta e o lance coincidem com os do perfil por PLD (
 os perfis coincidem em 83–94% das horas de descarga, e o perfil só afeta o empreendedor pela
 degradação (número de ciclos) e pela conexão, que não é ativa.
 
+**Dias representativos.** `python scripts/dias_representativos.py [--casos base contrato_3t]` resolve o
+MILP de 24 h de cada dia dos cenários (condição cíclica diária) em cada potência da grade e compara a curva de
+oferta com a dos blocos semanais, também com K = 6, 12, 24 e 48 dias representativos (k-medoids sobre PLD e
+FV). Sem contrato, a potência ótima não muda (55 MW) e a perda de lucro com P difere < 1,5%; com contrato
+de 3 t/dia, a perda da cronologia entre dias subestima o custo de oportunidade da potência em 30–40% e leva
+o ótimo a 57,5 MW. Resultados em `resultados/dias_representativos/`.
+
 Formatos aceitos diretamente pelo modelo (para outras fontes):
 `timestamp,pld`, `timestamp,fator_capacidade`, `timestamp,fator_kg_mwh` (fator de emissão da
 rede, em `rede.fator_emissao_arquivo`) e, para o despacho do ONS,
