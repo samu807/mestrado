@@ -784,6 +784,10 @@ ENERGY CENTRAL. **BESS 5 MWh aux consumption**. 2025. Disponível em: https://ww
 :::
 
 ::: {custom-style="Referencia"}
+ENERGY-STORAGE.NEWS. **Battery storage system prices continue to fall sharply, BNEF and Ember reports find**. Londres: Solar Media, dez. 2025. Disponível em: https://www.energy-storage.news. Acesso em: 20 out. 2026.
+:::
+
+::: {custom-style="Referencia"}
 EPE – EMPRESA DE PESQUISA ENERGÉTICA. **Plano Decenal de Expansão de Energia 2034**: caderno de micro e minigeração distribuída e baterias. Rio de Janeiro: EPE, 2024.
 :::
 
