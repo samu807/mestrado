@@ -174,6 +174,7 @@ Tabela 4.4 – Lance mínimo para a construção do BESS com uma hipótese alter
 | Eletrolisador 25 MW | 1.214 | 60 | 0% |
 | 50 despachos/ano | 1.227 | 60 | +1% |
 | 150 despachos/ano | 1.222 | 60 | +1% |
+| Despacho na ponta da carga líquida | 1.214 | 60 | 0% |
 | Degradação R\$ 100/MWh | 1.214 | 60 | 0% |
 | Degradação R\$ 200/MWh | 1.214 | 60 | 0% |
 
@@ -445,6 +446,8 @@ Fonte: elaborado pelo autor.
 As receitas no MCP e com hidrogênio são idênticas nos três casos, de modo que a frequência do despacho não altera a operação do lado mercantil. A única diferença está no custo de degradação do módulo LRCAP, e as curvas de custo de oportunidade marginal da Figura 4.7(b) são deslocadas em paralelo por exatamente $c^{deg} H^{cap} \Delta N^{ons}$: R\$ 43 mil/(MW·ano) entre 150 e 365 despachos e R\$ 63 mil/(MW·ano) entre 50 e 365 despachos, como previsto pela Equação (3.46). O efeito do ponto de conexão compartilhado mostrou-se, portanto, desprezível.
 
 Em consequência, a frequência do despacho, embora desconhecida, não altera a potência ótima para a receita de referência e afeta apenas o limiar de entrada e o lucro. Como seu efeito é linear e pode ser calculado diretamente, sem simulação, essa incerteza pode ser incorporada à análise como um custo por MW contratado — por exemplo, como componente do lance mínimo —, sem a necessidade de cenários adicionais no modelo de operação.
+
+O critério de escolha das horas de descarga também é desconhecido. O perfil do caso de referência descarrega no bloco de quatro horas de maior PLD após o período solar; como alternativa, avaliou-se um perfil que descarrega na ponta da carga líquida do SIN e recarrega nas horas de menor carga líquida da janela de recarga (Seção 3.7.2). Entre 2021 e 2025, a carga líquida média foi de 56 a 59 GW, e sua ponta ocorreu sobretudo entre 18 h e 22 h, como a do PLD: os dois perfis coincidem em 83% a 94% das horas de descarga, conforme o ano, e o PLD médio nas horas de descarga difere em menos de R\$ 1/MWh. O resultado é que a curva de oferta não se altera: o lucro operacional esperado difere do caso de referência em menos de R\$ 60 por ano em todas as potências, valor da ordem da tolerância do *solver*, e a potência ótima (55 MW), a receita mínima de entrada (R\$ 76 mil/(MW·ano)) e o lance mínimo (Tabela 4.4) são os mesmos. Isso decorre da separação entre os módulos: a energia do módulo LRCAP é liquidada pela CONCAP, e o perfil afeta o empreendedor apenas pela degradação, que depende do número de ciclos e não das horas em que ocorrem, e pelo limite do ponto de conexão, que não se mostrou ativo. Assim, o resultado é robusto ao critério de despacho do ONS, desde que o número de ciclos seja mantido e a recarga ocorra dentro da janela solar.
 
 ### 4.3.7 Custo de degradação e dimensionamento
 

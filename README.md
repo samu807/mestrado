@@ -86,6 +86,12 @@ Os resultados vão para `resultados/<nome_do_cenario>/`.
 **Frequência do despacho do ONS.** Por padrão o módulo LRCAP é despachado todos os dias. Com
 `lrcap.despacho_ons.ciclos_ano: N`, só os N dias de cada ano civil com maior PLD no período de
 descarga são despachados (sistema mais apertado); nos demais, o módulo fica cheio e não recarrega.
+Perfil alternativo, na ponta da carga líquida do SIN (geração hidrelétrica + térmica + nuclear do
+ONS): `python scripts/importar_carga_liquida.py` gera `data/ons_carga_liquida_<ano>.csv`, usado no caso
+`despacho_carga_liquida` (`arquivo: data/ons_carga_liquida_{ano}.csv`; `{ano}` é trocado pelo ano de
+cada cenário). A curva de oferta e o lance coincidem com os do perfil por PLD (diferença < R$ 60/ano):
+os perfis coincidem em 83–94% das horas de descarga, e o perfil só afeta o empreendedor pela
+degradação (número de ciclos) e pela conexão, que não é ativa.
 
 Formatos aceitos diretamente pelo modelo (para outras fontes):
 `timestamp,pld`, `timestamp,fator_capacidade`, `timestamp,fator_kg_mwh` (fator de emissão da
