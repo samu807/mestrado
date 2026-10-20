@@ -54,6 +54,9 @@ CASOS = {
     # Frequência do despacho do ONS (H2 ilimitado, sem importação)
     **{f"ciclos_{n}": (f"{n} despachos/ano", {"lrcap.despacho_ons": {"ciclos_ano": float(n)}})
        for n in (50, 150, 365)},
+    # Compressão do spread diário do PLD (achatamento da ponta pela entrada de armazenamento)
+    **{f"spread_{c}": (f"Spread diário do PLD {100 - c}%", {"mercado": {"compressao_spread": c / 100}})
+       for c in (25, 50)},
     # Perfil do ONS na ponta da carga líquida (scripts/importar_carga_liquida.py), em vez do PLD
     "despacho_carga_liquida": ("Despacho na ponta da carga líquida",
                                {"lrcap.despacho_ons": {"arquivo": "data/ons_carga_liquida_{ano}.csv"}}),

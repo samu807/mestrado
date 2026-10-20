@@ -103,6 +103,9 @@ class Mercado:
     pld_medio_rs_mwh: float = 180.0
     semente: int = 42
     fator_preco: float = 1.0               # multiplica o PLD lido (ex.: correção pelo IPCA)
+    # Compressão do spread diário (sensibilidade): PLD' = média do dia + (1 - c)(PLD - média do dia).
+    # Preserva a média diária e a ordem das horas; imita o achatamento da ponta pela entrada de armazenamento.
+    compressao_spread: float = 0.0
 
 
 @dataclass

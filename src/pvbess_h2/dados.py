@@ -256,7 +256,8 @@ def _perfil_anual(p: Parametros, idx: pd.DatetimeIndex) -> pd.DataFrame | None:
         idx_ano = pd.date_range(f"{anos[0]}-01-01", f"{anos[1] + 1}-01-01", freq=pd.Timedelta(hours=p.horizonte.dt_h),
                                 inclusive="left")
         try:
-            pld = _ler_serie(str(arq), p.base_dir, "pld", idx_ano) * m.fator_preco
+            pld = comprimir_spread(_ler_serie(str(arq), p.base_dir, "pld", idx_ano) * m.fator_preco,
+                                   m.compressao_spread)
         except ValueError:
             return None
         if len(_PERFIS_ANUAIS) >= 16:
@@ -264,6 +265,14 @@ def _perfil_anual(p: Parametros, idx: pd.DatetimeIndex) -> pd.DataFrame | None:
         _PERFIS_ANUAIS[chave] = _perfil_ciclico(p, idx_ano, pld.to_numpy())
     perfil = _PERFIS_ANUAIS[chave].reindex(idx)
     return None if perfil.isna().any().any() else perfil
+
+
+def comprimir_spread(pld: pd.Series, c: float) -> pd.Series:
+    """Aproxima o PLD de cada hora da média do seu dia: média + (1 - c)(PLD - média)."""
+    if not c:
+        return pld
+    media = pld.groupby(pld.index.normalize()).transform("mean")
+    return media + (1.0 - c) * (pld - media)
 
 
 def despacho_ons(p: Parametros, idx: pd.DatetimeIndex, pld: np.ndarray | None = None) -> pd.DataFrame:
@@ -299,7 +308,8 @@ def montar_series(p: Parametros) -> pd.DataFrame:
         fc = perfil_pv_sintetico(p, idx, rng)
 
     if p.mercado.arquivo:
-        pld = _ler_serie(p.mercado.arquivo, p.base_dir, "pld", idx) * p.mercado.fator_preco
+        pld = comprimir_spread(_ler_serie(p.mercado.arquivo, p.base_dir, "pld", idx) * p.mercado.fator_preco,
+                               p.mercado.compressao_spread)
     else:
         pld = pld_sintetico(p, idx, rng)
 
