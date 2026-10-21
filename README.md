@@ -93,6 +93,11 @@ cada cenário). A curva de oferta e o lance coincidem com os do perfil por PLD (
 os perfis coincidem em 83–94% das horas de descarga, e o perfil só afeta o empreendedor pela
 degradação (número de ciclos) e pela conexão, que não é ativa.
 
+**Curva de demanda de H₂ por faixas.** `hidrogenio.faixas_demanda: [[kg_dia, R$/kg], ...]` (preços decrescentes;
+última faixa pode ter volume `null`). Casos `faixas_1t` e `faixas_2t`: 1 ou 2 t/dia a R$ 35/kg e excedente a
+R$ 16/kg (paridade com o H₂ fóssil). Lucro sem leilão R$ 28,8/35,1 mi (contra 45,0), P* = 60 MW, receita para
+ofertar 60 MW cai de R$ 895 mil para ~R$ 300 mil; lance inalterado; equilíbrio do H₂ R$ 145/137 por kg.
+
 **Correspondência temporal do H₂.** `hidrogenio.correspondencia_janela_h` (casos `correspondencia_diaria` e
 `correspondencia_semanal`): a compra da rede vai só ao eletrolisador e, em cada janela, não excede a exportação
 renovável da própria usina (estilo UE). P* = 60 MW, lucro R$ 72,7–72,9 mi (+7%), H₂ 1.301–1.307 t (+27%),
