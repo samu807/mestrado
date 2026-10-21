@@ -54,6 +54,11 @@ CASOS = {
     # Frequência do despacho do ONS (H2 ilimitado, sem importação)
     **{f"ciclos_{n}": (f"{n} despachos/ano", {"lrcap.despacho_ons": {"ciclos_ano": float(n)}})
        for n in (50, 150, 365)},
+    # Correspondência temporal entre a compra da rede e a exportação renovável da própria usina (estilo UE)
+    **{f"correspondencia_{nome}": (f"Correspondência {rot} com a exportação",
+                                   {"rede": {"h2_verde_estrito": False},
+                                    "hidrogenio": {"correspondencia_janela_h": h}})
+       for nome, rot, h in (("diaria", "diária", 24), ("semanal", "semanal", 168))},
     # Compressão do spread diário do PLD (achatamento da ponta pela entrada de armazenamento)
     **{f"spread_{c}": (f"Spread diário do PLD {100 - c}%", {"mercado": {"compressao_spread": c / 100}})
        for c in (25, 50)},
@@ -67,6 +72,8 @@ CASOS = {
     **{f"el_{str(e).replace('.', '_')}": (f"Eletrolisador {e:g} MW".replace(".", ","),
                                           {"eletrolisador": {"potencia_max_mw": float(e)}})
        for e in (10, 25)},
+    # Dimensionamento da usina FV (base 50 MWp)
+    **{f"pv_{v}": (f"FV {v} MWp", {"pv": {"potencia_pico_mw": float(v)}}) for v in (40, 60, 75)},
     "contrato_3t_tanque_10t": ("Contrato 3 t/dia, tanque de 10 t",
                                {"hidrogenio": {"entrega_min_diaria_kg": 3000.0, "entrega_max_diaria_kg": 3000.0,
                                                "penalidade_deficit_rs_kg": MULTA, "tanque_max_kg": 10000.0}}),

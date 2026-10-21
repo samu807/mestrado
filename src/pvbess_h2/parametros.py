@@ -79,6 +79,10 @@ class Hidrogenio:
     limite_emissoes_kg_kg: float | None = None
     janela_emissoes_h: int = 168
     emissao_processo_kg_kg: float = 0.0    # outras etapas (compressão, água), por kg de H2
+    # Correspondência temporal (estilo UE, Regulamento Delegado 2023/1184): a energia comprada da rede vai só ao
+    # eletrolisador e, em cada janela de correspondencia_janela_h horas, não excede a energia renovável exportada
+    # pela própria usina (PPA consigo mesma). None = sem a regra. Exige rede.h2_verde_estrito = false.
+    correspondencia_janela_h: int | None = None
 
 
 @dataclass
@@ -223,6 +227,10 @@ class Parametros:
             assert (r.fator_emissao_arquivo or r.fator_emissao_kg_mwh is not None
                     or (cen and all(c.fator_emissao_arquivo for c in cen))), \
                 "hidrogenio.limite_emissoes_kg_kg exige o fator de emissão da rede (rede.fator_emissao_*)"
+        if h2.correspondencia_janela_h is not None:
+            assert h2.correspondencia_janela_h >= 1
+            assert self.rede.permitir_importacao and not self.rede.h2_verde_estrito, \
+                "hidrogenio.correspondencia_janela_h exige rede.permitir_importacao: true e rede.h2_verde_estrito: false"
         if lr.habilitado:
             # Requisitos de habilitação técnica (Portaria MME 136/2026, art. 7º)
             faixa = b.soc_max_frac - b.soc_min_frac

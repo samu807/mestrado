@@ -253,3 +253,20 @@ def test_limite_emissoes_exige_importacao_e_fator():
         p.validar()                       # sem fator de emissão da rede
     p.rede.fator_emissao_kg_mwh = 40.0
     p.validar()
+
+
+def test_correspondencia_temporal():
+    # Janela horária: comprar e vender na mesma hora é vedado, logo equivale ao H2 verde estrito.
+    _, m_est, _, _ = resolver_caso({"rede": {"h2_verde_estrito": True}})
+    _, m_h, df_h, _ = resolver_caso({"rede": {"h2_verde_estrito": False},
+                                     "hidrogenio": {"correspondencia_janela_h": 1}})
+    assert df_h.p_importacao_mw.max() < 1e-6
+    assert pyo.value(m_h.lucro) == pytest.approx(pyo.value(m_est.lucro), rel=1e-3)
+    # Janela diária: compra só para o eletrolisador e limitada à exportação do mesmo dia.
+    _, m_d, df, _ = resolver_caso({"rede": {"h2_verde_estrito": False},
+                                   "hidrogenio": {"correspondencia_janela_h": 24}})
+    _, m_sem, _, _ = resolver_caso({"rede": {"h2_verde_estrito": False}})
+    assert (df.p_importacao_mw <= df.p_eletrolisador_mw + 1e-6).all()
+    dia = df.index.normalize()
+    assert (df.p_importacao_mw.groupby(dia).sum() <= df.p_exportacao_mw.groupby(dia).sum() + 1e-6).all()
+    assert pyo.value(m_est.lucro) - 1e-3 <= pyo.value(m_d.lucro) <= pyo.value(m_sem.lucro) + 1e-3

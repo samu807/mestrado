@@ -196,16 +196,27 @@ def construir_modelo(p: Parametros, series: pd.DataFrame) -> pyo.ConcreteModel:
             return m.u_el[t] >= m.z_el[t]
         return m.u_el[t] >= m.z_el[t] - m.z_el[t - 1 if t > 0 else n - 1]
 
+    if h2.limite_emissoes_kg_kg is not None or h2.correspondencia_janela_h is not None:
+        @m.Constraint(m.T)
+        def importacao_so_h2(m, t):
+            return m.p_imp[t] <= m.p_el[t]
+
+    # Correspondência temporal: em cada janela, energia comprada <= energia renovável exportada.
+    if h2.correspondencia_janela_h is not None:
+        passos_c = max(1, int(round(h2.correspondencia_janela_h / dt)))
+        janelas_c = [range(i, min(i + passos_c, n)) for i in range(0, n, passos_c)]
+        m.JC = pyo.RangeSet(0, len(janelas_c) - 1)
+
+        @m.Constraint(m.JC)
+        def correspondencia(m, j):
+            return sum(m.p_imp[t] for t in janelas_c[j]) <= sum(m.p_exp[t] for t in janelas_c[j])
+
     # Limite de emissões do H2 (Lei 14.948/2024). A energia comprada da rede vai só ao
     # eletrolisador e é toda atribuída ao H2; o restante da energia do eletrolisador é FV,
     # direta ou via módulo mercantil. Em cada janela, emissões <= limite x H2 produzido.
     if h2.limite_emissoes_kg_kg is not None:
         f_rede = series["fator_emissao_kg_mwh"].to_numpy()
         f_pv = p.pv.fator_emissao_kg_mwh
-
-        @m.Constraint(m.T)
-        def importacao_so_h2(m, t):
-            return m.p_imp[t] <= m.p_el[t]
 
         m.emissoes_h2 = pyo.Expression(m.T, rule=lambda m, t: (
             (f_rede[t] * m.p_imp[t] + f_pv * (m.p_el[t] - m.p_imp[t])) * dt
