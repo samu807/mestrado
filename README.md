@@ -93,6 +93,19 @@ cada cenário). A curva de oferta e o lance coincidem com os do perfil por PLD (
 os perfis coincidem em 83–94% das horas de descarga, e o perfil só afeta o empreendedor pela
 degradação (número de ciclos) e pela conexão, que não é ativa.
 
+**Correspondência temporal do H₂.** `hidrogenio.correspondencia_janela_h` (casos `correspondencia_diaria` e
+`correspondencia_semanal`): a compra da rede vai só ao eletrolisador e, em cada janela, não excede a exportação
+renovável da própria usina (estilo UE). P* = 60 MW, lucro R$ 72,7–72,9 mi (+7%), H₂ 1.301–1.307 t (+27%),
+equilíbrio do H₂ R$ 95–96/kg; lance inalterado.
+
+**Troca de irradiância.** `python scripts/troca_irradiancia.py`: curva de cenário único com o PLD de 2024 e de
+2025 e a irradiância de 2021–2023. Com o PLD de 2025, P* = 55 MW com as três; o lucro varia ±2%. Com 2024,
+P* = 50–52,5 MW. Saída: `resultados/troca_irradiancia/`.
+
+**Tamanho da usina FV.** Casos `pv_40`, `pv_60`, `pv_75`: quanto maior a FV, maior o custo de oportunidade
+(entrada de R$ 76 mil a R$ 244 mil/(MW·ano); P* de 55 a 47,5 MW). Lance: R$ 1,237 mi (40 MWp), 1,191 mi
+(60–75 MWp), só pela TUST compartilhada. Equilíbrio do H₂: R$ 109–126/kg em todas as configurações.
+
 **Compressão do spread do PLD.** Casos `spread_25` e `spread_50` (`mercado.compressao_spread`): PLD de cada
 hora aproximado da média do dia, preservando a média e a ordem das horas. Com 50%, o lucro sem leilão cai
 0,3%, a perda com 60 MW cai 2,6%, a entrada vai de R$ 76 mil a R$ 74 mil/(MW·ano) e P* fica em 55 MW: o
