@@ -655,7 +655,10 @@ def main():
                     "troca_pilhas_vp_rs": pilhas, "fluxo_anual_rs": fluxo, "vpl_rs": vpl,
                     "tir": tir(capex * jdc + pilhas, fluxo, n),
                     "h2_vendido_kg": h2,
-                    "preco_h2_equilibrio_rs_kg": p.hidrogenio.preco_venda_rs_kg - vpl / (fa * h2 * (1 - pr["trib"])),
+                    # Preço médio realizado (com faixas de demanda, abaixo do preço da 1ª faixa) mais o acréscimo
+                    # uniforme por kg que anula o VPL, mantida a operação.
+                    "preco_h2_medio_rs_kg": op["receita_h2_rs"] / max(h2, 1e-9),
+                    "preco_h2_equilibrio_rs_kg": op["receita_h2_rs"] / max(h2, 1e-9) - vpl / (fa * h2 * (1 - pr["trib"])),
                 })
     res = pd.DataFrame(linhas)
     res.to_csv(saida / "viabilidade.csv", index=False)

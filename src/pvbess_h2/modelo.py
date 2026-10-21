@@ -260,7 +260,21 @@ def construir_modelo(p: Parametros, series: pd.DataFrame) -> pyo.ConcreteModel:
     m.receita_mcp = pyo.Expression(expr=sum(m.pld[t] * m.p_exp[t] * dt for t in m.T))
     m.custo_importacao = pyo.Expression(
         expr=sum((m.pld[t] + rede.custo_adicional_importacao_rs_mwh) * m.p_imp[t] * dt for t in m.T))
-    m.receita_h2 = pyo.Expression(expr=sum(h2.preco_venda_rs_kg * m.v_h2[t] * dt for t in m.T))
+    if h2.faixas_demanda is None:
+        m.receita_h2 = pyo.Expression(expr=sum(h2.preco_venda_rs_kg * m.v_h2[t] * dt for t in m.T))
+    else:
+        # Curva de demanda por faixas: o H2 vendido em cada dia é repartido em faixas de volume com preços
+        # decrescentes; a receita é côncava no volume, e o ótimo preenche as faixas em ordem, sem binárias.
+        fx = h2.faixas_demanda
+        m.KF = pyo.RangeSet(0, len(fx) - 1)
+        m.q_faixa = pyo.Var(m.D, m.KF, within=pyo.NonNegativeReals,
+                            bounds=lambda m, d, k: (0, fx[k][0]))
+
+        @m.Constraint(m.D)
+        def venda_faixas(m, d):
+            return sum(m.q_faixa[d, k] for k in m.KF) == sum(m.v_h2[t] * dt for t in horas_do_dia[d])
+
+        m.receita_h2 = pyo.Expression(expr=sum(fx[k][1] * m.q_faixa[d, k] for d in m.D for k in m.KF))
     m.custo_h2 = pyo.Expression(expr=sum(el.custo_variavel_rs_kg * m.m_h2[t] * dt for t in m.T)
                                 + sum(el.custo_partida_rs * m.u_el[t] for t in m.T)
                                 + sum((h2.penalidade_deficit_rs_kg or 0.0) * m.deficit_h2[d] for d in m.D))

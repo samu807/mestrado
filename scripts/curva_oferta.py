@@ -72,6 +72,11 @@ CASOS = {
     **{f"el_{str(e).replace('.', '_')}": (f"Eletrolisador {e:g} MW".replace(".", ","),
                                           {"eletrolisador": {"potencia_max_mw": float(e)}})
        for e in (10, 25)},
+    # Curva de demanda de H2 por faixas diárias: até N t/dia a R$ 35/kg (comprador de H2 renovável) e o excedente
+    # a R$ 16/kg, paridade com o H2 de origem fóssil (US$ 3/kg, extremo superior da faixa da IEA, pela PTAX)
+    **{f"faixas_{n}t": (f"Demanda: {n} t/dia a R$ 35/kg, excedente a R$ 16/kg",
+                        {"hidrogenio": {"faixas_demanda": [[n * 1000.0, 35.0], [None, 16.0]]}})
+       for n in (1, 2)},
     # Dimensionamento da usina FV (base 50 MWp)
     **{f"pv_{v}": (f"FV {v} MWp", {"pv": {"potencia_pico_mw": float(v)}}) for v in (40, 60, 75)},
     "contrato_3t_tanque_10t": ("Contrato 3 t/dia, tanque de 10 t",

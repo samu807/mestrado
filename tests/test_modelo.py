@@ -270,3 +270,17 @@ def test_correspondencia_temporal():
     dia = df.index.normalize()
     assert (df.p_importacao_mw.groupby(dia).sum() <= df.p_exportacao_mw.groupby(dia).sum() + 1e-6).all()
     assert pyo.value(m_est.lucro) - 1e-3 <= pyo.value(m_d.lucro) <= pyo.value(m_sem.lucro) + 1e-3
+
+
+def test_faixas_demanda_h2():
+    # Uma faixa só, sem limite, ao preço de referência: igual à demanda ilimitada.
+    p0, m0, df0, _ = resolver_caso()
+    preco = p0.hidrogenio.preco_venda_rs_kg
+    _, m1, _, _ = resolver_caso({"hidrogenio": {"faixas_demanda": [[None, preco]]}})
+    assert pyo.value(m1.lucro) == pytest.approx(pyo.value(m0.lucro), rel=1e-4)
+    # Duas faixas: 500 kg/dia ao preço de referência e o excedente a R$ 1/kg. A receita segue as faixas.
+    _, m2, df, _ = resolver_caso({"hidrogenio": {"faixas_demanda": [[500.0, preco], [None, 1.0]]}})
+    vendas = df.venda_h2_kg_h.groupby(df.index.normalize()).sum()
+    esperado = sum(min(v, 500.0) * preco + max(v - 500.0, 0.0) * 1.0 for v in vendas)
+    assert pyo.value(m2.receita_h2) == pytest.approx(esperado, rel=1e-4)
+    assert pyo.value(m2.lucro) <= pyo.value(m0.lucro) + 1e-3

@@ -78,6 +78,10 @@ class Hidrogenio:
     # 14.948/2024: 7 kgCO2eq/kgH2 até 2030). Exige rede.h2_verde_estrito = false.
     limite_emissoes_kg_kg: float | None = None
     janela_emissoes_h: int = 168
+    # Curva de demanda por faixas diárias: lista de [volume_kg_dia, preço_rs_kg], com preços decrescentes; o volume
+    # da última faixa pode ser None (sem limite). Substitui preco_venda_rs_kg na receita: em cada dia, o H2
+    # vendido preenche as faixas em ordem de preço. None = demanda ilimitada a preco_venda_rs_kg.
+    faixas_demanda: list | None = None
     emissao_processo_kg_kg: float = 0.0    # outras etapas (compressão, água), por kg de H2
     # Correspondência temporal (estilo UE, Regulamento Delegado 2023/1184): a energia comprada da rede vai só ao
     # eletrolisador e, em cada janela de correspondencia_janela_h horas, não excede a energia renovável exportada
@@ -227,6 +231,11 @@ class Parametros:
             assert (r.fator_emissao_arquivo or r.fator_emissao_kg_mwh is not None
                     or (cen and all(c.fator_emissao_arquivo for c in cen))), \
                 "hidrogenio.limite_emissoes_kg_kg exige o fator de emissão da rede (rede.fator_emissao_*)"
+        if h2.faixas_demanda is not None:
+            fx = h2.faixas_demanda
+            assert len(fx) >= 1 and all(len(f) == 2 for f in fx), "hidrogenio.faixas_demanda: lista de [kg_dia, R$/kg]"
+            assert all(f[0] is not None and f[0] > 0 for f in fx[:-1]), "só a última faixa pode ter volume None"
+            assert all(fx[k][1] > fx[k + 1][1] for k in range(len(fx) - 1)), "preços das faixas devem decrescer"
         if h2.correspondencia_janela_h is not None:
             assert h2.correspondencia_janela_h >= 1
             assert self.rede.permitir_importacao and not self.rede.h2_verde_estrito, \
