@@ -93,6 +93,11 @@ cada cenário). A curva de oferta e o lance coincidem com os do perfil por PLD (
 os perfis coincidem em 83–94% das horas de descarga, e o perfil só afeta o empreendedor pela
 degradação (número de ciclos) e pela conexão, que não é ativa.
 
+**Compressão do spread do PLD.** Casos `spread_25` e `spread_50` (`mercado.compressao_spread`): PLD de cada
+hora aproximado da média do dia, preservando a média e a ordem das horas. Com 50%, o lucro sem leilão cai
+0,3%, a perda com 60 MW cai 2,6%, a entrada vai de R$ 76 mil a R$ 74 mil/(MW·ano) e P* fica em 55 MW: o
+custo de oportunidade é dominado pelo H₂, não pela arbitragem.
+
 **Lance como distribuição (Monte Carlo).** `python scripts/lance_monte_carlo.py` sorteia as premissas de
 custo e de regra (`config/economia.yaml`, `monte_carlo`; probabilidades das regras não confirmadas são
 hipóteses) e recalcula o lance. BESS dimensionado (60 MW/288 MWh): mediana R$ 1,44 mi/(MW·ano), P10–P90
