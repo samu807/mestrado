@@ -178,6 +178,8 @@ def main():
     ap.add_argument("--fronteira", choices=["ciclica", "lp"],
                     help="estados na fronteira dos blocos (padrão: estocastico.fronteira_blocos)")
     ap.add_argument("--subdir", help="subpasta de resultados/curva_oferta para as curvas desta rodada")
+    ap.add_argument("--retomar", action="store_true",
+                    help="pula os casos já concluídos e retoma os pontos gravados em <caso>_parcial.csv")
     args = ap.parse_args()
     warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -196,8 +198,15 @@ def main():
             p = aplicar(base, CASOS[caso][1])
             p.lrcap.receita_fixa_rs_mw_ano = 0.0          # lucro avaliado = Q(P)
             grade = [0.0] + list(np.arange(p.lrcap.potencia_min_mw, 60 + 1e-6, args.passo))
-            linhas = []
+            parcial = saida / f"{caso}_parcial.csv"
+            if args.retomar and (saida / f"{caso}.csv").exists() and (saida / f"{caso}_operacao.csv").exists():
+                print(f"[{caso}] já concluído", flush=True)
+                continue
+            linhas = pd.read_csv(parcial).to_dict("records") if args.retomar and parcial.exists() else []
+            feitos = {round(r["p_cap_mw"], 6) for r in linhas}
             for x in grade:
+                if round(float(x), 6) in feitos:
+                    continue
                 av = avaliar_potencia(p, float(x), processos=args.processos)
                 ub = av.limite_superior or []      # relaxação linear de cada ano (fronteira "lp")
                 linhas.append({"p_cap_mw": x, "q_rs": av.esperado,
@@ -205,8 +214,10 @@ def main():
                                **({"ub_rs": float(np.dot(p.estocastico.probabilidades(), ub))} if ub else {})})
                 gap = f"  gap {1 - av.esperado / linhas[-1]['ub_rs']:.3%}" if ub else ""
                 print(f"[{caso}] P = {x:5.1f} MW  Q = R$ {av.esperado / 1e6:7.3f} mi{gap}", flush=True)
-            curva = pd.DataFrame(linhas)
+                pd.DataFrame(linhas).to_csv(parcial, index=False)
+            curva = pd.DataFrame(linhas).sort_values("p_cap_mw").reset_index(drop=True)
             curva.to_csv(saida / f"{caso}.csv", index=False)
+            parcial.unlink(missing_ok=True)
 
             # Operação média nos cenários na potência ótima para a receita de referência
             x_ref = float(oferta(curva, np.array([r_ref])).p_cap_mw.iloc[0])
