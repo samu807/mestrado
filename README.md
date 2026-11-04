@@ -98,6 +98,15 @@ degradação (número de ciclos) e pela conexão, que não é ativa.
 R$ 16/kg (paridade com o H₂ fóssil). Lucro sem leilão R$ 28,8/35,1 mi (contra 45,0), P* = 60 MW, receita para
 ofertar 60 MW cai de R$ 895 mil para ~R$ 300 mil; lance inalterado; equilíbrio do H₂ R$ 145/137 por kg.
 
+**Preço do excedente por cenário.** `hidrogenio.precos_faixas_por_ano: {ano: [R$/kg por faixa]}` troca os
+preços das faixas no cenário de cada ano. Casos `faixas_1t_ano` e `faixas_2t_ano`: excedente à paridade do H₂
+cinza do ano (`scripts/preco_h2_cinza.py` → `data/preco_h2_cinza_anual.csv`: gás = 0,135 × Brent, calibrado
+nos preços médios da Petrobras de 2023–2024; H₂ cinza = 0,165 MMBtu/kg × gás + US$ 1/kg; PTAX e IPCA do ano;
+normalizado para média de R$ 16/kg): R$ 16,55 (2021), 18,86 (2022), 15,23 (2023), 15,44 (2024), 13,92 (2025).
+Resultado: Q(0) +0,5% (35,23 contra 35,05 mi com 2 t/dia), P* = 60 MW, entrada R$ 82 mil, lance inalterado
+(1,214 mi); o preço alto de 2022 cai no ano de menor lucro (PLD baixo) e reduz a dispersão entre cenários.
+`curva_oferta.py --retomar` grava cada ponto e retoma rodadas interrompidas.
+
 **Correspondência temporal do H₂.** `hidrogenio.correspondencia_janela_h` (casos `correspondencia_diaria` e
 `correspondencia_semanal`): a compra da rede vai só ao eletrolisador e, em cada janela, não excede a exportação
 renovável da própria usina (estilo UE). P* = 60 MW, lucro R$ 72,7–72,9 mi (+7%), H₂ 1.301–1.307 t (+27%),
