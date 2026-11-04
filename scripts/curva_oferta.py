@@ -34,6 +34,9 @@ MULTA = 35.0
 # Fator de emissão marginal da rede: térmica a gás natural, 56,1 tCO2/TJ (IPCC, 2006) com 45% de
 # rendimento, o mesmo de scripts/importar_emissoes.py.
 FATOR_MARGINAL = 56.1 * 3.6 / 0.45
+# Paridade do H2 cinza por ano de cenário, em R$ de 2025 (scripts/preco_h2_cinza.py)
+PRECO_CINZA = {int(a): float(x) for a, x in pd.read_csv(RAIZ / "data" / "preco_h2_cinza_anual.csv")
+               .set_index("ano").preco_excedente_rs_kg.items()}
 CASOS = {
     "base": ("H₂ ilimitado, sem importação", {}),
     "contrato_2t": ("Contrato 2 t/dia, sem importação",
@@ -76,6 +79,12 @@ CASOS = {
     # a R$ 16/kg, paridade com o H2 de origem fóssil (US$ 3/kg, extremo superior da faixa da IEA, pela PTAX)
     **{f"faixas_{n}t": (f"Demanda: {n} t/dia a R$ 35/kg, excedente a R$ 16/kg",
                         {"hidrogenio": {"faixas_demanda": [[n * 1000.0, 35.0], [None, 16.0]]}})
+       for n in (1, 2)},
+    # As mesmas faixas, com o excedente à paridade do H2 cinza de cada ano (scripts/preco_h2_cinza.py: gás indexado
+    # ao Brent, PTAX e IPCA do ano; média de 2021 a 2025 igual a R$ 16/kg)
+    **{f"faixas_{n}t_ano": (f"Demanda: {n} t/dia a R$ 35/kg, excedente ao H₂ cinza do ano",
+                            {"hidrogenio": {"faixas_demanda": [[n * 1000.0, 35.0], [None, 16.0]],
+                                            "precos_faixas_por_ano": {a: [35.0, x] for a, x in PRECO_CINZA.items()}}})
        for n in (1, 2)},
     # Dimensionamento da usina FV (base 50 MWp)
     **{f"pv_{v}": (f"FV {v} MWp", {"pv": {"potencia_pico_mw": float(v)}}) for v in (40, 60, 75)},

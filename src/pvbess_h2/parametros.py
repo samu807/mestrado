@@ -82,6 +82,10 @@ class Hidrogenio:
     # da última faixa pode ser None (sem limite). Substitui preco_venda_rs_kg na receita: em cada dia, o H2
     # vendido preenche as faixas em ordem de preço. None = demanda ilimitada a preco_venda_rs_kg.
     faixas_demanda: list | None = None
+    # Preços das faixas por ano de cenário: {ano: [R$/kg por faixa]}, mesma ordem e número de faixas de
+    # faixas_demanda (os volumes não mudam). Anos ausentes usam os preços de faixas_demanda. None = iguais em
+    # todos os cenários. Usado para o preço do excedente seguir a paridade do H2 cinza de cada ano.
+    precos_faixas_por_ano: dict | None = None
     emissao_processo_kg_kg: float = 0.0    # outras etapas (compressão, água), por kg de H2
     # Correspondência temporal (estilo UE, Regulamento Delegado 2023/1184): a energia comprada da rede vai só ao
     # eletrolisador e, em cada janela de correspondencia_janela_h horas, não excede a energia renovável exportada
@@ -236,6 +240,12 @@ class Parametros:
             assert len(fx) >= 1 and all(len(f) == 2 for f in fx), "hidrogenio.faixas_demanda: lista de [kg_dia, R$/kg]"
             assert all(f[0] is not None and f[0] > 0 for f in fx[:-1]), "só a última faixa pode ter volume None"
             assert all(fx[k][1] > fx[k + 1][1] for k in range(len(fx) - 1)), "preços das faixas devem decrescer"
+        if h2.precos_faixas_por_ano is not None:
+            assert h2.faixas_demanda is not None, "hidrogenio.precos_faixas_por_ano exige faixas_demanda"
+            for ano, pr in h2.precos_faixas_por_ano.items():
+                assert len(pr) == len(h2.faixas_demanda), f"precos_faixas_por_ano[{ano}]: um preço por faixa"
+                assert all(pr[k] > pr[k + 1] for k in range(len(pr) - 1)), \
+                    f"precos_faixas_por_ano[{ano}]: preços devem decrescer"
         if h2.correspondencia_janela_h is not None:
             assert h2.correspondencia_janela_h >= 1
             assert self.rede.permitir_importacao and not self.rede.h2_verde_estrito, \

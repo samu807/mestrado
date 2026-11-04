@@ -284,3 +284,17 @@ def test_faixas_demanda_h2():
     esperado = sum(min(v, 500.0) * preco + max(v - 500.0, 0.0) * 1.0 for v in vendas)
     assert pyo.value(m2.receita_h2) == pytest.approx(esperado, rel=1e-4)
     assert pyo.value(m2.lucro) <= pyo.value(m0.lucro) + 1e-3
+
+
+def test_precos_faixas_por_ano():
+    from pvbess_h2.estocastico import parametros_cenario
+    p = carregar_parametros(Path(__file__).resolve().parents[1] / "config" / "estocastico_unifei.yaml")
+    p.hidrogenio.faixas_demanda = [[2000.0, 35.0], [None, 16.0]]
+    p.hidrogenio.precos_faixas_por_ano = {2022: [35.0, 19.0]}
+    p.validar()
+    c22, c23 = (next(c for c in p.estocastico.cenarios if c.ano == a) for a in (2022, 2023))
+    assert parametros_cenario(p, c22).hidrogenio.faixas_demanda == [[2000.0, 35.0], [None, 19.0]]
+    assert parametros_cenario(p, c23).hidrogenio.faixas_demanda == [[2000.0, 35.0], [None, 16.0]]
+    p.hidrogenio.precos_faixas_por_ano = {2022: [10.0, 19.0]}
+    with pytest.raises(AssertionError):
+        p.validar()
