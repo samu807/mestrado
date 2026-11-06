@@ -397,6 +397,26 @@ Fonte: elaborado pelo autor.
 
 Uma propriedade relevante do método é que ele fornece, a cada iteração, limites superior e inferior para o lucro ótimo, de modo que a qualidade da solução final é certificada, e não apenas estimada. Essa característica o distingue de métodos heurísticos e meta-heurísticos, como algoritmos genéticos, frequentemente empregados em problemas de dimensionamento e operação de sistemas de armazenamento (FENG *et al.*, 2022), mas que não oferecem garantia de otimalidade.
 
+### 3.6.4 Limites de otimalidade e *gap*
+
+Todos os resultados de otimização deste trabalho são acompanhados de dois limites para o valor ótimo $Z^{*}$ do problema de maximização. O limite inferior, $\underline Z$, é o valor de uma solução viável efetivamente obtida — uma operação que respeita todas as restrições, incluídas as de integralidade —, de modo que o ótimo é pelo menos igual a ele. O limite superior, $\bar Z$, é o valor de um problema relaxado, no qual parte das restrições é afrouxada (tipicamente, as variáveis binárias passam a assumir qualquer valor entre 0 e 1); como o conjunto viável da relaxação contém o do problema original, o ótimo é no máximo igual a ele. O *gap* de otimalidade é a distância relativa entre os dois limites, conforme a Equação {eq:gap}:
+
+$$
+\underline Z \;\leq\; Z^{*} \;\leq\; \bar Z, \qquad \text{gap} = \frac{\bar Z - \underline Z}{\bar Z}
+$$ {#eq:gap}
+
+O *gap* é, portanto, um limite para o erro da solução obtida em relação ao ótimo, e não uma estimativa desse erro: com $\bar Z$ e $\underline Z$ conhecidos, o ótimo desconhecido está necessariamente entre eles. Ao contrário, um *gap* positivo não significa que a solução esteja afastada do ótimo, pois parte da diferença pode decorrer apenas da folga do problema relaxado. Nos critérios de parada, o denominador pode ser $\bar Z$ ou $\underline Z$; para os valores deste trabalho, a diferença entre as duas convenções é desprezível.
+
+O mesmo conceito aparece em três níveis do método de solução:
+
+a) **em cada MILP semanal:** no *branch-and-bound* do HiGHS, o limite inferior é a melhor solução inteira encontrada, e o superior é o maior valor das relaxações lineares entre os ramos ainda abertos da árvore. A solução é interrompida com *gap* de 0,01%;
+
+b) **na decomposição de Benders:** o limite inferior é o maior lucro anual entre as potências avaliadas, e o superior é o valor ótimo do problema mestre, cujos cortes superestimam a função valor (Seção 3.6.3). O algoritmo termina com *gap* de 0,1% ou, se o mestre propuser um ponto já avaliado, informa o *gap* remanescente;
+
+c) **na avaliação com potência fixa** (curva de oferta e viabilidade): o limite inferior, $\underline Q$, é a soma dos lucros dos MILPs semanais com as fronteiras tiradas da relaxação linear, e o superior, $\bar Q$, é o valor da relaxação linear do ano inteiro (Seção 3.6.2). O *gap* é informado para cada potência da grade e não é usado como critério de parada.
+
+No último caso, o *gap* reúne três parcelas: a tolerância dos MILPs semanais, o efeito de fixar o estado de carga do módulo mercantil e o estoque de hidrogênio nas fronteiras entre semanas e a folga da própria relaxação linear do ano. Como a última parcela não corresponde a um erro da solução, o *gap* superestima a perda em relação ao ótimo. Por exemplo, no caso de referência sem participação no leilão, o lucro viável é de R\$ 45,016 milhões por ano e o limite superior, de R\$ 45,041 milhões: o *gap* de 0,055% garante que o lucro ótimo excede o calculado em no máximo R\$ 25 mil por ano. Os valores obtidos são discutidos na Seção 4.1.
+
 ## 3.7 Extensão estocástica e valor da informação
 
 A formulação das Seções 3.4 a 3.6 supõe que as séries de preço e de geração do ano de análise sejam conhecidas no momento da contratação. Na prática, a potência ofertada no LRCAP é definida antes do início do contrato e permanece fixa durante 15 anos, enquanto o PLD e a irradiância variam de um ano para outro. Esta seção apresenta a extensão estocástica do modelo, que trata essa incerteza, e os indicadores utilizados para quantificar o benefício de considerá-la: o valor da solução estocástica (VSS) e o valor esperado da informação perfeita (EVPI).
