@@ -102,6 +102,15 @@ ciclos/dia diferem da referência em ≤ 0,06%; com 150 e 50 dias, a curva sobe 
 degradação), entrada R$ 33 e 13 mil, iguais às dos dias escolhidos pelo PLD; P* = 55 MW em todos; lance
 R$ 1,214 / 1,222 / 1,227 mi. Só o número de ciclos importa, e de forma linear.
 
+**Termelétricas de reserva de capacidade (análogo para o despacho).** `python scripts/importar_termicas_reserva.py`
+baixa do bucket público do ONS (`geracao_termica_despacho_2_ho`) a geração horária, por motivo de despacho, das
+usinas de reserva de capacidade que entraram em operação em ago/2026 e grava `data/ons_termicas_reserva.csv`. O ONS
+marca parte delas com o sufixo "LRC" (UTE Linhares LRC1 e LRC4); Azulão foi incluída por ser vencedora do LRCAP
+2021 citada na imprensa (confirmar na lista oficial da EPE/ANEEL). Ago–nov/2026: Linhares LRC4 acionada em 18 de
+100 dias, sempre entre 15 h e 23 h, blocos de ~6 h, 77% por razão elétrica; Linhares LRC1 em 5 dias; Azulão em
+45 de 97 dias, blocos de ~13 h, à noite. O motivo "reserva de potência" nunca foi usado (2021–2026). Ainda não
+há um ano completo de operação.
+
 **Curva de demanda de H₂ por faixas.** `hidrogenio.faixas_demanda: [[kg_dia, R$/kg], ...]` (preços decrescentes;
 última faixa pode ter volume `null`). Casos `faixas_1t` e `faixas_2t`: 1 ou 2 t/dia a R$ 35/kg e excedente a
 R$ 16/kg (paridade com o H₂ fóssil). Lucro sem leilão R$ 28,8/35,1 mi (contra 45,0), P* = 60 MW, receita para
