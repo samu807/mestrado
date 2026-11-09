@@ -41,7 +41,11 @@ PROBS = BASE.estocastico.probabilidades()
 def correcao_recarga(caso):
     """Por cenário: custo da recarga excedente do módulo LRCAP somado por bloco menos o apurado no
     ano inteiro, em R$/(MW·ano)."""
-    p = aplicar(BASE, CASOS[caso][1])
+    return correcao_recarga_params(aplicar(BASE, CASOS[caso][1]))
+
+
+def correcao_recarga_params(p):
+    """Como correcao_recarga, para parâmetros já montados (ex.: perfil de despacho de arquivo)."""
     out = []
     for c in p.estocastico.cenarios:
         q = parametros_cenario(p, c)
