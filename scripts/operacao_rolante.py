@@ -10,7 +10,7 @@ impõe estado final (os estados ao fim de H horas ficam livres), como é usual n
 
 Previsões da geração FV:
   perfeita     a geração realizada (isola o efeito da janela finita);
-  persistencia a geração da mesma hora do dia anterior.
+  persistencia a geração da mesma hora do último dia já observado (sem usar dados posteriores à hora t).
 
 O lucro operacional realizado é apurado com os dados reais e comparado com o da operação de
 previsão perfeita no ano (blocos semanais, maior limite entre as fronteiras lp e cíclica).
@@ -48,14 +48,21 @@ def cenario(base, ano):
     return q
 
 
-def previsao_pv(s, tipo):
-    pv = s["pv_disp_mw"].to_numpy()
+def previsao_janela(pv, t, n, tipo):
+    """Geração FV vista na hora t para as horas t, ..., t + n - 1: a da hora t é medida; as seguintes, previstas.
+
+    Na persistência, a previsão de cada hora é a geração da mesma hora do último dia já observado em t: para
+    a hora t + k, o índice t + k - 24 * ceil(k / 24), que nunca passa de t. Com janela maior que 24 h, o segundo
+    dia da janela repete, portanto, o mesmo dia observado, e não a geração real das próximas 24 h. Só nas
+    primeiras 24 h do ano, em que não há dia anterior nas séries, usa-se a geração realizada.
+    """
+    pv = np.asarray(pv, dtype=float)
+    k = np.arange(min(n, len(pv) - t))
     if tipo == "perfeita":
-        return pv.copy()
+        return pv[t + k].copy()
     if tipo == "persistencia":
-        f = np.roll(pv, 24)
-        f[:24] = pv[:24]
-        return f
+        j = t + k - 24 * np.ceil(k / 24).astype(int)
+        return pv[np.where(j < 0, t + k, j)]
     raise ValueError(tipo)
 
 
@@ -104,7 +111,7 @@ def rolante(q, s, p_cap, janela, previsao, horas):
     q.horizonte.partida_ciclica = False
     b, h2 = q.bess, q.hidrogenio
     e_merc = b.energia_mwh - q.lrcap.energia_por_mw_h * p_cap
-    f = previsao_pv(s, previsao)
+    pv_real = s["pv_disp_mw"].to_numpy()
     soc = (b.soc_inicial_frac if b.soc_inicial_frac is not None else 0.5) * e_merc
     tanque, ligado = h2.tanque_inicial_kg, False
     opt = _solver(1e-4)
@@ -112,7 +119,7 @@ def rolante(q, s, p_cap, janela, previsao, horas):
     linhas, t0 = [], time.time()
     for t in range(horas):
         w = s.iloc[t:min(t + janela, len(s))].copy()
-        w.iloc[1:, w.columns.get_loc("pv_disp_mw")] = f[t + 1:t + len(w)]
+        w["pv_disp_mw"] = previsao_janela(pv_real, t, len(w), previsao)
         qw = copy.deepcopy(q)
         qw.bess.soc_inicial_frac = min(max(soc / e_merc, b.soc_min_frac), b.soc_max_frac)
         qw.hidrogenio.tanque_inicial_kg = min(max(tanque, 0.0), h2.tanque_max_kg)

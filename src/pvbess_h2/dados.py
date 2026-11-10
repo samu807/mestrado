@@ -127,7 +127,7 @@ def _maiores(nota: pd.Series, n: float) -> set:
     """Os n dias de maior nota. Empates (ex.: PLD no piso o dia todo) são desfeitos por uma
     sequência de baixa discrepância no dia do ano, que espalha os escolhidos pelo ano em
     vez de favorecer os primeiros dias."""
-    desempate = _van_der_corput(nota.index.dayofyear.to_numpy() - 1)
+    desempate = _van_der_corput(nota.index.day_of_year.to_numpy() - 1)
     ordem = np.lexsort((desempate, -nota.round(6).to_numpy()))
     return set(nota.index[ordem[:int(round(min(n, len(nota))))]])
 
@@ -234,6 +234,34 @@ def _perfil_ciclico(p: Parametros, idx: pd.DatetimeIndex, pld: np.ndarray | None
     return _perfil_ons(p, idx, pld, e_fim)
 
 
+def _fracao_excedente(desc, rec, rte: float) -> float:
+    """Fração da recarga do módulo LRCAP acima da custeada pela CONCAP (injetada / RTE de referência)."""
+    e_rec, e_inj = float(np.sum(rec)), float(np.sum(desc))
+    return max(0.0, e_rec - e_inj / rte) / e_rec if e_rec > 0 else 0.0
+
+
+def _excedente_por_ano(perfil: pd.DataFrame, rte: float) -> np.ndarray:
+    """Fração excedente de cada ano civil do perfil, repetida em todas as horas do ano."""
+    f = {ano: _fracao_excedente(g["descarga_pu"], g["recarga_pu"], rte)
+         for ano, g in perfil.groupby(perfil.index.year)}
+    return np.array([f[a] for a in perfil.index.year])
+
+
+@lru_cache(maxsize=32)
+def _excedente_arquivo(arquivo: str, rte: float) -> dict:
+    """Fração excedente de cada ano civil COMPLETO de um arquivo de despacho ({ano: fração})."""
+    df = pd.read_csv(arquivo, parse_dates=["timestamp"]).set_index("timestamp").sort_index()
+    out = {}
+    for ano, g in df.groupby(df.index.year):
+        if len(g) < 2:
+            continue
+        passo = g.index[1] - g.index[0]
+        esperado = pd.date_range(f"{ano}-01-01", f"{ano + 1}-01-01", freq=passo, inclusive="left")
+        if len(g) == len(esperado) and (g.index == esperado).all():
+            out[int(ano)] = _fracao_excedente(g["descarga_pu"], g["recarga_pu"], rte)
+    return out
+
+
 _PERFIS_ANUAIS: dict = {}
 
 
@@ -250,8 +278,9 @@ def _perfil_anual(p: Parametros, idx: pd.DatetimeIndex) -> pd.DataFrame | None:
     anos = (idx[0].year, idx[-1].year)
     chave = (str(arq), float(m.fator_preco), anos, p.horizonte.dt_h,
              b.eficiencia_carga, b.eficiencia_descarga, b.soc_min_frac, b.soc_max_frac,
-             lr.energia_por_mw_h, lr.duracao_h, lr.ciclos_max_dia, lr.ciclos_max_ano,
-             d.modo, tuple(d.janela_recarga), tuple(d.horas_descarga), tuple(d.horas_recarga), d.ciclos_ano)
+             lr.energia_por_mw_h, lr.duracao_h, lr.ciclos_max_dia, lr.ciclos_max_ano, lr.rte_referencia,
+             d.modo, tuple(d.janela_recarga), tuple(d.horas_descarga), tuple(d.horas_recarga), d.ciclos_ano,
+             m.compressao_spread)
     if chave not in _PERFIS_ANUAIS:
         idx_ano = pd.date_range(f"{anos[0]}-01-01", f"{anos[1] + 1}-01-01", freq=pd.Timedelta(hours=p.horizonte.dt_h),
                                 inclusive="left")
@@ -262,7 +291,9 @@ def _perfil_anual(p: Parametros, idx: pd.DatetimeIndex) -> pd.DataFrame | None:
             return None
         if len(_PERFIS_ANUAIS) >= 16:
             _PERFIS_ANUAIS.clear()
-        _PERFIS_ANUAIS[chave] = _perfil_ciclico(p, idx_ano, pld.to_numpy())
+        perfil_ano = _perfil_ciclico(p, idx_ano, pld.to_numpy())
+        perfil_ano["recarga_excedente_frac"] = _excedente_por_ano(perfil_ano, lr.rte_referencia)
+        _PERFIS_ANUAIS[chave] = perfil_ano
     perfil = _PERFIS_ANUAIS[chave].reindex(idx)
     return None if perfil.isna().any().any() else perfil
 
@@ -278,8 +309,14 @@ def comprimir_spread(pld: pd.Series, c: float) -> pd.Series:
 def despacho_ons(p: Parametros, idx: pd.DatetimeIndex, pld: np.ndarray | None = None) -> pd.DataFrame:
     """Perfil de despacho do ONS no módulo LRCAP, por MW contratado (p.u. de P_cap).
 
-    Retorna `descarga_pu`, `recarga_pu` e `soc_pu` (energia armazenada em MWh por MW
-    contratado, ao fim de cada intervalo). Sem arquivo de despacho, o perfil é gerado
+    Retorna `descarga_pu`, `recarga_pu`, `soc_pu` (energia armazenada em MWh por MW
+    contratado, ao fim de cada intervalo) e `recarga_excedente_frac`, a fração da recarga
+    acima da custeada pela CONCAP (injetada / RTE de referência, art. 9º §§ 7º e 8º). Essa
+    fração é apurada no ano civil sempre que o perfil do ano é conhecido (PLD ou despacho
+    lidos de arquivo que cobre o ano), e não no horizonte pedido: num bloco semanal, a
+    recarga de um despacho pode cair no bloco vizinho ao da descarga correspondente, e a
+    apuração por bloco cobraria como excedente uma recarga que, no ano, não o é. Nos demais
+    casos (séries sintéticas, `dias`), vale o próprio horizonte. Sem arquivo de despacho, o perfil é gerado
     assim: descarga a potência plena nas horas de descarga dos dias selecionados e
     recarga, nas horas de recarga, até encher (limitada à potência nominal). O perfil é
     exógeno ao empreendedor (Portaria MME 136/2026, art. 5º §2º).
@@ -289,12 +326,21 @@ def despacho_ons(p: Parametros, idx: pd.DatetimeIndex, pld: np.ndarray | None = 
     decomposição veem o mesmo perfil que o ano completo. Nos demais casos, a condição
     cíclica é aplicada ao próprio horizonte.
     """
-    d = p.lrcap.despacho_ons
+    d, rte = p.lrcap.despacho_ons, p.lrcap.rte_referencia
     if p.mercado.arquivo and not d.arquivo and d.dias is None:
         perfil = _perfil_anual(p, idx)
         if perfil is not None:
             return perfil
-    return _perfil_ciclico(p, idx, pld)
+    perfil = _perfil_ciclico(p, idx, pld)
+    por_ano = {}
+    if d.arquivo:
+        arq = Path(d.arquivo)
+        por_ano = _excedente_arquivo(str(arq if arq.is_absolute() else p.base_dir / arq), float(rte))
+    if por_ano and all(a in por_ano for a in set(idx.year)):
+        perfil["recarga_excedente_frac"] = [por_ano[a] for a in idx.year]
+    else:
+        perfil["recarga_excedente_frac"] = _fracao_excedente(perfil["descarga_pu"], perfil["recarga_pu"], rte)
+    return perfil
 
 
 def montar_series(p: Parametros) -> pd.DataFrame:
@@ -328,6 +374,7 @@ def montar_series(p: Parametros) -> pd.DataFrame:
             "ons_descarga_pu": ons["descarga_pu"].values,
             "ons_recarga_pu": ons["recarga_pu"].values,
             "ons_soc_pu": ons["soc_pu"].values,
+            "ons_recarga_excedente_frac": ons["recarga_excedente_frac"].values,
             "dia": (idx.normalize() - idx[0].normalize()).days,
         },
         index=idx,

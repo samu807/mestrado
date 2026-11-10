@@ -6,6 +6,12 @@ Problema de maximização (lucro), neutro ao risco (beta = 0):
     EEV = E_s[Pi_s(x_EV)]                    (x_EV = ótimo do ano médio)
     EVPI = WS - RP >= 0        VSS = RP - EEV >= 0
 
+As quatro grandezas são avaliadas com a mesma aproximação da operação anual: blocos semanais com condição
+cíclica, que é a do problema resolvido por Benders (os cortes exigem a fronteira cíclica). Avaliar o EEV
+com a fronteira "lp" e o RP com a cíclica compararia aproximações diferentes, e a diferença entre elas
+(da ordem do próprio VSS) entraria no indicador; com a mesma fronteira, VSS e EVPI são não negativos, a
+menos da tolerância de convergência.
+
 O ano médio é a média hora a hora dos 5 anos (PLD já corrigido pelo IPCA; 29/02 removido),
 gerada em data/pld_se_medio_2021_2025.csv e data/pv_itajuba_sarah3_medio_2021_2025.csv.
 
@@ -51,6 +57,7 @@ def main():
 
     base = carregar_parametros(args.config)
     base.estocastico.beta = 0.0
+    base.estocastico.fronteira_blocos = "ciclica"   # a mesma do Benders (RP, WS e EV), também no EEV
     anos = base.estocastico.cenarios
     probs = np.array(base.estocastico.probabilidades())
     saida = RAIZ / "resultados" / (Path(args.config).stem + "_estocastico")

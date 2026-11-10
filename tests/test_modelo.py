@@ -298,3 +298,77 @@ def test_precos_faixas_por_ano():
     p.hidrogenio.precos_faixas_por_ano = {2022: [10.0, 19.0]}
     with pytest.raises(AssertionError):
         p.validar()
+
+
+def test_config_deterministica_igual_ao_cenario_2025():
+    # config/unifei_escalonada.yaml é a versão determinística do caso de referência: os mesmos
+    # parâmetros do cenário de 2025 de config/estocastico_unifei.yaml (o mapa de sensibilidade e
+    # a validação da decomposição rodam nela) e, portanto, as mesmas séries horárias.
+    from dataclasses import asdict
+    from pvbess_h2.estocastico import parametros_cenario
+    raiz = Path(__file__).resolve().parents[1]
+    det = carregar_parametros(raiz / "config" / "unifei_escalonada.yaml")
+    est = carregar_parametros(raiz / "config" / "estocastico_unifei.yaml")
+    ref = parametros_cenario(est, next(c for c in est.estocastico.cenarios if c.ano == 2025))
+    for secao in ("pv", "bess", "eletrolisador", "hidrogenio", "rede", "mercado", "lrcap"):
+        assert asdict(getattr(det, secao)) == asdict(getattr(ref, secao)), secao
+    for p in (det, ref):
+        p.horizonte.inicio, p.horizonte.dias = "2025-06-02 00:00", 7
+    assert np.allclose(montar_series(det).values, montar_series(ref).values)
+
+
+def test_recarga_excedente_apurada_no_ano():
+    # Com poucos despachos, a recarga de um despacho pode cair no bloco semanal vizinho ao da
+    # descarga. O excedente sobre a recarga custeada pela CONCAP é apurado no ano civil: a soma do
+    # custo dos blocos é igual ao custo do ano inteiro, e um bloco sem descarga não paga excedente.
+    from pvbess_h2.decomposicao import dividir_em_blocos
+    p = carregar_parametros(Path(__file__).resolve().parents[1] / "config" / "estocastico_unifei.yaml")
+    p.lrcap.despacho_ons.ciclos_ano = 50
+    dt = p.horizonte.dt_h
+
+    def custo(s):
+        return float((s.ons_recarga_excedente_frac * s.pld_rs_mwh * s.ons_recarga_pu * dt).sum())
+
+    p.horizonte.inicio, p.horizonte.dias = "2025-01-01 00:00", 365
+    ano = montar_series(p)
+    assert ano.ons_recarga_excedente_frac.nunique() == 1
+    rte = p.bess.eficiencia_carga * p.bess.eficiencia_descarga
+    assert ano.ons_recarga_pu.sum() == pytest.approx(ano.ons_descarga_pu.sum() / rte)
+    assert custo(ano) == pytest.approx(0.0, abs=1e-6)       # RTE do BESS acima da de referência
+    total, desbalanceados = 0.0, 0
+    for inicio, dias in dividir_em_blocos("2025-01-01", 365, 7):
+        p.horizonte.inicio, p.horizonte.dias = inicio, dias
+        bloco = montar_series(p)
+        total += custo(bloco)
+        desbalanceados += bloco.ons_recarga_pu.sum() > bloco.ons_descarga_pu.sum() / p.lrcap.rte_referencia + 1e-9
+    assert desbalanceados > 0                                # a apuração por bloco cobraria excedente
+    assert total == pytest.approx(custo(ano), abs=1e-6)
+    # O modelo usa a fração das séries: sem excedente no ano, o custo é nulo em qualquer bloco
+    p.horizonte.inicio, p.horizonte.dias = "2025-01-01 00:00", 7
+    p.lrcap.potencia_fixa_mw = 30.0
+    m = construir_modelo(p, montar_series(p))
+    assert pyo.value(m.custo_recarga_lrcap) == pytest.approx(0.0, abs=1e-6)
+
+
+def test_recarga_excedente_de_arquivo_de_despacho(tmp_path):
+    # Perfil de despacho lido de arquivo que cobre o ano: a fração excedente é a do ano, igual em
+    # todos os blocos; com RTE de referência acima da do perfil, há excedente e ele é cobrado.
+    p = carregar_parametros(Path(__file__).resolve().parents[1] / "config" / "estocastico_unifei.yaml")
+    idx = pd.date_range("2025-01-01", "2026-01-01", freq="h", inclusive="left")
+    desc = np.zeros(len(idx))
+    rec = np.zeros(len(idx))
+    dias = np.arange(0, 365, 9)                               # um despacho a cada 9 dias, às 18 h
+    for d in dias:
+        desc[d * 24 + 18:d * 24 + 22] = 1.0
+        rec[d * 24 + 34:d * 24 + 39] = [1.0, 1.0, 1.0, 1.0, 4 / 0.9025 - 4]   # recarga na manhã seguinte
+    arq = tmp_path / "despacho.csv"
+    pd.DataFrame({"timestamp": idx, "descarga_pu": desc, "recarga_pu": rec}).to_csv(arq, index=False)
+    p.lrcap.despacho_ons.arquivo = str(arq)
+    p.lrcap.rte_referencia = 0.95                             # acima da RTE do perfil (0,9025): há excedente
+    p.bess.eficiencia_carga = p.bess.eficiencia_descarga = 0.95
+    esperado = 1 - (desc.sum() / 0.95) / rec.sum()
+    fracoes = set()
+    for inicio in ("2025-01-01 00:00", "2025-01-08 00:00", "2025-03-05 00:00"):
+        p.horizonte.inicio, p.horizonte.dias = inicio, 7
+        fracoes.add(round(float(montar_series(p).ons_recarga_excedente_frac.iloc[0]), 12))
+    assert fracoes == {round(esperado, 12)}

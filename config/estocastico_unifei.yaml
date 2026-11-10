@@ -33,8 +33,9 @@ horizonte:
 
 pv:
   potencia_pico_mw: 50.0       # capacidade instalada [MWp]
-  # Fator de capacidade horário do PVGIS-ERA5 (2023) para Itajubá, reposicionado em 2025
-  arquivo: data/pv_itajuba_2025.csv
+  # Fator de capacidade horário do PVGIS-SARAH3 (2023) para Itajubá, reposicionado em 2025
+  # (o mesmo do cenário de 2025, para que as rodadas determinísticas usem o caso de referência)
+  arquivo: data/pv_itajuba_sarah3_2025.csv
   fator_capacidade_pico: 0.85  # usado apenas no perfil sintético
   nebulosidade: 0.25           # variabilidade diária (0 = céu limpo) - sintético
 

@@ -96,8 +96,8 @@ degradação (número de ciclos) e pela conexão, que não é ativa.
 **Despacho sorteado (independente do PLD).** `python scripts/despacho_sintetico.py` sorteia perfis dentro dos
 limites da Portaria (ciclos de 4 h, até 2/dia e 366/ano) em quatro famílias: horário de início sorteado entre
 16 h e 20 h (todo dia), 150 e 50 dias sorteados, e dois ciclos/dia em 183 dias (manhã e noite). A recarga repõe
-cada descarga nas horas de menor PLD entre descargas; a recarga excedente é apurada no ano (correção de
-`combinar_fronteiras.py`). Resultado (curva em 30–60 MW, 2–3 amostras por família): horário sorteado e dois
+cada descarga nas horas de menor PLD entre descargas; a recarga excedente é apurada no ano civil pelo
+próprio modelo (`dados.despacho_ons`), e não por bloco semanal. Resultado (curva em 30–60 MW, 2–3 amostras por família): horário sorteado e dois
 ciclos/dia diferem da referência em ≤ 0,06%; com 150 e 50 dias, a curva sobe R$ 43 e 63 mil/(MW·ano) (só a
 degradação), entrada R$ 33 e 13 mil, iguais às dos dias escolhidos pelo PLD; P* = 55 MW em todos; lance
 R$ 1,214 / 1,222 / 1,227 mi. Só o número de ciclos importa, e de forma linear.

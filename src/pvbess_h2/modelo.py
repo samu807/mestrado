@@ -252,10 +252,16 @@ def construir_modelo(p: Parametros, series: pd.DataFrame) -> pyo.ConcreteModel:
     # Recarga do módulo LRCAP acima de (energia injetada / RTE de referência) é
     # custeada pelo empreendedor ao PLD (art. 9º §§ 7º e 8º). O restante da
     # liquidação da energia do módulo LRCAP vai para a CONCAP (art. 9º §6º).
-    e_rec = float((series["ons_recarga_pu"] * dt).sum())
-    e_inj = float((series["ons_descarga_pu"] * dt).sum())
-    frac_excesso = max(0.0, e_rec - e_inj / lr.rte_referencia) / e_rec if e_rec > 0 else 0.0
-    custo_rec_pu = frac_excesso * float((series["pld_rs_mwh"] * series["ons_recarga_pu"] * dt).sum())
+    # A fração excedente vem das séries (dados.despacho_ons), apurada no ano civil quando
+    # o perfil do ano é conhecido: apurá-la no horizonte do modelo cobraria, num bloco
+    # semanal, a recarga de um despacho cuja descarga caiu no bloco vizinho.
+    if "ons_recarga_excedente_frac" in series:
+        frac_excesso = series["ons_recarga_excedente_frac"]
+    else:   # séries montadas fora de dados.montar_series: apuração no próprio horizonte
+        e_rec = float((series["ons_recarga_pu"] * dt).sum())
+        e_inj = float((series["ons_descarga_pu"] * dt).sum())
+        frac_excesso = max(0.0, e_rec - e_inj / lr.rte_referencia) / e_rec if e_rec > 0 else 0.0
+    custo_rec_pu = float((frac_excesso * series["pld_rs_mwh"] * series["ons_recarga_pu"] * dt).sum())
 
     m.receita_mcp = pyo.Expression(expr=sum(m.pld[t] * m.p_exp[t] * dt for t in m.T))
     m.custo_importacao = pyo.Expression(

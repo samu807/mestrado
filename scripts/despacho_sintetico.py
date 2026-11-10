@@ -15,10 +15,9 @@ Famílias de perfis (o horário de início de cada descarga é sorteado):
 Em todas, a recarga repõe a energia de cada descarga nas horas de menor PLD entre a descarga anterior e a
 seguinte, a até 1 p.u. (o ONS minimiza o custo da recarga, art. 4º, § 14).
 
-A recarga do módulo LRCAP acima da custeada pela CONCAP é apurada por bloco semanal no modelo; quando uma
-recarga cai no bloco anterior ao da descarga correspondente (o que os perfis sorteados permitem), ela é cobrada
-como excedente, embora no ano o excedente seja nulo. Como em scripts/combinar_fronteiras.py, essa parcela é
-devolvida, apurando-se o excedente no ano inteiro (correção linear em P).
+A recarga do módulo LRCAP acima da custeada pela CONCAP é apurada no ano civil pelo próprio modelo
+(dados.despacho_ons), e não por bloco semanal: nos perfis sorteados, a recarga pode cair no bloco anterior ao da
+descarga correspondente, e a apuração por bloco a cobraria como excedente.
 
 A potência P = 0 não depende do despacho (não há módulo LRCAP); Q(0) vem de resultados/curva_oferta/base.csv,
 assim como a curva do caso de referência nas mesmas potências. O lance mínimo é recalculado com a rotina de
@@ -47,7 +46,6 @@ sys.path.insert(0, str(RAIZ / "scripts"))
 
 from pvbess_h2 import carregar_parametros  # noqa: E402
 from pvbess_h2.estocastico import avaliar_potencia, dias_cenario  # noqa: E402
-from combinar_fronteiras import correcao_recarga_params  # noqa: E402
 from viabilidade import decomposicao, info_despacho, premissas  # noqa: E402
 
 SAIDA = RAIZ / "resultados" / "despacho_sintetico"
@@ -149,11 +147,9 @@ def main():
     df = pd.DataFrame(pontos)
     P = np.array([0.0] + list(args.potencias))
     linhas = []
-    pi = np.asarray(base.estocastico.probabilidades(), float)
-    corr_ref = float(correcao_recarga_params(base) @ pi)
-    q_ref = np.array([ref.q_rs.loc[x] for x in P]) + P * corr_ref
+    q_ref = np.array([ref.q_rs.loc[x] for x in P])
     curva_ref = pd.DataFrame({"p_cap_mw": P, "q_rs": q_ref})
-    linhas.append({"familia": "referencia_pld", "k": -1, "correcao_recarga_rs_mw": corr_ref, **indicadores(P, q_ref),
+    linhas.append({"familia": "referencia_pld", "k": -1, **indicadores(P, q_ref),
                    "lance_rs_mw_ano": lance(base, eco, curva_ref, q_sem),
                    **{f"q_{x:g}": y for x, y in zip(P, q_ref)}})
     for (familia, k), g in df.groupby(["familia", "k"], sort=False):
@@ -161,15 +157,14 @@ def main():
         if not all(x in g.index for x in args.potencias):
             continue
         p = com_perfil(base, familia, k)
-        corr = float(correcao_recarga_params(p) @ pi)
-        Q = np.array([ref.q_rs.loc[0.0]] + [g.q_rs.loc[x] for x in args.potencias]) + P * corr
-        linhas.append({"familia": familia, "k": k, "correcao_recarga_rs_mw": corr, **indicadores(P, Q),
+        Q = np.array([ref.q_rs.loc[0.0]] + [g.q_rs.loc[x] for x in args.potencias])
+        linhas.append({"familia": familia, "k": k, **indicadores(P, Q),
                        "lance_rs_mw_ano": lance(p, eco, pd.DataFrame({"p_cap_mw": P, "q_rs": Q}), q_sem),
                        **{f"q_{x:g}": y for x, y in zip(P, Q)},
                        **{f"dq_{x:g}_pct": (y / r - 1) * 100 for x, y, r in zip(P[1:], Q[1:], q_ref[1:])}})
     res = pd.DataFrame(linhas)
     res.to_csv(SAIDA / "resumo.csv", index=False)
-    cols = ["familia", "k", "correcao_recarga_rs_mw", "entrada_rs_mw", "receita_60mw_rs_mw", "p_otima_600k_mw", "lance_rs_mw_ano"] + \
+    cols = ["familia", "k", "entrada_rs_mw", "receita_60mw_rs_mw", "p_otima_600k_mw", "lance_rs_mw_ano"] + \
            [c for c in res.columns if c.startswith("dq_")]
     print(res[cols].round(2).to_string(index=False))
 
