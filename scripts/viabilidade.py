@@ -11,6 +11,13 @@ residual, descontado à taxa antes de impostos (central), coerente com o fluxo a
 I inclui a usina FV, o BESS, o eletrolisador e o tanque de H2; J é o fator de juros durante a construção
 (prazo de implantação), e as trocas de pilhas dependem do fator de capacidade do eletrolisador.
 
+Os tributos sobre a receita (PIS/Cofins) entram de duas formas. No VPL do empreendimento, incidem sobre toda a
+receita bruta (receita fixa, venda no MCP e venda de H2). No lance mínimo, que compara construir e não construir o
+BESS, incidem sobre a receita fixa (fator k); a variação das receitas de MCP e de H2 entre as duas alternativas
+não é tributada. Essa variação é nula quando toda a potência é contratada, como no caso de referência e na
+bateria dimensionada para o contrato; nos casos em que parte do BESS é retida (contrato de 3 t/dia), o
+imposto incidiria só sobre a diferença de receita operacional entre as duas alternativas, e o efeito no lance é pequeno.
+
 Q_inv(P) é o lucro operacional da curva de oferta, Q(P), ajustado para a decisão de construir o BESS:
   - sem o custo de degradação por MWh do módulo LRCAP: o desgaste do uso contratado já está no O&M
     fixo, que inclui a reposição parcial de módulos (augmentation) ao longo do contrato, e o
@@ -41,7 +48,7 @@ from pvbess_h2 import carregar_parametros, montar_series  # noqa: E402
 from pvbess_h2.estocastico import avaliar_potencia, dias_cenario, parametros_cenario  # noqa: E402
 
 sys.path.insert(0, str(RAIZ / "scripts"))
-from curva_oferta import CASOS, aplicar, oferta  # noqa: E402
+from curva_oferta import CASOS, aplicar, oferta, operacao_media  # noqa: E402
 
 NIVEIS = ["baixo", "central", "alto"]
 PASSO = 1e3                       # resolução do lance [R$/MW·ano]
@@ -313,6 +320,22 @@ def decomposicao(p, eco, pr, curva, info, q_sem):
                 "uso_mercantil": (q_sem - Q[k] - deg[k]) / pk / d}
     parcelas["tributos_reajuste"] = r - sum(parcelas.values())
     return {"lance_minimo_rs_mw_ano": r, "p_cap_mw": pk, **parcelas, "soma_parcelas": sum(parcelas.values())}
+
+
+def operacao_no_ponto(caso, p, x, op_ref, dirc, processos):
+    """Operação média nos cenários com a potência `x`. A curva de oferta grava a operação na potência ótima do
+    proponente que já tem o BESS; quando a análise de investimento escolhe outra potência, a operação é
+    recalculada nela (e guardada), para que H2 vendido, receitas, fator de capacidade e picos de fluxo se
+    refiram ao mesmo ponto do VPL."""
+    if abs(float(op_ref["p_cap_mw"]) - x) < 1e-6:
+        return op_ref
+    arq = dirc / f"{caso}_operacao_{x:g}MW.csv"
+    if not arq.exists():
+        print(f"[{caso}] operação em {x:g} MW (a da curva de oferta é de {op_ref['p_cap_mw']:g} MW)...", flush=True)
+        q = copy.deepcopy(p)
+        q.lrcap.receita_fixa_rs_mw_ano = 0.0
+        operacao_media(q, float(x), processos).to_csv(arq, header=["valor"])
+    return pd.read_csv(arq, index_col=0)["valor"]
 
 
 def lucro_sem_bess(base, processos):
@@ -628,7 +651,7 @@ def main():
             continue
         p = aplicar(base, ajustes)
         curva = pd.read_csv(dirc / f"{caso}.csv")
-        op = pd.read_csv(dirc / f"{caso}_operacao.csv", index_col=0)["valor"]
+        op_ref = pd.read_csv(dirc / f"{caso}_operacao.csv", index_col=0)["valor"]
         for nivel in NIVEIS:
             for i in eco["taxas_desconto"]:
                 pr = premissas(eco, capex=nivel, taxa=i)
@@ -636,6 +659,11 @@ def main():
                 kr = fator_receita(eco, pr) / (1 - pr["trib"])   # disponibilidade e reajuste, sem tributos
                 v = r_ref * kr * P + Qi
                 k = int(np.argmax(v))
+                op = operacao_no_ponto(caso, p, float(P[k]), op_ref, dirc, args.processos)
+                must = must_injecao(p, pr, True)
+                if op.get("injecao_max_mw", 0.0) > must + 1e-6:
+                    warnings.warn(f"{caso}: a injeção líquida chega a {op['injecao_max_mw']:.1f} MW na operação, acima "
+                                  f"do MUST de {must:.1f} MW usado no custo de rede", RuntimeWarning)
                 c = capex_om(p, eco, pr)
                 capex = c["pv"] + c["bess"] + c["eletrolisador"] + c["tanque"]
                 jdc = fator_implantacao(i, pr["implantacao"])

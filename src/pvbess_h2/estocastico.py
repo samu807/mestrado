@@ -26,7 +26,9 @@ import numpy as np
 import pandas as pd
 import pyomo.environ as pyo
 
-from .decomposicao import _fronteiras_lp, _gap, _solver, avaliar_bloco, dividir_em_blocos
+from .decomposicao import (_fronteiras_lp, _gap, _solver, avaliar_bloco, correcao_partidas,
+                           dividir_em_blocos)
+from .dados import fracao_do_ano_periodo
 from .modelo import potencia_lrcap_max
 from .parametros import Cenario, Parametros
 
@@ -49,6 +51,11 @@ def parametros_cenario(p: Parametros, c: Cenario) -> Parametros:
 
 def dias_cenario(p: Parametros, c: Cenario) -> int:
     return p.estocastico.dias_por_cenario or (366 if calendar.isleap(c.ano) else 365)
+
+
+def fracao_cenario(p: Parametros, c: Cenario) -> float:
+    """Fração do ano coberta pelo cenário: 1 no ano completo; menor com estocastico.dias_por_cenario."""
+    return fracao_do_ano_periodo(f"{c.ano}-01-01", dias_cenario(p, c))
 
 
 def blocos_cenario(p: Parametros, c: Cenario) -> list[tuple[Parametros, str, int]]:
@@ -74,6 +81,7 @@ class Avaliacao:
     cvar: float
     objetivo: float
     limite_superior: list[float] | None = None   # relaxação linear de cada cenário (fronteira "lp")
+    correcao_partidas: list[float] | None = None  # custo de partidas do ano menos o contado por bloco (R$)
 
 
 def _executar(tarefas, processos):
@@ -99,20 +107,31 @@ def avaliar_potencia(p: Parametros, x: float, processos: int = 4, gap_sub: float
         fronteiras = [f for _, fs in lps for f in fs]
         res = _executar([(q, ini, d, x, gap_sub, True, f) for (_, (q, ini, d)), f in zip(blocos, fronteiras)],
                         processos)
-        av = _resumir(p, x, blocos, res, probs)
-        av.limite_superior = [p.lrcap.receita_fixa_rs_mw_ano * x + ub for ub, _ in lps]
+        av = _resumir(p, x, blocos, res, probs, ano_inteiro=True)
+        av.limite_superior = [p.lrcap.receita_fixa_rs_mw_ano * fracao_cenario(p, c) * x + ub
+                              for c, (ub, _) in zip(est.cenarios, lps)]
         return av
     res = _executar([(q, ini, d, x, gap_sub, True) for _, (q, ini, d) in blocos], processos)
-    return _resumir(p, x, blocos, res, probs)
+    return _resumir(p, x, blocos, res, probs, ano_inteiro=True)
 
 
-def _resumir(p, x, blocos, res, probs):
+def _resumir(p, x, blocos, res, probs, ano_inteiro=False):
+    """Lucro de cada cenário. Com `ano_inteiro` (avaliações com P_cap fixo), o custo das partidas do
+    eletrolisador é o da sequência do ano, e não o contado bloco a bloco (decomposicao.correcao_partidas):
+    o lucro passa a ser exatamente o da operação que concatena os blocos, um limite inferior do ótimo
+    anual. No Benders, vale o problema com blocos independentes, e a correção não se aplica."""
     est = p.estocastico
-    lucro = [p.lrcap.receita_fixa_rs_mw_ano * x] * len(est.cenarios)
+    lucro = [p.lrcap.receita_fixa_rs_mw_ano * fracao_cenario(p, c) * x for c in est.cenarios]
+    estados = [[] for _ in est.cenarios]
     for (s, _), r in zip(blocos, res):
         lucro[s] += r.q
+        estados[s].append((r.z_ini, r.z_fim, r.ciclica))
+    corr = None
+    if ano_inteiro:
+        corr = [correcao_partidas(p.eletrolisador.custo_partida_rs, e) for e in estados]
+        lucro = [v - c for v, c in zip(lucro, corr)]
     return Avaliacao(x, lucro, float(np.dot(probs, lucro)), cvar(lucro, probs, est.alpha),
-                     objetivo(lucro, probs, est.alpha, est.beta))
+                     objetivo(lucro, probs, est.alpha, est.beta), correcao_partidas=corr)
 
 
 def resolver_estocastico(p: Parametros, tol: float = 1e-3, max_iter: int = 30,
@@ -134,7 +153,8 @@ def resolver_estocastico(p: Parametros, tol: float = 1e-3, max_iter: int = 30,
     W = {s: [i for i, (ss, _) in enumerate(blocos) if ss == s] for s in S}
     p_max = potencia_lrcap_max(p)
     p_min = p.lrcap.potencia_min_mw if p_max > 0 else 0.0
-    r_cap = p.lrcap.receita_fixa_rs_mw_ano
+    # Receita fixa de cada cenário: a anual, rateada pela fração do ano simulada (1 no ano completo)
+    r_cap = [p.lrcap.receita_fixa_rs_mw_ano * fracao_cenario(p, c) for c in est.cenarios]
 
     ms = pyo.ConcreteModel()
     ms.B = pyo.RangeSet(0, len(blocos) - 1)
@@ -146,7 +166,7 @@ def resolver_estocastico(p: Parametros, tol: float = 1e-3, max_iter: int = 30,
     ms.nu = pyo.Var(ms.S, within=pyo.NonNegativeReals)
     ms.cmin = pyo.Constraint(expr=ms.P >= p_min * ms.w)
     ms.cmax = pyo.Constraint(expr=ms.P <= p_max * ms.w)
-    ms.Pi = pyo.Expression(ms.S, rule=lambda m, s: r_cap * m.P + sum(m.theta[i] for i in W[s]))
+    ms.Pi = pyo.Expression(ms.S, rule=lambda m, s: r_cap[s] * m.P + sum(m.theta[i] for i in W[s]))
     ms.cauda = pyo.Constraint(ms.S, rule=lambda m, s: m.nu[s] >= m.zeta - m.Pi[s])
     ms.cortes = pyo.ConstraintList()
     ms.obj = pyo.Objective(

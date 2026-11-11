@@ -15,6 +15,7 @@ from __future__ import annotations
 import pandas as pd
 import pyomo.environ as pyo
 
+from .dados import fracao_do_ano
 from .parametros import Parametros
 
 
@@ -34,7 +35,6 @@ def construir_modelo(p: Parametros, series: pd.DataFrame) -> pyo.ConcreteModel:
     b, el, h2, rede, lr = p.bess, p.eletrolisador, p.hidrogenio, p.rede, p.lrcap
     dt = p.horizonte.dt_h
     n = len(series)
-    horas_horizonte = n * dt
 
     m = pyo.ConcreteModel(name="PV-BESS-H2 LRCAP x MCP")
 
@@ -248,7 +248,7 @@ def construir_modelo(p: Parametros, series: pd.DataFrame) -> pyo.ConcreteModel:
         return sum(m.v_h2[t] * dt for t in horas_do_dia[d]) <= h2.entrega_max_diaria_kg
 
     # ------------------------------------------------------------ Função objetivo
-    fracao_ano = horas_horizonte / 8760.0
+    fracao_ano = fracao_do_ano(series.index, dt)   # horas do horizonte / horas do ano civil (8.784 nos bissextos)
     # Recarga do módulo LRCAP acima de (energia injetada / RTE de referência) é
     # custeada pelo empreendedor ao PLD (art. 9º §§ 7º e 8º). O restante da
     # liquidação da energia do módulo LRCAP vai para a CONCAP (art. 9º §6º).

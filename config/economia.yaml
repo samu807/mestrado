@@ -57,8 +57,9 @@ consumo_auxiliar_frac: [0.0, 0.01, 0.02]
 # indisponibilidade acordada com o ONS é isenta de penalidade; as penalidades dependem do edital.
 disponibilidade: 1.0
 disponibilidade_sensibilidade: 0.97
-# Tributos sobre a receita bruta (PIS/Cofins), aplicados à receita fixa, à venda de energia no MCP e à
-# venda de H2. A taxa antes de impostos cobre IR e CSLL, mas não os tributos sobre a receita. Central:
+# Tributos sobre a receita bruta (PIS/Cofins). No VPL do empreendimento, aplicados à receita fixa, à venda de
+# energia no MCP e à venda de H2; no lance mínimo, à receita fixa (a variação das demais receitas entre
+# construir e não construir o BESS é nula quando toda a potência é contratada; ver scripts/viabilidade.py). A taxa antes de impostos cobre IR e CSLL, mas não os tributos sobre a receita. Central:
 # regime cumulativo do lucro presumido (0,65% + 3%), admitido para receita bruta anual de até R$ 78 milhões
 # (caso de uma SPE só do BESS); sensibilidade: regime não cumulativo do lucro real (1,65% + 7,6%), sem
 # créditos. O preço do H2 é tomado líquido de ICMS. Encargos setoriais (TFSEE, contribuição à CCEE)

@@ -24,6 +24,19 @@ def indice_temporal(p: Parametros) -> pd.DatetimeIndex:
     return pd.date_range(h.inicio, periods=passos, freq=pd.Timedelta(hours=h.dt_h))
 
 
+def fracao_do_ano(idx: pd.DatetimeIndex, dt_h: float) -> float:
+    """Fração do ano coberta pelas horas de `idx`, com cada hora dividida pelas horas do seu ano civil
+    (8.784 nos bissextos). Um ano completo vale exatamente 1, de modo que a receita fixa anual do
+    LRCAP, rateada pelos blocos de um ano bissexto, soma a própria receita anual."""
+    horas_ano = np.where(idx.is_leap_year, 8784.0, 8760.0)
+    return float((dt_h / horas_ano).sum())
+
+
+def fracao_do_ano_periodo(inicio: str, dias: int) -> float:
+    """Como `fracao_do_ano`, para um período de `dias` dias a partir de `inicio` (passo horário)."""
+    return fracao_do_ano(pd.date_range(inicio, periods=24 * int(dias), freq="h"), 1.0)
+
+
 def _ler_serie(caminho: str, base_dir: Path, coluna: str, idx: pd.DatetimeIndex) -> pd.Series:
     arq = Path(caminho)
     if not arq.is_absolute():

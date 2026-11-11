@@ -4,7 +4,7 @@ Estrutura: a potência contratada no LRCAP (P_cap) é a única variável que aco
 blocos do ano (semanas). Cada bloco é resolvido de forma independente, com estados
 cíclicos (SOC do módulo mercantil e estoque de H2 terminam no valor inicial).
 
-    max  R_cap * P_cap * horas/8760 + sum_w Q_w(P_cap)
+    max  R_cap * P_cap * (fração do ano coberta) + sum_w Q_w(P_cap)
     s.a. P_cap = 0 ou P_min <= P_cap <= P_max
 
 Q_w é o lucro operacional ótimo do bloco w com P_cap fixo. Como os subproblemas têm
@@ -35,7 +35,7 @@ import pandas as pd
 import pyomo.environ as pyo
 from pyomo.contrib.appsi.solvers import Highs
 
-from .dados import montar_series
+from .dados import fracao_do_ano_periodo, montar_series
 from .modelo import construir_modelo, potencia_lrcap_max
 from .parametros import Parametros
 from .resultados import indicadores, serie_resultados
@@ -99,6 +99,28 @@ class ResultadoBloco:
     q: float          # lucro operacional ótimo (incumbente) com P_cap = x_hat
     lam: float        # inclinação do corte
     c: float          # intercepto do corte (limite dual do MILP lagrangiano)
+    z_ini: int | None = None   # eletrolisador ligado na primeira hora do bloco (só com custo de partida)
+    z_fim: int | None = None   # ... e na última
+    ciclica: bool = True       # partidas contadas com condição cíclica no bloco (False: desligado antes do início)
+
+
+def correcao_partidas(custo_partida: float, estados: list[tuple[int, int, bool]]) -> float:
+    """Custo das partidas do eletrolisador na sequência do ano menos o contado bloco a bloco [R$].
+
+    Cada bloco conta a partida da sua primeira hora contra um estado anterior suposto: o da sua própria
+    última hora (condição cíclica) ou desligado (fronteira imposta). Na operação do ano, que concatena os
+    blocos, o estado anterior é o da última hora do bloco precedente (o do último bloco, para o primeiro:
+    condição cíclica no ano). `estados` = (ligado na primeira hora, ligado na última hora, cíclica) de cada
+    bloco, em ordem. A diferença é de no máximo uma partida por fronteira, para mais ou para menos; somada
+    ao custo dos blocos, dá o custo exato da operação concatenada.
+    """
+    if custo_partida <= 0 or not estados or any(e[0] is None for e in estados):
+        return 0.0
+    dif = 0
+    for w, (z0, zf, ciclica) in enumerate(estados):
+        anterior = estados[w - 1][1]
+        dif += max(z0 - anterior, 0) - max(z0 - (zf if ciclica else 0), 0)
+    return custo_partida * dif
 
 
 def avaliar_bloco(args) -> ResultadoBloco:
@@ -121,8 +143,14 @@ def avaliar_bloco(args) -> ResultadoBloco:
     # 1) MILP com P_cap fixo: solução viável (limite inferior)
     r = opt.solve(m)
     q_val = r.best_feasible_objective
+    z_ini = z_fim = None
+    if p.eletrolisador.custo_partida_rs > 0 and q_val is not None:
+        ult = m.T.last()
+        prim = r.solution_loader.get_primals([m.z_el[0], m.z_el[ult]])
+        z_ini, z_fim = int(round(prim[m.z_el[0]])), int(round(prim[m.z_el[ult]]))
+    ciclica = q.horizonte.partida_ciclica
     if so_valor:
-        return ResultadoBloco(q_val, float("nan"), float("nan"))
+        return ResultadoBloco(q_val, float("nan"), float("nan"), z_ini, z_fim, ciclica)
 
     # 2) LP relaxado com P_cap fixo: dual da restrição de cópia
     binarias = _binarias(m)
@@ -139,7 +167,7 @@ def avaliar_bloco(args) -> ResultadoBloco:
     m.obj_lag = pyo.Objective(expr=m.f_oper - lam * m.P_cap, sense=pyo.maximize)
     r = opt.solve(m)
     c = r.best_objective_bound
-    return ResultadoBloco(q_val, lam, c)
+    return ResultadoBloco(q_val, lam, c, z_ini, z_fim, ciclica)
 
 
 # ---------------------------------------------------- estados na fronteira dos blocos
@@ -213,8 +241,7 @@ def resolver_benders(p: Parametros, inicio: str, dias: int, dias_bloco: int = 7,
     blocos = dividir_em_blocos(inicio, dias, dias_bloco)
     p_max = potencia_lrcap_max(p)
     p_min = p.lrcap.potencia_min_mw if p_max > 0 else 0.0
-    horas = sum(d for _, d in blocos) * 24
-    r_cap = p.lrcap.receita_fixa_rs_mw_ano * horas / 8760.0
+    r_cap = p.lrcap.receita_fixa_rs_mw_ano * fracao_do_ano_periodo(inicio, dias)
 
     # Mestre
     ms = pyo.ConcreteModel()
@@ -306,6 +333,13 @@ def operacao_anual(p: Parametros, inicio: str, dias: int, p_cap: float, dias_blo
     k = pd.concat([k for _, k in partes], axis=1)
     # Indicadores somáveis; taxas recalculadas sobre o ano
     total = k.sum(axis=1)
+    # Partidas do eletrolisador na sequência do ano, e não bloco a bloco (ver correcao_partidas)
+    ligado = [(int(d["p_eletrolisador_mw"].iloc[0] > 1e-6), int(d["p_eletrolisador_mw"].iloc[-1] > 1e-6),
+               fronteira != "lp") for d, _ in partes]
+    corr = correcao_partidas(p.eletrolisador.custo_partida_rs, ligado)
+    total["custo_h2_rs"] += corr
+    total["lucro_rs"] -= corr
+    total["correcao_partidas_rs"] = corr
     total["potencia_lrcap_mw"] = p_cap
     total["energia_modulo_lrcap_mwh"] = k.loc["energia_modulo_lrcap_mwh"].iloc[0]
     total["energia_modulo_mercantil_mwh"] = k.loc["energia_modulo_mercantil_mwh"].iloc[0]
@@ -315,6 +349,8 @@ def operacao_anual(p: Parametros, inicio: str, dias: int, p_cap: float, dias_blo
                                               / max(df["p_exportacao_mw"].sum(), 1e-9))
     total["ciclos_equivalentes_mercantil"] = (df["p_descarga_bess_mw"].sum() * p.horizonte.dt_h
                                               / max(total["energia_modulo_mercantil_mwh"], 1e-9))
+    total["injecao_max_mw"] = max(float(df["fluxo_conexao_mw"].max()), 0.0)     # picos do ano, não somas
+    total["retirada_max_mw"] = max(float(-df["fluxo_conexao_mw"].min()), 0.0)
     total["limite_superior_lp_rs"] = ub   # lucro operacional (sem receita fixa) da relaxação
     return df, total.round(4)
 

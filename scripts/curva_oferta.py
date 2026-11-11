@@ -25,7 +25,8 @@ sys.path.insert(0, str(RAIZ / "src"))
 
 from pvbess_h2 import carregar_parametros  # noqa: E402
 from pvbess_h2.decomposicao import operacao_anual  # noqa: E402
-from pvbess_h2.estocastico import avaliar_potencia, parametros_cenario  # noqa: E402
+from pvbess_h2.modelo import potencia_lrcap_max  # noqa: E402
+from pvbess_h2.estocastico import avaliar_potencia, dias_cenario, parametros_cenario  # noqa: E402
 
 # Multa por kg não entregue: PLACEHOLDER igual ao preço do H2. É uma cláusula de firmeza, e não
 # ressarcimento do produto (este seria só a diferença entre o preço de reposição e o do
@@ -104,7 +105,8 @@ CASOS = {
 INDICADORES = ["receita_mcp_rs", "receita_h2_rs", "custo_importacao_rs", "custo_h2_rs", "custo_degradacao_rs",
                "energia_exportada_mwh", "energia_importada_mwh", "energia_eletrolisador_mwh", "curtailment_mwh",
                "h2_produzido_kg", "h2_vendido_kg", "deficit_h2_kg", "fator_capacidade_eletrolisador",
-               "emissoes_h2_kgco2"]
+               "emissoes_h2_kgco2", "injecao_max_mw", "retirada_max_mw"]
+PICOS = ["injecao_max_mw", "retirada_max_mw"]      # nos cenários, vale o máximo, e não a média
 
 
 def aplicar(base, ajustes):
@@ -117,6 +119,21 @@ def aplicar(base, ajustes):
             setattr(alvo, k, v)
     p.validar()
     return p
+
+
+def operacao_media(p, x: float, processos: int = 4) -> pd.Series:
+    """Operação média nos cenários com a potência contratada `x` (picos: máximo entre os cenários)."""
+    ks = []
+    for c in p.estocastico.cenarios:
+        q = parametros_cenario(p, c)
+        _, k = operacao_anual(q, f"{c.ano}-01-01", dias_cenario(p, c), x, processos=processos)
+        ks.append(k[INDICADORES])
+    tab = pd.concat(ks, axis=1)
+    op = tab.mean(axis=1)
+    op[PICOS] = tab.loc[PICOS].max(axis=1)
+    op["intensidade_h2_kgco2_kg"] = op["emissoes_h2_kgco2"] / max(op["h2_produzido_kg"], 1e-9)
+    op["p_cap_mw"] = x
+    return op
 
 
 def oferta(curva: pd.DataFrame, receitas: np.ndarray) -> pd.DataFrame:
@@ -197,7 +214,7 @@ def main():
         for caso in args.casos:
             p = aplicar(base, CASOS[caso][1])
             p.lrcap.receita_fixa_rs_mw_ano = 0.0          # lucro avaliado = Q(P)
-            grade = [0.0] + list(np.arange(p.lrcap.potencia_min_mw, 60 + 1e-6, args.passo))
+            grade = [0.0] + list(np.arange(p.lrcap.potencia_min_mw, potencia_lrcap_max(p) + 1e-6, args.passo))
             parcial = saida / f"{caso}_parcial.csv"
             if args.retomar and (saida / f"{caso}.csv").exists() and (saida / f"{caso}_operacao.csv").exists():
                 print(f"[{caso}] já concluído", flush=True)
@@ -221,15 +238,7 @@ def main():
 
             # Operação média nos cenários na potência ótima para a receita de referência
             x_ref = float(oferta(curva, np.array([r_ref])).p_cap_mw.iloc[0])
-            ks = []
-            for c in p.estocastico.cenarios:
-                q = parametros_cenario(p, c)
-                dias = 366 if c.ano % 4 == 0 else 365
-                _, k = operacao_anual(q, f"{c.ano}-01-01", dias, x_ref, processos=args.processos)
-                ks.append(k[INDICADORES])
-            op = pd.concat(ks, axis=1).mean(axis=1)
-            op["intensidade_h2_kgco2_kg"] = op["emissoes_h2_kgco2"] / max(op["h2_produzido_kg"], 1e-9)
-            op["p_cap_mw"] = x_ref
+            op = operacao_media(p, x_ref, args.processos)
             op.to_csv(saida / f"{caso}_operacao.csv", header=["valor"])
             print(f"[{caso}] ótimo com R$ {r_ref / 1e3:.0f} mil/MW·ano: {x_ref:.1f} MW", flush=True)
 

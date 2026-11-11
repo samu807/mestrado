@@ -71,6 +71,10 @@ def indicadores(m: pyo.ConcreteModel, df: pd.DataFrame, p: Parametros) -> pd.Ser
         "fator_capacidade_eletrolisador": df["p_eletrolisador_mw"].mean() / p.eletrolisador.potencia_max_mw,
         "preco_medio_exportacao_rs_mwh": (df["pld_rs_mwh"] * df["p_exportacao_mw"]).sum()
         / max(df["p_exportacao_mw"].sum(), 1e-9),
+        # Picos do fluxo líquido no ponto de conexão (lado mercantil + módulo LRCAP): base do montante
+        # de uso da rede (MUST) de injeção e de consumo
+        "injecao_max_mw": max(float(df["fluxo_conexao_mw"].max()), 0.0),
+        "retirada_max_mw": max(float(-df["fluxo_conexao_mw"].min()), 0.0),
     }
     return pd.Series(k).round(4)
 

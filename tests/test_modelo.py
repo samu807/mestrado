@@ -372,3 +372,21 @@ def test_recarga_excedente_de_arquivo_de_despacho(tmp_path):
         p.horizonte.inicio, p.horizonte.dias = inicio, 7
         fracoes.add(round(float(montar_series(p).ons_recarga_excedente_frac.iloc[0]), 12))
     assert fracoes == {round(esperado, 12)}
+
+
+def test_receita_fixa_em_ano_bissexto():
+    # A receita fixa é rateada pelas horas do ano civil: os blocos de um ano bissexto somam a receita
+    # anual, e não 366/365 dela; num ano comum, uma semana vale 168/8760.
+    from pvbess_h2.dados import fracao_do_ano_periodo
+    from pvbess_h2.decomposicao import dividir_em_blocos
+    assert fracao_do_ano_periodo("2024-01-01", 366) == pytest.approx(1.0)
+    assert fracao_do_ano_periodo("2025-01-01", 365) == pytest.approx(1.0)
+    assert sum(fracao_do_ano_periodo(i, d) for i, d in dividir_em_blocos("2024-01-01", 366, 7)) == pytest.approx(1.0)
+    assert fracao_do_ano_periodo("2025-06-02", 7) == pytest.approx(168 / 8760)
+    p = carregar_parametros(Path(__file__).resolve().parents[1] / "config" / "estocastico_unifei.yaml")
+    p.mercado.arquivo, p.pv.arquivo = "data/pld_se_2024.csv", "data/pv_itajuba_sarah3_2024.csv"
+    p.rede.fator_emissao_arquivo = "data/fator_emissao_sin_2024.csv"
+    p.horizonte.inicio, p.horizonte.dias = "2024-02-26 00:00", 7      # semana com o dia 29/02
+    p.lrcap.potencia_fixa_mw = 40.0
+    m = construir_modelo(p, montar_series(p))
+    assert pyo.value(m.receita_lrcap) == pytest.approx(p.lrcap.receita_fixa_rs_mw_ano * 40.0 * 168 / 8784)

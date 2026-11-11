@@ -178,6 +178,18 @@ Formatos aceitos diretamente pelo modelo (para outras fontes):
 rede, em `rede.fator_emissao_arquivo`) e, para o despacho do ONS,
 `timestamp,descarga_pu,recarga_pu` (em `lrcap.despacho_ons.arquivo`).
 
+## Correções de contabilidade (nov/2026)
+
+- A receita fixa é rateada pelas horas do ano civil (8.784 nos bissextos): os blocos de 2024 somam a receita anual.
+- Nas avaliações com P_cap fixo, as partidas do eletrolisador são contadas na sequência do ano, e não bloco a
+  bloco (`decomposicao.correcao_partidas`): efeito de até R$ 3,5 mil/ano por cenário, nulo com 60 MW. O
+  lucro de Q(P) sobe até R$ 17 mil/ano (0,04%) em relação às curvas já geradas, que não foram refeitas.
+- A operação média da curva de oferta traz `injecao_max_mw` e `retirada_max_mw`; `viabilidade.py` avisa quando a
+  injeção líquida passa do MUST (no caso de referência: 62,5 MW contra 60 MW) e recalcula a operação na
+  potência que o VPL escolhe, quando difere da ótima da curva.
+- A correção do PLD pelo IPCA parte do fim do ano; contada do meio do ano, o lucro sobe de 0,4% a 0,8% e a
+  decisão não muda (hipótese q do Capítulo 3).
+
 ## Resultados — Itajubá (MG), ano de 2025
 
 PLD horário SE/CO de 2025 (CCEE), PV do PVGIS-ERA5 (50 MWp, fator de capacidade 16,9%),

@@ -16,6 +16,7 @@ RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ / "src"))
 
 from pvbess_h2 import carregar_parametros  # noqa: E402
+from pvbess_h2.dados import fracao_do_ano  # noqa: E402
 from pvbess_h2.decomposicao import operacao_anual, resolver_benders  # noqa: E402
 
 
@@ -85,8 +86,8 @@ def main():
     cortes.to_csv(saida / "cortes.csv", index=False)
     df.to_csv(saida / "operacao_horaria.csv", index_label="timestamp")
     kpi.to_csv(saida / "indicadores.csv", header=["valor"])
-    horas = len(df) * p.horizonte.dt_h
-    graficos(tab, cortes, p.lrcap.receita_fixa_rs_mw_ano * horas / 8760.0, p.lrcap.potencia_min_mw, saida)
+    graficos(tab, cortes, p.lrcap.receita_fixa_rs_mw_ano * fracao_do_ano(df.index, p.horizonte.dt_h),
+             p.lrcap.potencia_min_mw, saida)
     print(kpi.to_string())
     print(f"\nResultados salvos em {saida}")
 
