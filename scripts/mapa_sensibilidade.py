@@ -7,7 +7,7 @@ potência de referência fixa (lucro ótimo - lucro com P_ref).
 Cada célula é gravada ao terminar (resultados/<caso>_mapa/mapa.csv); rodar de novo
 retoma de onde parou. Com --so-graficos, apenas refaz as figuras a partir do CSV.
 
-Uso:  python scripts/mapa_sensibilidade.py [config/unifei_escalonada.yaml] [--p-ref 54.44]
+Uso:  python scripts/mapa_sensibilidade.py [config/referencia_2025.yaml] [--p-ref 54.44]
 """
 
 import argparse
@@ -133,7 +133,7 @@ def graficos(df, p_ref, saida):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("config", nargs="?", default=str(RAIZ / "config" / "unifei_escalonada.yaml"))
+    ap.add_argument("config", nargs="?", default=str(RAIZ / "config" / "referencia_2025.yaml"))
     ap.add_argument("--p-ref", type=float, default=54.44, help="potência de referência para o arrependimento [MW]")
     ap.add_argument("--inicio", default="2025-01-01")
     ap.add_argument("--dias", type=int, default=365)

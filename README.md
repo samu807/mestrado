@@ -32,6 +32,7 @@ config/caso_base.yaml      parâmetros do caso (valores PLACEHOLDER — substitu
 config/itajuba_2025.yaml   mesmo caso com PLD SE/CO e PV de Itajubá (requer data/ gerado pelo importador)
 config/economia.yaml       custos de investimento, O&M fixo e taxas de desconto (viabilidade)
 config/unifei_escalonada.yaml  planta da UNIFEI (1 MWp + PEM 350 kW) escalonada a 50 MWp + 17,5 MW
+config/referencia_2025.yaml    caso de referência, cenário de 2025, em versão determinística (mapa de sensibilidade)
 docs/formulacao.md         formulação matemática completa (conjuntos, parâmetros, variáveis, restrições)
 src/pvbess_h2/
   parametros.py            leitura/validação do YAML
@@ -221,8 +222,10 @@ Pendências: catálogo do eletrolisador e geração medida da UFV.
 
 ### Sensibilidade: receita fixa do LRCAP × preço do H₂
 
-Benders anual em 48 combinações (6 receitas fixas × 8 preços de H₂), caso `unifei_escalonada`
-(`python scripts/mapa_sensibilidade.py`, ~56 min em 4 núcleos; *gap* máximo 0,11%).
+Benders anual em 48 combinações (6 receitas fixas × 8 preços de H₂), caso `referencia_2025`: o cenário de
+2025 do caso de referência (FV do SARAH-3, despacho ligado ao PLD, custo de partida), em versão determinística
+(`python scripts/mapa_sensibilidade.py`, ~2,5 h em 4 núcleos; *gap* máximo 0,11%; ótimo de 53,6 MW e
+R\$ 67,8 mi com R\$ 600 mil e H₂ a R\$ 35/kg).
 
 ![Mapa de sensibilidade](docs/figuras/mapa_sensibilidade_potencia_lucro.png)
 
@@ -240,11 +243,11 @@ Fontes: boletins InfoLeilão Expresso da CCEE (04º e 05º LRCAP 2026), comunica
 Quadro 4.1 de `docs/dissertacao/cap4_resultados.md`. A duração (h) associada ao CAPEX da EPE ainda
 precisa ser conferida no documento original.
 
-- Em **nenhuma** combinação compensa ficar fora do LRCAP: a potência ótima vai de 43,8 a 60 MW.
+- Em **nenhuma** combinação compensa ficar fora do LRCAP: a potência ótima vai de 41,6 a 60 MW.
 - Com receita fixa ≥ R\$ 1,5 mi/MW·ano (custo estimado de baterias), o ótimo é **toda a bateria
   no LRCAP** para qualquer preço de H₂ da faixa.
 - A fronteira em que o ótimo deixa de ser 60 MW se desloca para a direita com a receita fixa:
-  H₂ a R\$ 25/kg (R\$ 330 mil), R\$ 30/kg (600 mil), R\$ 40/kg (830 mil), R\$ 45/kg (1,0 mi).
+  H₂ a R\$ 20/kg (R\$ 330 mil), R\$ 30/kg (600 mil), R\$ 35/kg (830 mil), R\$ 40/kg (1,0 mi).
 - Contratar 54,4 MW (ótimo do cenário atual) custa até R\$ 11,6 mi/ano de arrependimento se a
   receita fixa vier alta; errar para cima (60 MW) tende a custar menos
   (`docs/figuras/mapa_sensibilidade_arrependimento.png`).
@@ -284,18 +287,18 @@ R\$ 259 mil/ano (0,38%), da ordem do EVPI; com R\$ 330 mil a 1,0 mi, R\$ 36–34
 #### Previsão perfeita dentro do ano: operação em horizonte rolante
 
 `scripts/operacao_rolante.py`: a cada hora, MILP numa janela de 48 h com PLD conhecido (D-1), perfil
-do ONS, FV medida na hora e prevista por persistência adiante, estados reais; executa só a hora.
+do ONS, FV medida na hora e prevista por persistência adiante (mesma hora do último dia já observado), estados reais; executa só a hora.
 Lucro operacional de 2025 (sem receita fixa), contra a operação de previsão perfeita:
 
 | P_cap | Previsão perfeita | Rolante (persistência) | Perda | Partidas do eletrolisador |
 |---|---|---|---|---|
-| 30 MW | R\$ 42,08 mi | R\$ 42,07 mi | −0,03% | 11 → 84 |
-| 55 MW | R\$ 34,77 mi | R\$ 34,58 mi | −0,54% | 75 → 163 |
+| 30 MW | R\$ 42,08 mi | R\$ 42,07 mi | −0,02% | 11 → 76 |
+| 55 MW | R\$ 34,77 mi | R\$ 34,57 mi | −0,58% | 75 → 171 |
 | 60 MW | R\$ 30,80 mi | R\$ 30,80 mi | 0 | 375 → 375 |
 
 - Com a FV conhecida, a janela de 48 h reproduz o ótimo anual (+0,02%): o viés vem só da previsão.
 - O viés fica no módulo mercantil: máximo quando ele é escasso (55 MW, 36 MWh), nulo sem ele
-  (60 MW). Superestima o custo dos últimos 5 MW em ≈ R\$ 38 mil/MW·ano (~5%); o ótimo a R\$ 600 mil
+  (60 MW). Superestima o custo dos últimos 5 MW em ≈ R\$ 40 mil/MW·ano (~5%); o ótimo a R\$ 600 mil
   segue em 55 MW, e o lance (BESS inteiro) não muda. Muito menor que os 18% de García-Miguel
   et al. (2024), com eólica e desvios penalizados no mercado do dia seguinte.
 

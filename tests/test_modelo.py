@@ -301,13 +301,13 @@ def test_precos_faixas_por_ano():
 
 
 def test_config_deterministica_igual_ao_cenario_2025():
-    # config/unifei_escalonada.yaml é a versão determinística do caso de referência: os mesmos
-    # parâmetros do cenário de 2025 de config/estocastico_unifei.yaml (o mapa de sensibilidade e
-    # a validação da decomposição rodam nela) e, portanto, as mesmas séries horárias.
+    # config/referencia_2025.yaml é a versão determinística do caso de referência: os mesmos
+    # parâmetros do cenário de 2025 de config/estocastico_unifei.yaml (o mapa de sensibilidade
+    # roda nela) e, portanto, as mesmas séries horárias.
     from dataclasses import asdict
     from pvbess_h2.estocastico import parametros_cenario
     raiz = Path(__file__).resolve().parents[1]
-    det = carregar_parametros(raiz / "config" / "unifei_escalonada.yaml")
+    det = carregar_parametros(raiz / "config" / "referencia_2025.yaml")
     est = carregar_parametros(raiz / "config" / "estocastico_unifei.yaml")
     ref = parametros_cenario(est, next(c for c in est.estocastico.cenarios if c.ano == 2025))
     for secao in ("pv", "bess", "eletrolisador", "hidrogenio", "rede", "mercado", "lrcap"):

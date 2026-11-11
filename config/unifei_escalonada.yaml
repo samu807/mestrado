@@ -1,10 +1,6 @@
 # =============================================================================
 # Planta da UNIFEI (Itajubá/MG) ESCALONADA para o porte do LRCAP
 #
-# Versão DETERMINÍSTICA do caso de referência: os mesmos parâmetros de
-# config/estocastico_unifei.yaml com as séries do cenário de 2025 (o teste
-# tests/test_modelo.py::test_config_deterministica_igual_ao_cenario_2025 verifica isso).
-#
 # Planta real: UFV de ~1 MWp + eletrolisador PEM NEA|Hytron de 350 kW (fontes públicas
 # citam 300 kW; CONFIRMAR), sem bateria. Mantém-se a proporção eletrolisador/FV da
 # planta (0,35) e escala-se para 50 MWp. O BESS é hipotético: a planta não tem bateria
@@ -28,9 +24,8 @@ horizonte:
 
 pv:
   potencia_pico_mw: 50.0       # capacidade instalada [MWp]
-  # Fator de capacidade horário do PVGIS-SARAH3 (2023) para Itajubá, reposicionado em 2025:
-  # o mesmo arquivo do cenário de 2025 de config/estocastico_unifei.yaml.
-  arquivo: data/pv_itajuba_sarah3_2025.csv
+  # Fator de capacidade horário do PVGIS-ERA5 (2023) para Itajubá, reposicionado em 2025
+  arquivo: data/pv_itajuba_2025.csv
   fator_capacidade_pico: 0.85  # usado apenas no perfil sintético
   nebulosidade: 0.25           # variabilidade diária (0 = céu limpo) - sintético
 
@@ -52,7 +47,6 @@ eletrolisador:
   carga_min_frac: 0.10         # PEM típico (catálogo Hytron pendente)
   consumo_especifico_kwh_kg: 55.0  # sistema; PEM típico 4,3-5,2 kWh/Nm3 = 48-58 kWh/kg
   custo_variavel_rs_kg: 1.5    # água, O&M variável [R$/kg]
-  custo_partida_rs: 500.0      # PLACEHOLDER: custo por partida (desgaste/purga), a calibrar com o fabricante
 
 hidrogenio:
   preco_venda_rs_kg: 35.0
@@ -72,8 +66,6 @@ rede:
   # (PV + BESS carregada pelo PV): a importação da rede é proibida.
   h2_verde_estrito: true
   custo_adicional_importacao_rs_mwh: 250.0  # encargos/TUSD sobre a energia importada
-  # Fator de emissão horário do SIN (scripts/importar_emissoes.py), usado só com limite de emissões do H2
-  fator_emissao_arquivo: data/fator_emissao_sin_2025.csv
 
 mercado:
   # PLD horário do submercado Sudeste/Centro-Oeste (CCEE, dados abertos)
@@ -106,8 +98,6 @@ lrcap:
   ciclos_max_ano: 366          # art. 4º §3º
   # Perfil de despacho do ONS (exógeno ao empreendedor - art. 5º §2º).
   despacho_ons:
-    modo: pld                             # descarga no bloco de 4 h de maior PLD após a janela solar
-    janela_recarga: [8, 9, 10, 11, 12, 13, 14, 15, 16]   # recarga nas horas de menor PLD desta janela
     # CSV opcional com colunas `timestamp,descarga_pu,recarga_pu` (fração de P_cap).
     arquivo: null
     horas_descarga: [18, 19, 20, 21]      # descarga a potência plena
