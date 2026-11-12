@@ -56,8 +56,6 @@ def indicadores(m: pyo.ConcreteModel, df: pd.DataFrame, p: Parametros) -> pd.Ser
         "energia_modulo_mercantil_mwh": pyo.value(m.E_merc),
         "energia_injetada_lrcap_mwh": e("p_descarga_lrcap_mw"),
         "ciclos_completos_lrcap": df["ons_descarga_pu"].sum() * p.horizonte.dt_h / p.lrcap.duracao_h,
-        "energia_pv_potencial_mwh": e("pv_potencial_mw") if "pv_potencial_mw" in df else e("pv_disp_mw"),
-        "energia_pv_cortada_ons_mwh": (e("pv_potencial_mw") - e("pv_disp_mw")) if "pv_potencial_mw" in df else 0.0,
         "energia_pv_disponivel_mwh": e("pv_disp_mw"),
         "energia_pv_utilizada_mwh": e("p_pv_mw"),
         "curtailment_mwh": e("curtailment_mw"),

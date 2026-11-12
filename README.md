@@ -619,24 +619,16 @@ eletrolisador: o lucro operacional esperado mais a degradação do LRCAP é igua
 - **Bateria isolada:** R\$ 136 mil/MW·ano acima do híbrido, inteiramente pela TUST sobre toda a
   potência (com PIS/Cofins). No lance, o papel da FV com H₂ é dividir a conexão, não gerar receita para a bateria.
 
-### Teste de curtailment: cortes do ONS (constrained-off) sobre a geração FV
+### Limitação: curtailment
 
-Os cortes por restrição de operação do ONS (`restricao_coff_fotovoltaica_tm`, submercado SE/CO, a partir de
-abr/2024) reduzem a geração FV disponível (`pv.corte_arquivo`, fração por mês e hora do dia;
-`scripts/importar_cortes_fv.py`). Diferem do curtailment voluntário do modelo, que é livre e nulo no caso de
-referência. `scripts/teste_curtailment.py` recalcula Q(P), com fronteira `lp` e receita fixa nula:
-
-| Caso | Corte médio | Q(0) [R$ mi] | Variação | Receita de entrada [R$ mil/MW·ano] | Custo do último MW [R$ mil/MW·ano] | Ótimo com R$ 600 mil/MW·ano |
-|---|---|---|---|---|---|---|
-| referência (sem corte) | 0 | 45,02 | — | 76,4 | 895 | 55 MW |
-| observado (2024–2025 por ano; 2021–2023 sem dado) | 11% (2024), 27% (2025) | 41,93 | −6,9% | 76,2 | 833 | 55 MW |
-| recente (nov/2025–out/2026 em todos os cenários) | 25,6% | 33,35 | −25,9% | 76,0 | 668 | 57,5 MW |
-| recente × 2 (sensibilidade) | ~51% | 20,54 | −54,4% | 75,5 | 274 | 60 MW |
-
-Leitura: o corte reduz o lucro sem contrato, mas quase não altera a receita de entrada (a bateria continua
-arbitrando o PLD), e **reduz** o custo de oportunidade dos últimos MW, porque há menos energia FV a vender
-às horas de pico. O lance mínimo da potência marginal cai e a potência ótima para uma dada receita fixa
-sobe. Limitações: os cortes são do agregado SE/CO, não da usina de Itajubá; 2021–2023 não têm dado.
+O modelo só representa o corte **voluntário** da geração FV (`0 ≤ p_pv ≤ pv_disp`, indicador `curtailment_mwh`),
+livre e nulo no caso de referência: a conexão de 80 MW é maior que a usina de 50 MWp e o PLD mínimo (R$ 58,60/MWh)
+é positivo. Não há corte involuntário por restrição de operação do ONS (*constrained-off*), que atinge as usinas
+despachadas pelo ONS no SE/CO (cerca de 11% da geração de referência em 2024 e 27% em 2025). Um teste com o perfil
+do agregado do submercado reduziu em até 26% o lucro sem contrato e deixou a receita de entrada quase igual, mas foi
+descartado: o corte vale para a injeção na rede, e num sistema híbrido a energia barrada pode ser usada na bateria
+ou no eletrolisador, de modo que reduzir a geração superestima a perda. Se a injeção for relevante, o tratamento
+adequado é um teto à injeção nas horas de corte.
 
 ## Próximos passos sugeridos
 

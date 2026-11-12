@@ -372,14 +372,6 @@ def montar_series(p: Parametros) -> pd.DataFrame:
     else:
         pld = pld_sintetico(p, idx, rng)
 
-    # Geração potencial da usina e parcela que o ONS manda cortar (constrained-off), se houver perfil
-    pv_potencial = p.pv.potencia_pico_mw * fc.values
-    if p.pv.corte_arquivo:
-        corte = (_ler_serie(p.pv.corte_arquivo, p.base_dir, "fracao_corte", idx) * p.pv.corte_fator).clip(0.0, 1.0)
-        pv_disp = pv_potencial * (1.0 - corte.to_numpy())
-    else:
-        pv_disp = pv_potencial
-
     r = p.rede
     if r.fator_emissao_arquivo and r.fator_emissao_kg_mwh is None:
         fe = _ler_serie(r.fator_emissao_arquivo, p.base_dir, "fator_kg_mwh", idx).to_numpy()
@@ -389,8 +381,7 @@ def montar_series(p: Parametros) -> pd.DataFrame:
     ons = despacho_ons(p, idx, pld.to_numpy())
     return pd.DataFrame(
         {
-            "pv_disp_mw": pv_disp,
-            "pv_potencial_mw": pv_potencial,
+            "pv_disp_mw": p.pv.potencia_pico_mw * fc.values,
             "pld_rs_mwh": pld.values,
             "fator_emissao_kg_mwh": fe,
             "ons_descarga_pu": ons["descarga_pu"].values,

@@ -44,8 +44,6 @@ def parametros_cenario(p: Parametros, c: Cenario) -> Parametros:
     precos = precos.get(c.ano, precos.get(str(c.ano)))
     if precos is not None:   # preços das faixas de demanda de H2 do ano do cenário
         q.hidrogenio.faixas_demanda = [[v, float(pr)] for (v, _), pr in zip(q.hidrogenio.faixas_demanda, precos)]
-    if q.pv.corte_arquivo:   # perfil de cortes do ONS por ano, se o nome tiver "{ano}"
-        q.pv.corte_arquivo = q.pv.corte_arquivo.format(ano=c.ano)
     if c.fator_emissao_arquivo and q.rede.fator_emissao_kg_mwh is None:   # valor constante prevalece
         q.rede.fator_emissao_arquivo = c.fator_emissao_arquivo
     return q
