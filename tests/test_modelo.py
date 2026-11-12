@@ -390,3 +390,36 @@ def test_receita_fixa_em_ano_bissexto():
     p.lrcap.potencia_fixa_mw = 40.0
     m = construir_modelo(p, montar_series(p))
     assert pyo.value(m.receita_lrcap) == pytest.approx(p.lrcap.receita_fixa_rs_mw_ano * 40.0 * 168 / 8784)
+
+
+def test_corte_do_ons_reduz_a_geracao_disponivel(tmp_path):
+    # O perfil de corte do ONS reduz a geração FV disponível (e não é o curtailment voluntário do modelo):
+    # a série traz a potencial e a disponível, e o modelo nunca usa mais do que a disponível.
+    p = carregar_parametros(CONFIG)
+    sem = montar_series(p)
+    idx = sem.index
+    frac = np.where(idx.hour == 12, 0.4, 0.0)
+    arq = tmp_path / "corte.csv"
+    pd.DataFrame({"timestamp": idx, "fracao_corte": frac}).to_csv(arq, index=False)
+    p.pv.corte_arquivo = str(arq)
+    com = montar_series(p)
+    assert np.allclose(com.pv_potencial_mw, sem.pv_disp_mw)
+    assert np.allclose(com.pv_disp_mw, sem.pv_disp_mw * (1 - frac))
+    p.pv.corte_fator = 3.0                          # fração limitada a 1: 3 x 0,4 -> corte total ao meio-dia
+    assert np.allclose(montar_series(p).pv_disp_mw[idx.hour == 12], 0.0)
+    p.pv.corte_fator = 1.0
+    m = construir_modelo(p, com)
+    resolver(m)
+    df = serie_resultados(m, com)
+    assert (df.p_pv_mw <= com.pv_disp_mw + 1e-6).all()
+    assert indicadores(m, df, p)["energia_pv_cortada_ons_mwh"] == pytest.approx(
+        (com.pv_potencial_mw - com.pv_disp_mw).sum() * p.horizonte.dt_h)
+
+
+def test_corte_do_ons_por_cenario():
+    # "{ano}" no nome do arquivo escolhe o perfil de cada cenário
+    from pvbess_h2.estocastico import parametros_cenario
+    p = carregar_parametros(Path(__file__).resolve().parents[1] / "config" / "estocastico_unifei.yaml")
+    p.pv.corte_arquivo = "data/ons_corte_fv_recente_{ano}.csv"
+    for c in p.estocastico.cenarios:
+        assert parametros_cenario(p, c).pv.corte_arquivo == f"data/ons_corte_fv_recente_{c.ano}.csv"

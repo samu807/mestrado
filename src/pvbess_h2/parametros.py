@@ -35,6 +35,12 @@ class PV:
     # emissões de operação, como no fator da rede; ciclo de vida da FV de grande porte:
     # mediana de 48 (IPCC AR5, 2014, Anexo III).
     fator_emissao_kg_mwh: float = 0.0
+    # Cortes de geração impostos pelo ONS (constrained-off): CSV `timestamp,fracao_corte` com a fração da geração
+    # disponível que o ONS manda cortar em cada hora (scripts/importar_cortes_fv.py), com "{ano}" no nome para
+    # um perfil por cenário. A geração FV disponível do modelo passa a ser a potencial x (1 - fracao x fator).
+    # Diferente do curtailment do modelo, que é voluntário e gratuito. None = sem cortes do ONS.
+    corte_arquivo: str | None = None
+    corte_fator: float = 1.0               # multiplica a fração (sensibilidade; fração final limitada a 1)
 
 
 @dataclass
@@ -210,6 +216,7 @@ class Parametros:
         assert 0 <= b.soc_min_frac <= b.soc_inicial_frac <= b.soc_max_frac <= 1, \
             "exige soc_min_frac <= soc_inicial_frac <= soc_max_frac"
         assert 0 <= e.carga_min_frac <= 1
+        assert self.pv.corte_fator >= 0, "pv.corte_fator deve ser >= 0"
         assert e.consumo_especifico_kwh_kg > 0
         h2 = self.hidrogenio
         assert h2.tanque_inicial_kg <= h2.tanque_max_kg
