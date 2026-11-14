@@ -66,7 +66,7 @@ hidrogenio:
   tanque_inicial_kg: 0.0       # estoque inicial = final (condição cíclica)
   entrega_min_diaria_kg: 0.0   # contrato mínimo de entrega por dia [kg/dia]
   # Demanda de H2 em faixas diárias (caso de referência da H1): até 2 t/dia a R$ 35/kg (comprador de H2 renovável) e o
-  # excedente a R$ 16/kg, paridade com o H2 de origem fóssil (US$ 3/kg, extremo superior da faixa da IEA, pela PTAX)
+  # excedente a R$ 16/kg, custo do H2 fóssil (cerca de US$ 3/kg, média europeia de 5 anos, IEA GHR 2026 p. 115, pela PTAX); sem fonte de mercado no Brasil, ambos são hipóteses (sensibilidade na Seção 4.3.8)
   faixas_demanda: [[2000.0, 35.0], [null, 16.0]]
   venda_max_kg_h: null         # limite de retirada por hora (null = sem limite)
 

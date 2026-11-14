@@ -77,7 +77,7 @@ CASOS = {
                                           {"eletrolisador": {"potencia_max_mw": float(e)}})
        for e in (10, 25)},
     # Curva de demanda de H2 por faixas diárias: até N t/dia a R$ 35/kg (comprador de H2 renovável) e o excedente
-    # a R$ 16/kg, paridade com o H2 de origem fóssil (US$ 3/kg, extremo superior da faixa da IEA, pela PTAX)
+    # a R$ 16/kg, custo do H2 fóssil (cerca de US$ 3/kg, média europeia de 5 anos, IEA GHR 2026 p. 115, pela PTAX); sem fonte de mercado no Brasil, ambos são hipóteses (sensibilidade na Seção 4.3.8)
     **{f"faixas_{n}t": (f"Demanda: {n} t/dia a R$ 35/kg, excedente a R$ 16/kg",
                         {"hidrogenio": {"faixas_demanda": [[n * 1000.0, 35.0], [None, 16.0]]}})
        for n in (1, 2, 3)},
