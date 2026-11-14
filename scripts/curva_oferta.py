@@ -80,7 +80,14 @@ CASOS = {
     # a R$ 16/kg, paridade com o H2 de origem fóssil (US$ 3/kg, extremo superior da faixa da IEA, pela PTAX)
     **{f"faixas_{n}t": (f"Demanda: {n} t/dia a R$ 35/kg, excedente a R$ 16/kg",
                         {"hidrogenio": {"faixas_demanda": [[n * 1000.0, 35.0], [None, 16.0]]}})
-       for n in (1, 2)},
+       for n in (1, 2, 3)},
+    # Sensibilidade ao preço do H2 (2 t/dia): preço cheio c e preço do excedente e, em R$/kg. Os valores vêm das faixas
+    # de custo da IEA (Global Hydrogen Review 2026, p. 110-111 e 118), pela PTAX de 09/12/2025 (R$ 5,4025/US$):
+    # R$ 5 e 24 = piso e teto do H2 fóssil em 2025; R$ 11 = custo máximo aceitável sem políticas (US$ 2/kg);
+    # R$ 18 = piso solar de 2025 (US$ 3,4/kg); R$ 54 = US$ 10/kg. O preço cheio deve exceder o do excedente.
+    **{f"preco_{c}_{e}": (f"Demanda: 2 t/dia a R$ {c}/kg, excedente a R$ {e}/kg",
+                          {"hidrogenio": {"faixas_demanda": [[2000.0, float(c)], [None, float(e)]]}})
+       for c, e in ((35, 5), (35, 11), (35, 24), (18, 16), (27, 16), (54, 16), (11, 5))},
     # As mesmas faixas, com o excedente à paridade do H2 cinza de cada ano (scripts/preco_h2_cinza.py: gás indexado
     # ao Brent, PTAX e IPCA do ano; média de 2021 a 2025 igual a R$ 16/kg)
     **{f"faixas_{n}t_ano": (f"Demanda: {n} t/dia a R$ 35/kg, excedente ao H₂ cinza do ano",
