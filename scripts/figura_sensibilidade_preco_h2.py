@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 GRADE = [0.0, 30.0, 40.0, 50.0, 55.0, 57.5, 60.0]
 RECEITAS = (200e3, 300e3, 400e3, 500e3, 600e3)
 casos = {}
-for sub in ("sensibilidade_preco_h2", "sensibilidade_limiar_h2"):
+for sub in ("sensibilidade_preco_h2", "sensibilidade_limiar_h2", "sensibilidade_conjunta_h2"):
     for f in glob.glob(f"resultados/curva_oferta/{sub}/*.csv"):
         if "resumo" in f:
             continue
@@ -35,9 +35,10 @@ def p_otimo(k, R):
 
 rot = {"preco_11_5": "11 / 5", "preco_35_5": "35 / 5", "preco_35_11": "35 / 11", "ref": "35 / 16 (referência)",
        "preco_35_24": "35 / 24", "preco_35_26": "35 / 26", "preco_35_28": "35 / 28", "preco_18_16": "18 / 16",
-       "preco_27_16": "27 / 16", "preco_54_16": "54 / 16", "faixas_3t": "35 / 16, até 3 t/dia"}
+       "preco_27_16": "27 / 16", "preco_54_16": "54 / 16", "faixas_3t": "35 / 16, até 3 t/dia",
+       "preco3t_35_24": "35 / 24, até 3 t/dia", "preco3t_35_28": "35 / 28, até 3 t/dia"}
 ordem = ["preco_11_5", "preco_35_5", "preco_35_11", "preco_18_16", "preco_27_16", "ref", "preco_54_16",
-         "preco_35_24", "preco_35_26", "preco_35_28", "faixas_3t"]
+         "preco_35_24", "preco_35_26", "preco_35_28", "faixas_3t", "preco3t_35_24", "preco3t_35_28"]
 ordem = [k for k in ordem if k in q]
 
 print("| Preço cheio / excedente (R$/kg) | " + " | ".join(f"R$ {int(R/1e3)} mil" for R in RECEITAS) + " |")
@@ -60,7 +61,8 @@ for k, c in exc:
         degrau(axs[0], k, c, lw=3 if k == "ref" else 1.8)
 axs[0].set_title("Preço do excedente (preço cheio de R$ 35/kg)", fontsize=10)
 for k, c, ls in (("preco_18_16", "#7f9bb5", "-"), ("preco_27_16", "#4a6f8f", "--"), ("ref", "#14223A", "-"),
-                 ("preco_54_16", "#2c3e50", ":"), ("faixas_3t", "#c0392b", "-")):
+                 ("preco_54_16", "#2c3e50", ":"), ("faixas_3t", "#c0392b", "-"),
+                 ("preco3t_35_24", "#e08214", "-"), ("preco3t_35_28", "#7f0000", "-")):
     degrau(axs[1], k, c, ls, 3 if k == "ref" else 1.8)
 axs[1].set_title("Preço cheio (excedente de R$ 16/kg) e teto de 3 t/dia", fontsize=10)
 for ax in axs:
