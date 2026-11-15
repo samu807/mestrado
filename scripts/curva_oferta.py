@@ -87,7 +87,7 @@ CASOS = {
     # R$ 18 = piso solar de 2025 (US$ 3,4/kg); R$ 54 = US$ 10/kg. O preço cheio deve exceder o do excedente.
     **{f"preco_{c}_{e}": (f"Demanda: 2 t/dia a R$ {c}/kg, excedente a R$ {e}/kg",
                           {"hidrogenio": {"faixas_demanda": [[2000.0, float(c)], [None, float(e)]]}})
-       for c, e in ((35, 5), (35, 11), (35, 24), (18, 16), (27, 16), (54, 16), (11, 5))},
+       for c, e in ((35, 5), (35, 11), (35, 24), (35, 26), (35, 28), (18, 16), (27, 16), (54, 16), (11, 5))},
     # As mesmas faixas, com o excedente à paridade do H2 cinza de cada ano (scripts/preco_h2_cinza.py: gás indexado
     # ao Brent, PTAX e IPCA do ano; média de 2021 a 2025 igual a R$ 16/kg)
     **{f"faixas_{n}t_ano": (f"Demanda: {n} t/dia a R$ 35/kg, excedente ao H₂ cinza do ano",
