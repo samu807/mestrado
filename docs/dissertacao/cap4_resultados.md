@@ -657,43 +657,47 @@ O arrependimento é nulo ou inferior a R\$ 0,2 milhão por ano na vizinhança do
 
 Os resultados das Figuras 4.11 e 4.12 são coerentes com a curva de oferta da Subseção 4.3.3, obtida com o modelo estocástico: a potência ótima para R\$ 600 mil e hidrogênio a R\$ 35/kg (53,6 MW no cenário de 2025, com tolerância de 0,1%, contra 54,6 MW com a tolerância de 0,01% da Tabela 4.10) e a receita a partir da qual se oferta toda a potência (cerca de R\$ 900 mil, contra a fronteira entre R\$ 830 mil e R\$ 1,0 milhão no mapa) são compatíveis entre as duas análises.
 
-**Preço do hidrogênio com demanda em faixas.** Os preços de R\$ 35/kg (faixa cheia) e R\$ 16/kg (excedente) da curva de demanda por faixas não têm fonte direta de mercado (Seção 3.5). Para avaliar o efeito dessa incerteza sobre a decisão do proponente que dispõe do BESS, a curva de oferta de 60 MW foi recalculada, com a receita fixa de referência e o modelo estocástico dos cinco anos, variando um preço de cada vez em relação ao caso de referência de 2 t/dia: o preço cheio de R\$ 18 a R\$ 54/kg, o do excedente de R\$ 5 a R\$ 24/kg e o teto da faixa cheia, de 2 para 3 t/dia. Avaliou-se também uma combinação de preços baixos, R\$ 11 e R\$ 5/kg, equivalente ao custo máximo que os compradores aceitariam pagar (IEA, 2026, p. 118). A Tabela 4.16 e a Figura 4.13 apresentam os resultados.
+**Preço do hidrogênio com demanda em faixas.** Os preços de R\$ 35/kg (faixa cheia) e R\$ 16/kg (excedente) da curva de demanda por faixas não têm fonte direta de mercado (Seção 3.5). Para avaliar o efeito dessa incerteza sobre a decisão do proponente que dispõe do BESS, a curva de oferta de 60 MW foi recalculada, com o modelo estocástico dos cinco anos, variando um preço de cada vez em relação ao caso de referência de 2 t/dia: o preço cheio de R\$ 18 a R\$ 54/kg, o do excedente de R\$ 5 a R\$ 28/kg e o teto da faixa cheia, de 2 para 3 t/dia. Avaliou-se também uma combinação de preços baixos, R\$ 11 e R\$ 5/kg, equivalente ao custo máximo que os compradores aceitariam pagar (IEA, 2026, p. 118). A curva foi obtida nos pontos de 0, 30, 40, 50, 55, 57,5 e 60 MW, de modo que a potência ótima abaixo de 50 MW tem a resolução dessa grade. Com a receita fixa de referência, o ótimo é a potência máxima em quase todos os casos, e, nessa condição de canto, a potência ótima não mede a sensibilidade; por isso a Tabela 4.16 mostra também o ótimo para receitas fixas de R\$ 200 a R\$ 600 mil/(MW·ano) e a Figura 4.13 apresenta o custo marginal médio de cada trecho da curva.
 
 ::: {custom-style="Legenda"}
-Tabela 4.16 – Sensibilidade da decisão de contratação ao preço do hidrogênio, com demanda em faixas (receita fixa de R\$ 600 mil/(MW·ano))
+Tabela 4.16 – Sensibilidade da curva de oferta ao preço do hidrogênio, com demanda em faixas: lucro sem o leilão, custo do último trecho e potência ótima para diferentes receitas fixas
 :::
 
-| Preço cheio / excedente (R\$/kg) | Lucro sem o leilão (R\$ mi/ano) | Receita mínima de entrada (R\$ mil/(MW·ano)) | Receita para ofertar os 60 MW (R\$ mil/(MW·ano)) | Potência ótima (MW) | Ganho líquido do leilão (R\$ mi/ano) |
-|------------------|--------|--------|--------|--------|--------|
-| 11 / 5 | 16,47 | 89 | 132 | 60 | 30,10 |
-| 35 / 5 | 31,80 | 84 | 145 | 60 | 30,35 |
-| 35 / 11 | 33,12 | 83 | 205 | 60 | 29,69 |
-| 18 / 16 | 23,58 | 82 | 304 | 60 | 28,47 |
-| 27 / 16 | 29,59 | 82 | 311 | 60 | 28,47 |
-| **35 / 16 (referência)** | **35,05** | **82** | **318** | **60** | **28,45** |
-| 54 / 16 | 48,72 | 82 | 335 | 60 | 28,39 |
-| 35 / 24 | 38,90 | 79 | 539 | 60 | 25,99 |
-| 35 / 16, até 3 t/dia | 41,07 | 85 | 863 | 57,5 | 26,57 |
+| Preço cheio / excedente (R\$/kg) | Lucro sem o leilão (R\$ mi/ano) | Custo do último trecho (R\$ mil/(MW·ano)) | Ótimo com R\$ 200 mil (MW) | Ótimo com R\$ 300 mil (MW) | Ótimo com R\$ 400 mil (MW) | Ótimo com R\$ 500 mil (MW) | Ótimo com R\$ 600 mil (MW) |
+|------------------|--------|--------|--------|--------|--------|--------|--------|
+| 11 / 5 | 16,47 | 132 | 60 | 60 | 60 | 60 | 60 |
+| 35 / 5 | 31,80 | 145 | 60 | 60 | 60 | 60 | 60 |
+| 35 / 11 | 33,12 | 205 | 57,5 | 60 | 60 | 60 | 60 |
+| 18 / 16 | 23,58 | 304 | 50 | 57,5 | 60 | 60 | 60 |
+| 27 / 16 | 29,59 | 311 | 50 | 57,5 | 60 | 60 | 60 |
+| **35 / 16 (referência)** | 35,05 | 318 | 50 | 57,5 | 60 | 60 | 60 |
+| 54 / 16 | 48,72 | 335 | 50 | 57,5 | 60 | 60 | 60 |
+| 35 / 24 | 38,90 | 539 | 40 | 50 | 55 | 57,5 | 60 |
+| 35 / 26 | 39,98 | 602 | 40 | 50 | 55 | 55 | 57,5 |
+| 35 / 28 | 41,09 | 667 | 40 | 50 | 50 | 55 | 57,5 |
+| 35 / 16, até 3 t/dia | 41,07 | 863 | 50 | 55 | 55 | 55 | 57,5 |
 
 ::: {custom-style="Fonte"}
-Fonte: elaborado pelo autor. Receita para ofertar os 60 MW: custo de oportunidade do último trecho de 2,5 MW. Ganho líquido: lucro com o leilão na potência ótima menos o lucro sem o leilão.
+Fonte: elaborado pelo autor. Último trecho: custo de oportunidade médio entre 57,5 e 60 MW. Potência ótima na grade de 0, 30, 40, 50, 55, 57,5 e 60 MW.
 :::
 
 ::: {custom-style="Legenda"}
-Figura 4.13 – Receita a partir da qual se oferta toda a potência, por combinação de preços do hidrogênio (faixas de até 2 t/dia, exceto onde indicado)
+Figura 4.13 – Custo marginal médio de cada trecho da curva de oferta, por preço do excedente (esquerda) e por preço cheio e teto de demanda (direita)
 :::
 
 ::: {custom-style="Figura"}
-![](figuras/sensibilidade_preco_h2_faixas.png){width=15cm}
+![](figuras/sensibilidade_preco_h2_faixas.png){width=16cm}
 :::
 
 ::: {custom-style="Fonte"}
-Fonte: elaborado pelo autor. Em vermelho, os casos em que o último trecho custa mais do que a receita fixa de referência.
+Fonte: elaborado pelo autor. A linha tracejada é a receita fixa de referência, de R\$ 600 mil/(MW·ano); a bateria é contratada até o trecho em que o custo marginal supera a receita.
 :::
 
-A decisão de contratar os 60 MW é robusta aos preços do hidrogênio: em oito dos nove casos, o custo de oportunidade do último trecho fica abaixo da receita fixa de referência de R\$ 600 mil/(MW·ano), e a potência ótima é de 60 MW, do preço mais baixo ao mais alto avaliados. O preço do excedente é o que mais desloca esse custo: de R\$ 145 mil/(MW·ano), com o excedente a R\$ 5/kg, a R\$ 539 mil, com R\$ 24/kg, pois o excedente é a receita que o BESS desloca ao ir para o leilão e deixar de suprir o eletrolisador fora do período solar. O preço cheio, ao contrário, quase não altera o custo do último trecho, que se mantém entre R\$ 304 mil e R\$ 335 mil/(MW·ano) para preços de R\$ 18 a R\$ 54/kg, embora mude muito o lucro sem o leilão, de R\$ 23,6 milhões a R\$ 48,7 milhões por ano: o preço cheio aumenta a receita do hidrogênio com ou sem o leilão, e seu efeito se compensa na diferença que importa à decisão. A receita mínima de entrada fica entre R\$ 79 mil e R\$ 89 mil/(MW·ano) em todos os casos, e o ganho líquido do leilão entre R\$ 26,0 e R\$ 30,4 milhões por ano.
+A receita mínima de entrada, que depende dos primeiros 30 MW, fica entre R\$ 78 mil e R\$ 89 mil/(MW·ano) em todos os casos, e o ganho líquido do leilão, entre R\$ 24,7 e R\$ 30,4 milhões por ano com a receita de referência. A sensibilidade está nos trechos acima de 40 MW. O preço do excedente é o que desloca a curva: o custo do último trecho passa de R\$ 145 mil/(MW·ano), com o excedente a R\$ 5/kg, para R\$ 205 mil (R\$ 11), R\$ 318 mil (R\$ 16, referência), R\$ 539 mil (R\$ 24), R\$ 602 mil (R\$ 26) e R\$ 667 mil (R\$ 28). O excedente é a receita que o BESS desloca ao ir para o leilão e deixar de suprir o eletrolisador fora do período solar. O preço cheio quase não desloca a curva: as curvas de R\$ 18, 27, 35 e 54/kg ficam praticamente sobrepostas, e o custo do último trecho varia só de R\$ 304 mil a R\$ 335 mil, embora o lucro sem o leilão varie de R\$ 23,6 milhões a R\$ 48,7 milhões por ano. A explicação está no volume: com 60 MW no leilão, o eletrolisador vende em média 2,3 t/dia e ultrapassa 2 t em 39% dos dias (57% dos dias, com 3,0 t/dia em média, sem o leilão), de modo que o kg marginal é, na maior parte do tempo, vendido ao preço do excedente, e o preço cheio altera a receita com e sem o leilão na mesma medida.
 
-O teto de demanda da faixa cheia pesa mais do que os preços. Com 3 t/dia a R\$ 35/kg, o custo de oportunidade do último trecho sobe para R\$ 863 mil/(MW·ano), acima da receita de referência, e a potência ótima recua para 57,5 MW. Quanto maior o volume que o comprador absorve ao preço cheio, mais vale manter o BESS abastecendo o eletrolisador fora do período solar. Os resultados indicam, assim, que a conclusão de participar do leilão com a potência máxima não depende do nível dos preços do hidrogênio na faixa que a literatura sustenta, mas depende da existência de um comprador que absorva volumes elevados ao preço cheio, informação que o mercado brasileiro ainda não fornece. Como as combinações variam um preço de cada vez, a sensibilidade conjunta, com o excedente alto e o teto elevado simultaneamente, pode ultrapassar R\$ 600 mil e não foi avaliada.
+Com a receita de referência, de R\$ 600 mil/(MW·ano), a decisão é contratar os 60 MW em todos os casos de 2 t/dia com excedente de até R\$ 24/kg, do preço mais baixo ao mais alto de preço cheio. O limiar está perto de R\$ 26/kg: com o excedente a esse valor, o último trecho custa R\$ 602 mil/(MW·ano), pouco acima da receita, e a potência ótima passa a 57,5 MW, o mesmo valor obtido com o excedente a R\$ 28/kg. R\$ 26/kg correspondem a cerca de US\$ 4,8/kg, acima do custo médio do hidrogênio de gás natural na Europa, de US\$ 3/kg, e próximo ao que se obtém ao aplicar a esse custo a alta de cerca de 50% que a IEA atribui ao conflito no Oriente Médio (IEA, 2026, p. 113-114), US\$ 4,5/kg, cálculo do autor. Com receitas menores, a curva importa: com R\$ 300 mil, o ótimo é 60 MW com o excedente a R\$ 5 ou R\$ 11/kg, 57,5 MW com R\$ 16/kg e 50 MW com R\$ 24 a R\$ 28/kg; com R\$ 200 mil, o ótimo varia de 40 a 60 MW. A decisão de contratar a potência máxima é, portanto, robusta ao preço do hidrogênio para a receita de referência, mas, para receitas fixas abaixo de cerca de R\$ 400 mil/(MW·ano), a potência a ofertar depende do preço do excedente, e é mais baixa quanto maior ele for.
+
+O teto de demanda da faixa cheia tem efeito comparável ao de um excedente elevado. Com 3 t/dia a R\$ 35/kg, o custo do último trecho é de R\$ 863 mil/(MW·ano), e a potência ótima com a receita de referência é de 57,5 MW (55 MW com R\$ 400 mil). Quanto maior o volume que o comprador absorve ao preço cheio, mais vale manter o BESS abastecendo o eletrolisador fora do período solar, e o resultado indica que o volume que o mercado absorve a preço elevado pesa mais do que o próprio preço cheio, informação que o mercado brasileiro ainda não fornece. Como as combinações variam um preço de cada vez, a sensibilidade conjunta, com o excedente alto e o teto elevado simultaneamente, não foi avaliada.
 
 ## 4.4 Síntese
 
@@ -717,7 +721,7 @@ f) **a quantidade a ofertar acima de cerca de 40 MW depende do hidrogênio e do 
 
 g) **a regra de suprimento do eletrolisador é a hipótese de maior efeito sobre o lucro:** permitir a importação de energia eleva o lucro em cerca de 30% e torna o BESS desnecessário para a produção de hidrogênio, resultado robusto ao custo adicional da energia importada entre R\$ 100 e R\$ 400/MWh (ganho de 51% a 12%). Com o limite de intensidade de emissões do marco legal (7 kgCO₂/kgH₂), o resultado depende do fator de emissão da rede: com o fator médio do SIN, o limite não restringe a importação, e o resultado é o da importação livre; com o fator marginal, a rede supre no máximo 28% da energia do eletrolisador, o BESS passa a valer mais fora do leilão e a potência ótima cai para 50 MW;
 
-h) **o custo de degradação e a frequência do despacho afetam o lucro e o limiar de entrada, mas pouco a potência ótima**, e a receita fixa e o preço do hidrogênio definem a fronteira entre contratar parte ou toda a potência, com arrependimento assimétrico que favorece contratar mais. Com a demanda de hidrogênio em faixas, a decisão de contratar os 60 MW se mantém para preços cheios de R\$ 11 a R\$ 54/kg e preços do excedente de R\$ 5 a R\$ 24/kg, e só muda, para 57,5 MW, quando o teto da faixa cheia sobe para 3 t/dia (Tabela 4.16).
+h) **o custo de degradação e a frequência do despacho afetam o lucro e o limiar de entrada, mas pouco a potência ótima**, e a receita fixa e o preço do hidrogênio definem a fronteira entre contratar parte ou toda a potência, com arrependimento assimétrico que favorece contratar mais. Com a demanda de hidrogênio em faixas e a receita de referência, a decisão de contratar os 60 MW se mantém para preços cheios de R\$ 11 a R\$ 54/kg e preços do excedente de até R\$ 24/kg, e só muda, para 57,5 MW, com excedente a partir de cerca de R\$ 26/kg ou com o teto da faixa cheia em 3 t/dia; com receitas abaixo de R\$ 400 mil/(MW·ano), o preço do excedente passa a determinar a potência ofertada (Tabela 4.16).
 
 **Método e incertezas:**
 
