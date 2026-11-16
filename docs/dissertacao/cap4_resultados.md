@@ -701,6 +701,55 @@ Com a receita de referência, de R\$ 600 mil/(MW·ano), a decisão é contratar 
 
 O teto de demanda da faixa cheia tem efeito comparável ao de um excedente elevado. Com 3 t/dia a R\$ 35/kg, o custo do último trecho é de R\$ 863 mil/(MW·ano), e a potência ótima com a receita de referência é de 57,5 MW (55 MW com R\$ 400 mil). Quanto maior o volume que o comprador absorve ao preço cheio, mais vale manter o BESS abastecendo o eletrolisador fora do período solar, e o resultado indica que o volume que o mercado absorve a preço elevado pesa mais do que o próprio preço cheio, informação que o mercado brasileiro ainda não fornece. Os dois efeitos se somam. Com o teto de 3 t/dia e o excedente a R\$ 24/kg, que isoladamente não reduzia a oferta de 60 MW, o custo do último trecho chega a R\$ 874 mil/(MW·ano), o trecho de 55 a 57,5 MW passa de R\$ 541 mil para R\$ 620 mil, acima da receita de referência, e a potência ótima cai para 55 MW; com o excedente a R\$ 28/kg, o último trecho custa R\$ 881 mil e o ótimo também é de 55 MW, e, com R\$ 300 mil, é de apenas 40 MW. A combinação, portanto, reduz a oferta em até 5 MW em relação à referência (60 MW), com a receita de referência. O último trecho varia pouco com o excedente nesses casos (R\$ 863 mil a R\$ 881 mil); o excedente passa a pesar nos trechos intermediários, que ficam acima da receita de referência.
 
+### 4.3.9 Hipóteses de rede, de projeto e de custos com a demanda em faixas
+
+As seções 4.3.4 a 4.3.7 variaram as hipóteses de rede, de projeto e de custos em torno do caso de demanda ilimitada a R\$ 35/kg. Como a curva de demanda por faixas (Seção 3.4) mudou a referência da curva de oferta, essas variações foram recalculadas em torno dela, com o modelo estocástico dos cinco anos, nos pontos de 0, 30, 40, 50, 55, 57,5 e 60 MW, uma hipótese por vez e com 2 t/dia a R\$ 35/kg e excedente a R\$ 16/kg. A Tabela 4.17 apresenta o lucro sem o leilão, a receita mínima de entrada, o custo do último trecho (entre 57,5 e 60 MW) e a potência ótima para três receitas fixas.
+
+::: {custom-style="Legenda"}
+Tabela 4.17 – Curva de oferta com a demanda em faixas (2 t/dia a R\$ 35/kg e excedente a R\$ 16/kg): hipóteses de rede, de projeto e de custos alteradas uma a uma
+:::
+
+| Hipótese alterada | Lucro sem o leilão (R\$ mi/ano) | Receita mínima de entrada (R\$ mil/(MW·ano)) | Custo do último trecho (R\$ mil/(MW·ano)) | Ótimo com R\$ 200 mil (MW) | Ótimo com R\$ 300 mil (MW) | Ótimo com R\$ 600 mil (MW) |
+|------|------|------|------|------|------|------|
+| **Referência (faixas de 2 t/dia, R\$ 35 e R\$ 16/kg)** | 35,05 | 82 | 318 | 50 | 57,5 | 60 |
+| **Rede** | | | | | | |
+| Importação de energia liberada | 35,13 | 83 | 301 | 50 | 57,5 | 60 |
+| Importação, adicional de R\$ 100/MWh | 40,62 | 98 | 187 | 60 | 60 | 60 |
+| Importação, adicional de R\$ 400/MWh | 35,07 | 82 | 302 | 50 | 57,5 | 60 |
+| Limite de 7 kgCO₂/kgH₂, fator médio | 35,09 | 82 | 301 | 50 | 57,5 | 60 |
+| Limite de 7 kgCO₂/kgH₂, fator marginal | 35,09 | 82 | 301 | 50 | 57,5 | 60 |
+| Limite de 3,4 kgCO₂/kgH₂, fator médio | 35,09 | 82 | 301 | 50 | 57,5 | 60 |
+| Limite de 3,4 kgCO₂/kgH₂, fator marginal | 35,08 | 82 | 301 | 50 | 57,5 | 60 |
+| Correspondência diária com a exportação | 35,08 | 82 | 307 | 50 | 57,5 | 60 |
+| Correspondência semanal com a exportação | 35,09 | 82 | 301 | 50 | 57,5 | 60 |
+| **Projeto** | | | | | | |
+| Usina FV de 40 MWp | 30,99 | 81 | 295 | 55 | 60 | 60 |
+| Usina FV de 60 MWp | 39,03 | 85 | 336 | 50 | 57,5 | 60 |
+| Usina FV de 75 MWp | 44,93 | 124 | 346 | 40 | 57,5 | 60 |
+| Eletrolisador de 10 MW | 34,00 | 89 | 1.084 | 40 | 55 | 57,5 |
+| Eletrolisador de 25 MW | 35,75 | 81 | 269 | 55 | 60 | 60 |
+| **Custos e operação** | | | | | | |
+| Degradação de R\$ 100/MWh | 34,16 | 154 | 320 | 40 | 57,5 | 60 |
+| Degradação de R\$ 200/MWh | 32,63 | 299 | 347 | 0 | 30 | 60 |
+| 50 despachos por ano | 35,05 | 19 | 255 | 55 | 60 | 60 |
+| 150 despachos por ano | 35,05 | 39 | 275 | 55 | 60 | 60 |
+| 365 despachos por ano | 35,05 | 82 | 318 | 50 | 57,5 | 60 |
+| Spread diário do PLD a 75% | 34,89 | 80 | 305 | 50 | 57,5 | 60 |
+| Spread diário do PLD a 50% | 34,75 | 78 | 293 | 55 | 60 | 60 |
+| Despacho na ponta da carga líquida | 35,05 | 82 | 318 | 50 | 57,5 | 60 |
+
+::: {custom-style="Fonte"}
+Fonte: elaborado pelo autor. Receita mínima de entrada: menor custo de oportunidade médio por MW contratado, com ao menos 30 MW. Último trecho: custo de oportunidade médio entre 57,5 e 60 MW. Potência ótima na grade de 0, 30, 40, 50, 55, 57,5 e 60 MW.
+:::
+
+**Rede.** Com a demanda em faixas, a regra de suprimento do eletrolisador deixa de ser a hipótese de maior efeito sobre o lucro, ao contrário do que ocorre com a demanda ilimitada (Seção 4.3.4). Liberar a importação eleva o lucro sem o leilão em apenas 0,2% (de R\$ 35,05 milhões para R\$ 35,13 milhões por ano), e o custo do último trecho passa de R\$ 318 mil para R\$ 301 mil/(MW·ano). Os limites de intensidade de emissões de 7 e de 3,4 kgCO₂/kgH₂, com o fator médio ou com o fator marginal da rede, e a correspondência semanal com a exportação produzem praticamente o mesmo resultado (R\$ 301 mil, e R\$ 307 mil na correspondência diária), de modo que a potência ótima com a receita de referência permanece em 60 MW. Com o fator marginal, que com a demanda ilimitada reduzia a potência ótima para 50 MW (Seção 4.3.5), a decisão também não muda. O adicional de R\$ 400/MWh na energia importada não altera o resultado (R\$ 302 mil), e o de R\$ 100/MWh eleva o lucro sem o leilão para R\$ 40,62 milhões e reduz o custo do último trecho a R\$ 187 mil, caso em que se ofertam 60 MW mesmo com R\$ 200 mil/(MW·ano).
+
+**Projeto.** O tamanho da usina FV altera o nível do lucro sem o leilão, de R\$ 31,0 milhões (40 MWp) a R\$ 44,9 milhões (75 MWp), e o custo do último trecho, de R\$ 295 mil a R\$ 346 mil/(MW·ano), mas a potência ótima com a receita de referência permanece em 60 MW; a receita mínima de entrada sobe de R\$ 82 mil para R\$ 124 mil com 75 MWp. O tamanho do eletrolisador é a única hipótese desta tabela que reduz a oferta com R\$ 600 mil/(MW·ano): com 10 MW, o último trecho custa R\$ 1,08 milhão, o ótimo é de 57,5 MW (55 MW com R\$ 300 mil), e a potência a ofertar fica entre 40 e 57,5 MW conforme a receita. Com 25 MW, o custo do último trecho cai para R\$ 269 mil, e a oferta de 60 MW se mantém. O comportamento é o da Seção 4.3.7: quanto menor o eletrolisador em relação à usina FV, mais a geração do meio-dia precisa ser deslocada pela bateria para o período sem sol.
+
+**Custos e operação.** O custo de degradação desloca o limiar de entrada, e não a potência ótima. Com R\$ 100/MWh, a receita mínima de entrada sobe de R\$ 82 mil para R\$ 154 mil/(MW·ano), e com R\$ 200/MWh, para R\$ 299 mil, mas o custo do último trecho varia pouco (R\$ 320 mil e R\$ 347 mil); com R\$ 200/MWh e receita de R\$ 200 mil, não se participaria do leilão, e com R\$ 300 mil, ofertar-se-iam apenas os 30 MW do mínimo. Com 50 e 150 despachos por ano, a receita mínima de entrada cai para R\$ 19 mil e R\$ 39 mil/(MW·ano) e o custo do último trecho, para R\$ 255 mil e R\$ 275 mil, o que amplia a oferta com receitas baixas (55 MW com R\$ 200 mil), sem alterá-la com R\$ 600 mil; com 365 despachos por ano, o resultado é o da referência. O spread diário do PLD reduzido a 75% e a 50% diminui o lucro sem o leilão em 0,5% e 0,9% e o custo do último trecho para R\$ 305 mil e R\$ 293 mil. O despacho na ponta da carga líquida, em lugar do PLD, não altera o resultado (mesmos R\$ 318 mil no último trecho e a mesma receita de entrada, de R\$ 82 mil).
+
+Em conjunto, com a demanda em faixas e a receita de referência, a decisão de ofertar os 60 MW é robusta às hipóteses de rede, de projeto e de custos avaliadas, com a única exceção do eletrolisador de 10 MW; o que essas hipóteses alteram é o custo do último trecho (de R\$ 187 mil a R\$ 347 mil/(MW·ano), exceto o eletrolisador de 10 MW) e, no caso da degradação e da frequência do despacho, a receita mínima de entrada (de R\$ 19 mil a R\$ 299 mil). A comparação com a demanda ilimitada indica que o efeito das hipóteses de rede e de emissões decorria do alto valor da energia guardada para o eletrolisador à noite, que as faixas reduzem (Seção 4.3.4). O sorteio do despacho em famílias (Seção 4.3.6), o tanque de 10 t e a combinação com o contrato firme de 3 t/dia não foram recalculados com as faixas, e permanecem apresentados em torno da demanda ilimitada.
+
 ## 4.4 Síntese
 
 Os resultados permitem distinguir duas decisões e hierarquizar os fatores que determinam cada uma.
@@ -719,11 +768,11 @@ d) **sem a receita do leilão, o BESS agrega pouco** (R\$ 8,8 milhões por ano, 
 
 e) **participar do leilão é robusto:** até cerca de 37,5 MW, o custo de oportunidade marginal situa-se entre R\$ 77 mil e R\$ 111 mil/(MW·ano) nos casos de contrato de hidrogênio e de importação, e a receita mínima de entrada permanece abaixo de R\$ 300 mil/(MW·ano) em todos os casos;
 
-f) **a quantidade a ofertar acima de cerca de 40 MW depende do hidrogênio e do dimensionamento:** o custo de oportunidade do último MW varia de R\$ 172 mil a cerca de R\$ 2,0 milhões/(MW·ano) conforme o contrato de fornecimento, e a potência ótima varia de 50 a 57,5 MW com o tamanho do eletrolisador, porque o módulo mercantil do BESS tem como principal função abastecer o eletrolisador fora do período solar;
+f) **a quantidade a ofertar acima de cerca de 40 MW depende do hidrogênio e do dimensionamento:** o custo de oportunidade do último MW varia de R\$ 172 mil a cerca de R\$ 2,0 milhões/(MW·ano) conforme o contrato de fornecimento, e a potência ótima varia de 50 a 57,5 MW com o tamanho do eletrolisador, porque o módulo mercantil do BESS tem como principal função abastecer o eletrolisador fora do período solar. Com a demanda em faixas, o custo do último MW da referência é de R\$ 318 mil/(MW·ano), e só o eletrolisador de 10 MW (R\$ 1,08 milhão e 57,5 MW) o eleva de forma relevante (Tabela 4.17);
 
-g) **a regra de suprimento do eletrolisador é a hipótese de maior efeito sobre o lucro:** permitir a importação de energia eleva o lucro em cerca de 30% e torna o BESS desnecessário para a produção de hidrogênio, resultado robusto ao custo adicional da energia importada entre R\$ 100 e R\$ 400/MWh (ganho de 51% a 12%). Com o limite de intensidade de emissões do marco legal (7 kgCO₂/kgH₂), o resultado depende do fator de emissão da rede: com o fator médio do SIN, o limite não restringe a importação, e o resultado é o da importação livre; com o fator marginal, a rede supre no máximo 28% da energia do eletrolisador, o BESS passa a valer mais fora do leilão e a potência ótima cai para 50 MW;
+g) **a regra de suprimento do eletrolisador é a hipótese de maior efeito sobre o lucro:** permitir a importação de energia eleva o lucro em cerca de 30% e torna o BESS desnecessário para a produção de hidrogênio, resultado robusto ao custo adicional da energia importada entre R\$ 100 e R\$ 400/MWh (ganho de 51% a 12%). Com o limite de intensidade de emissões do marco legal (7 kgCO₂/kgH₂), o resultado depende do fator de emissão da rede: com o fator médio do SIN, o limite não restringe a importação, e o resultado é o da importação livre; com o fator marginal, a rede supre no máximo 28% da energia do eletrolisador, o BESS passa a valer mais fora do leilão e a potência ótima cai para 50 MW. Com a demanda em faixas, esses efeitos desaparecem: importação, limites de emissões e correspondência temporal mudam o lucro em até 0,2% e a potência ótima permanece em 60 MW, e só um adicional de R\$ 100/MWh na energia importada altera o lucro (+16%) e reduz o custo do último trecho a R\$ 187 mil (Tabela 4.17);
 
-h) **o custo de degradação e a frequência do despacho afetam o lucro e o limiar de entrada, mas pouco a potência ótima**, e a receita fixa e o preço do hidrogênio definem a fronteira entre contratar parte ou toda a potência, com arrependimento assimétrico que favorece contratar mais. Com a demanda de hidrogênio em faixas e a receita de referência, a decisão de contratar os 60 MW se mantém para preços cheios de R\$ 11 a R\$ 54/kg e preços do excedente de até R\$ 24/kg, e só muda, para 57,5 MW, com excedente a partir de cerca de R\$ 26/kg ou com o teto da faixa cheia em 3 t/dia, e, para 55 MW, com o teto de 3 t/dia combinado a excedente de R\$ 24/kg ou mais; com receitas abaixo de R\$ 400 mil/(MW·ano), o preço do excedente passa a determinar a potência ofertada (Tabela 4.16).
+h) **o custo de degradação e a frequência do despacho afetam o lucro e o limiar de entrada, mas pouco a potência ótima**, e com a demanda em faixas, a degradação de R\$ 200/MWh eleva a receita mínima de entrada de R\$ 82 mil para R\$ 299 mil/(MW·ano) e 50 despachos por ano a reduzem para R\$ 19 mil, sem mudar a oferta de 60 MW com R\$ 600 mil; a receita fixa e o preço do hidrogênio definem a fronteira entre contratar parte ou toda a potência, com arrependimento assimétrico que favorece contratar mais. Com a demanda de hidrogênio em faixas e a receita de referência, a decisão de contratar os 60 MW se mantém para preços cheios de R\$ 11 a R\$ 54/kg e preços do excedente de até R\$ 24/kg, e só muda, para 57,5 MW, com excedente a partir de cerca de R\$ 26/kg ou com o teto da faixa cheia em 3 t/dia, e, para 55 MW, com o teto de 3 t/dia combinado a excedente de R\$ 24/kg ou mais; com receitas abaixo de R\$ 400 mil/(MW·ano), o preço do excedente passa a determinar a potência ofertada (Tabela 4.16).
 
 **Método e incertezas:**
 
