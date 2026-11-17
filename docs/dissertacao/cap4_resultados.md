@@ -750,6 +750,32 @@ Fonte: elaborado pelo autor. Receita mínima de entrada: menor custo de oportuni
 
 Em conjunto, com a demanda em faixas e a receita de referência, a decisão de ofertar os 60 MW é robusta às hipóteses de rede, de projeto e de custos avaliadas, com a única exceção do eletrolisador de 10 MW; o que essas hipóteses alteram é o custo do último trecho (de R\$ 187 mil a R\$ 347 mil/(MW·ano), exceto o eletrolisador de 10 MW) e, no caso da degradação e da frequência do despacho, a receita mínima de entrada (de R\$ 19 mil a R\$ 299 mil). A comparação com a demanda ilimitada indica que o efeito das hipóteses de rede e de emissões decorria do alto valor da energia guardada para o eletrolisador à noite, que as faixas reduzem (Seção 4.3.4). O sorteio do despacho em famílias (Seção 4.3.6), o tanque de 10 t e a combinação com o contrato firme de 3 t/dia não foram recalculados com as faixas, e permanecem apresentados em torno da demanda ilimitada.
 
+### 4.3.10 Decomposição da receita com a demanda em faixas
+
+Para mostrar de onde vem o lucro da Seção 4.3.1 quando a demanda de hidrogênio é limitada, o lucro esperado do caso de referência com 2 t/dia a R\$ 35/kg e excedente a R\$ 16/kg foi decomposto por fonte de receita, com 0, 30 e 60 MW contratados e a receita fixa de R\$ 600 mil/(MW·ano). A receita do LRCAP é o produto da receita fixa pela potência contratada. As receitas do hidrogênio e do MCP, o custo do hidrogênio e a degradação do BESS são as médias dos cinco cenários da operação otimizada. O O&M fixo e a TUST seguem as premissas centrais da análise de viabilidade (Seção 3.8.2): O&M de 1,5% (FV), 2,5% (BESS, com a reposição parcial de módulos) e 3% (eletrolisador) do investimento, e TUST de geração de R\$ 10,93/(kW·mês) sobre 60 MW de montante de uso de injeção. Como o BESS já existe e o montante de uso é o maior entre a potência da usina FV e a do BESS, esses dois custos não dependem da potência contratada. Não estão incluídos os tributos sobre a receita, o capital do BESS, que é custo afundado para quem já o possui, e os itens que a Portaria inclui na receita fixa e o modelo não contempla (Seção 3.1). A Tabela 4.18 apresenta o resultado.
+
+::: {custom-style="Legenda"}
+Tabela 4.18 – Decomposição do lucro esperado por fonte de receita, com a demanda de hidrogênio em faixas (receita fixa de R\$ 600 mil/(MW·ano))
+:::
+
+| R\$ milhões por ano | 0 MW | 30 MW | 60 MW | Variação de 0 a 60 MW |
+|------|------|------|------|------|
+| Receita do LRCAP (receita fixa) | 0,00 | 18,00 | 36,00 | +36,00 |
+| Receita do hidrogênio | 30,73 | 30,90 | 26,39 | −4,35 |
+| Receita do MCP (módulo mercantil) | 6,96 | 6,52 | 6,93 | −0,03 |
+| Custo do hidrogênio | −1,71 | −1,73 | −1,43 | +0,29 |
+| Degradação do BESS | −0,93 | −3,10 | −4,38 | −3,46 |
+| **Lucro operacional** | **35,05** | **50,60** | **63,51** | **+28,45** |
+| O&M fixo | −18,35 | −18,35 | −18,35 | 0,00 |
+| TUST | −7,87 | −7,87 | −7,87 | 0,00 |
+| **Resultado após O&M e TUST** | **8,84** | **24,38** | **37,29** | **+28,45** |
+
+::: {custom-style="Fonte"}
+Fonte: elaborado pelo autor. Média dos cinco cenários. O módulo LRCAP não tem receita nem custo de energia no MCP, pois a liquidação da energia de carga e de descarga é destinada à CONCAP (BRASIL, 2026, art. 9º, § 6º).
+:::
+
+Com 60 MW contratados, o LRCAP responde por R\$ 36,00 milhões dos R\$ 69,31 milhões de receita bruta (52%), e o hidrogênio, por R\$ 26,39 milhões (38%); sem o leilão, o hidrogênio responde por R\$ 30,73 milhões de R\$ 37,69 milhões (82%). O LRCAP substitui parte da receita do hidrogênio, que cai R\$ 4,35 milhões, o que é coerente com a perda da função do módulo mercantil de abastecer o eletrolisador fora do período solar (Seção 4.3.4). A receita do MCP quase não muda (de R\$ 6,96 milhões para R\$ 6,93 milhões), e a degradação aumenta R\$ 3,46 milhões, com o despacho diário do ONS. O ganho de R\$ 28,45 milhões por ano é, portanto, a receita do LRCAP, de R\$ 36,00 milhões, menos R\$ 7,55 milhões que a usina deixa de obter ou passa a gastar nas outras fontes. O O&M e a TUST, que somam R\$ 26,22 milhões, reduzem o nível do resultado, de R\$ 35,05 milhões para R\$ 8,84 milhões sem o leilão e de R\$ 63,51 milhões para R\$ 37,29 milhões com 60 MW, mas não alteram o ganho nem a potência ótima. Com a demanda ilimitada, o custo de oportunidade do último MW é maior (R\$ 895 mil contra R\$ 318 mil/(MW·ano), Seção 4.3.4), o que é coerente com uma perda de receita de hidrogênio maior ao contratar a bateria; essa decomposição não foi calculada para a demanda ilimitada.
+
 ## 4.4 Síntese
 
 Os resultados permitem distinguir duas decisões e hierarquizar os fatores que determinam cada uma.
@@ -766,7 +792,7 @@ d) **sem a receita do leilão, o BESS agrega pouco** (R\$ 8,8 milhões por ano, 
 
 **Proponente que dispõe do BESS:**
 
-e) **participar do leilão é robusto:** até cerca de 37,5 MW, o custo de oportunidade marginal situa-se entre R\$ 77 mil e R\$ 111 mil/(MW·ano) nos casos de contrato de hidrogênio e de importação, e a receita mínima de entrada permanece abaixo de R\$ 300 mil/(MW·ano) em todos os casos;
+e) **participar do leilão é robusto:** até cerca de 37,5 MW, o custo de oportunidade marginal situa-se entre R\$ 77 mil e R\$ 111 mil/(MW·ano) nos casos de contrato de hidrogênio e de importação, e a receita mínima de entrada permanece abaixo de R\$ 300 mil/(MW·ano) em todos os casos; com a demanda em faixas e 60 MW contratados, o LRCAP responde por 52% da receita bruta e o ganho de R\$ 28,45 milhões por ano equivale à receita fixa de R\$ 36,0 milhões menos R\$ 7,55 milhões nas demais fontes, principalmente hidrogênio e degradação (Tabela 4.18);
 
 f) **a quantidade a ofertar acima de cerca de 40 MW depende do hidrogênio e do dimensionamento:** o custo de oportunidade do último MW varia de R\$ 172 mil a cerca de R\$ 2,0 milhões/(MW·ano) conforme o contrato de fornecimento, e a potência ótima varia de 50 a 57,5 MW com o tamanho do eletrolisador, porque o módulo mercantil do BESS tem como principal função abastecer o eletrolisador fora do período solar. Com a demanda em faixas, o custo do último MW da referência é de R\$ 318 mil/(MW·ano), e só o eletrolisador de 10 MW (R\$ 1,08 milhão e 57,5 MW) o eleva de forma relevante (Tabela 4.17);
 
