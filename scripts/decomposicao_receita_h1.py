@@ -1,7 +1,7 @@
 """Decomposição do lucro esperado da H1 por fonte de receita, com 0, 30 e 60 MW contratados no LRCAP.
 
 Média dos cenários (operacao_media): receita do MCP, receita e custo do hidrogênio e degradação do BESS, sem a receita
-fixa; a receita do LRCAP é R * P. O O&M fixo e a TUST vêm de config/economia.yaml (premissas centrais de viabilidade.py)
+fixa; a receita do LRCAP é R * P. O O&M fixo e a TUST vêm de config/economia.yaml (premissas centrais de viabilidade.py), apenas como referência: não entram no lucro operacional
 e não dependem da potência contratada, pois o BESS já existe e o montante de uso é o maior entre a FV e o BESS.
 
 Uso:  python scripts/decomposicao_receita_h1.py config/estocastico_unifei_faixas.yaml [--receita 600000]
