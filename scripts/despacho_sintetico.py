@@ -113,14 +113,19 @@ def main():
     ap.add_argument("--amostras", nargs="+", type=int, default=[3, 2, 2, 2])
     ap.add_argument("--potencias", nargs="+", type=float, default=[30, 50, 55, 57.5, 60])
     ap.add_argument("--processos", type=int, default=4)
+    ap.add_argument("--subdir", default="despacho_sintetico", help="subpasta de resultados/ para as saídas")
+    ap.add_argument("--referencia", default="base.csv", help="curva de referência em resultados/curva_oferta/ (colunas p_cap_mw, q_rs)")
+    ap.add_argument("--sem-lance", action="store_true", help="não recalcula o lance mínimo (caso com demanda em faixas)")
     args = ap.parse_args()
+    global SAIDA
+    SAIDA = RAIZ / "resultados" / args.subdir
     warnings.filterwarnings("ignore")
     (SAIDA / "perfis").mkdir(parents=True, exist_ok=True)
     base = carregar_parametros(args.config)
     base.lrcap.receita_fixa_rs_mw_ano = 0.0
     eco = yaml.safe_load(open(RAIZ / "config" / "economia.yaml", encoding="utf-8"))
-    q_sem = float(pd.read_csv(RAIZ / "resultados" / "viabilidade" / "sem_bess.csv").lucro_sem_bess_rs.iloc[0])
-    ref = pd.read_csv(RAIZ / "resultados" / "curva_oferta" / "base.csv").set_index("p_cap_mw")
+    q_sem = float("nan") if args.sem_lance else float(pd.read_csv(RAIZ / "resultados" / "viabilidade" / "sem_bess.csv").lucro_sem_bess_rs.iloc[0])
+    ref = pd.read_csv(RAIZ / "resultados" / "curva_oferta" / args.referencia).set_index("p_cap_mw")
     nomes = [c.nome for c in base.estocastico.cenarios]
 
     arq = SAIDA / "pontos.csv"
@@ -150,7 +155,7 @@ def main():
     q_ref = np.array([ref.q_rs.loc[x] for x in P])
     curva_ref = pd.DataFrame({"p_cap_mw": P, "q_rs": q_ref})
     linhas.append({"familia": "referencia_pld", "k": -1, **indicadores(P, q_ref),
-                   "lance_rs_mw_ano": lance(base, eco, curva_ref, q_sem),
+                   "lance_rs_mw_ano": float("nan") if args.sem_lance else lance(base, eco, curva_ref, q_sem),
                    **{f"q_{x:g}": y for x, y in zip(P, q_ref)}})
     for (familia, k), g in df.groupby(["familia", "k"], sort=False):
         g = g.set_index("p_cap_mw")
@@ -159,7 +164,7 @@ def main():
         p = com_perfil(base, familia, k)
         Q = np.array([ref.q_rs.loc[0.0]] + [g.q_rs.loc[x] for x in args.potencias])
         linhas.append({"familia": familia, "k": k, **indicadores(P, Q),
-                       "lance_rs_mw_ano": lance(p, eco, pd.DataFrame({"p_cap_mw": P, "q_rs": Q}), q_sem),
+                       "lance_rs_mw_ano": float("nan") if args.sem_lance else lance(p, eco, pd.DataFrame({"p_cap_mw": P, "q_rs": Q}), q_sem),
                        **{f"q_{x:g}": y for x, y in zip(P, Q)},
                        **{f"dq_{x:g}_pct": (y / r - 1) * 100 for x, y, r in zip(P[1:], Q[1:], q_ref[1:])}})
     res = pd.DataFrame(linhas)
