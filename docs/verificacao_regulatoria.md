@@ -27,7 +27,8 @@ Conclusão: os postos são definidos por distribuidora para a aplicação de tar
 
 - Art. 2º, XLIX, b (TUSD): "valor monetário unitário determinado pela ANEEL, em R$/MWh (reais por megawatt-hora) ou em R$/kW (reais por quilowatt)".
 - Art. 109, § 7º: "TUSDG Fio B = a parcela da TUSD aplicável a geradores conforme nível de tensão", em "Reais por quilowatt (R$/kW)". A definição lida de TUSDg Fio B **não** traz qualificador de posto tarifário, ao contrário da TUSD Fio B do consumo, definida "no posto tarifário fora de ponta".
-- Art. 216 ("modalidade tarifária geração é aplicada à central geradora") e as regras de MUST/MUSD: **só em resumo, não lidos literalmente. Não verificado.**
+- Art. 216, caput (lido na leitura completa, seção 7): modalidade geração "é caracterizada por tarifas de demanda, independentemente das horas de utilização do dia", aplicada à central geradora. Sem posto tarifário.
+- Regras de MUST/MUSD e valores da TUST: não encontrados.
 
 Sobre TUST (rede básica): a cobrança por montante de uso em R$/kW·mês **não foi confirmada em texto oficial**. A cobrança em R$/kW consta do texto secundário sobre a TUSDg, e a Portaria MME 136/2026, art. 9º, § 13, exige "contratação de Montantes de Uso do Sistema de Transmissão ou de Distribuição" (seção 6).
 
@@ -42,7 +43,7 @@ O que as fontes lidas sustentam:
 - Fontes **secundárias**, não verificadas na norma e **conflitantes entre si**: o Cenário Energia (<https://cenarioenergia.com.br/2026/06/02/aneel-aprova-marco-de-baterias-com-tarifacao-dupla-para-sistemas-sem-despacho-do-ons/>) relata, por resumo de busca, "tarifação dupla" (consumo e injeção) para sistemas sem despacho do ONS e isenção de encargos de rede na fase de carregamento para os vinculados à operação centralizada; um resultado do Canal Solar de 27/07/2026 diz que a regulação "permanece sem definição". Um documento da EPE (FAQ do LRCAP) foi citado por resumo de busca como dizendo que a REN 1.162/2026 incluiu o art. 149-A na REN 1.000/2021 e que, para o LRCAP, "deve ser considerada apenas a parcela de geração (MUSTg)". Não li o texto desses documentos.
 - Texto oficial lido: Portaria MME 136/2026, art. 9º, §§ 6º a 8º e 13 (seção 6), que liquida a carga e a injeção ao PLD na CONCAP e exige contratar montantes de uso "para permitir a descarga e a recarga total do SAE, conforme regulamentação da ANEEL".
 
-(Se for localizado o texto do art. 149-A da REN 1.000/2021 na cópia consolidada, ele é apresentado na seção 7.)
+O art. 149-A da REN 1.000/2021 não consta da cópia consolidada lida (seção 7).
 
 ## 4. Importação de energia da rede: encargos de consumo
 
@@ -99,17 +100,26 @@ Fonte: <https://www.gov.br/mme/pt-br/acesso-a-informacao/legislacao/portarias/20
 
 **Art. 5º**: "Pela disponibilidade da potência contratada, o titular do empreendimento fará jus à Receita Fixa, em R$/ano, a ser paga em doze parcelas mensais, ..."; § 2º: "Fica alocado ao empreendedor o risco relativo à incerteza de despacho do seu empreendimento pelo ONS, ..."
 
-## 7. Art. 149-A da REN 1.000/2021 (cópia consolidada)
+## 7. Art. 149-A e regras de geração na REN 1.000/2021 (cópia consolidada, fonte secundária)
 
-*(Seção preenchida abaixo, se a leitura da cópia consolidada tiver sido concluída.)*
+Fonte: <https://www.legisweb.com.br/legislacao/?id=490988> (cópia com alterações até a REN 1.174/2026, de 27/10/2026; lida quase toda, com duas lacunas de ~58 caracteres e fórmulas em imagem não lidas).
+
+- **Art. 149-A: não existe nessa cópia** (o art. 149 é seguido direto pelo art. 150). A cópia não mostra nenhuma alteração da REN 1.162/2026 na REN 1.000. Isso contradiz o que um documento da EPE teria dito (resumo de busca) e é coerente com a página da ANEEL, que só cita o art. 16-A da REN 1.071/2023. Não resolvo a divergência: só o texto oficial da REN 1.162/2026 (DOU) resolve.
+- **Art. 216, caput**: a modalidade tarifária geração "é caracterizada por tarifas de demanda, independentemente das horas de utilização do dia" e se aplica à central geradora. Isso responde à pergunta 2 (por demanda, sem diferenciação por posto), mas em fonte secundária.
+- **Art. 149, caput**: "A demanda contratada por central geradora deve ser o valor por ela declarado de sua máxima potência injetável".
+- **Art. 150**: demanda de importador/exportador "sem diferenciação por posto tarifário".
+- **Art. 127, § 3º**: gerador despachado centralizadamente pelo ONS firma também CUST com o ONS.
+- **Art. 156**: cita o MUST contratado pela supridora, só sobre prazo; nenhum valor ou fórmula de MUST/TUST foi encontrado. **MUSD, MUSTg e "SAE": ausentes** do texto lido.
+- **Encargos (CDE, Proinfa) sobre energia consumida por gerador ou armazenador**: nada encontrado na REN 1.000.
+- Armazenamento na REN 1.000 aparece só em regras de micro e minigeração (incluídas pela REN 1.059/2023), sem cobrança específica.
 
 ## 8. Tabela-resumo
 
 | Item | O que a fonte diz | URL | Muda hipótese do modelo? |
 |---|---|---|---|
 | 1. Postos ponta/fora de ponta | REN 1.000, art. 2º, XXXVIII (cópia secundária): ponta = 3 h diárias consecutivas definidas pela distribuidora; fora de ponta = horas complementares; intermediário só no grupo B. Sem menção a geradores. | <https://www.legisweb.com.br/legislacao/?id=490988> | Não, desde que a TUST de geração seja anual. Aplicável ao consumo, não confirmado para geração. Texto oficial não lido (403). |
-| 2. TUST/TUSD de geração | Em R$/kW (TUSDg Fio B, art. 109 § 7º, secundária); sem qualificador de posto no trecho lido. TUST/MUST de rede básica: não confirmado. | idem | Não contradiz a TUST em R$/kW·mês de cap3 (3.5). Falta confirmação oficial. |
-| 3. BESS: injeção e recarga | REN 1.162 não lida. Portaria art. 9º, § 13: contratar MUST/MUSD "para permitir a descarga e a recarga total". Fontes secundárias divergem (dupla cobrança × só geração). | URLs da seção 3 | Sim, em aberto. A sensibilidade "TUST de consumo também" (3.8.4) é plausível, e a base de cálculo deve ser confirmada na REN 1.162. |
+| 2. TUST/TUSD de geração | REN 1.000, art. 216 (secundária): modalidade geração "caracterizada por tarifas de demanda, independentemente das horas de utilização do dia"; art. 149: demanda contratada = máxima potência injetável. Valor da TUST de rede básica: não confirmado. | idem | Não contradiz a TUST em R$/kW·mês sem posto horário (3.5). Falta confirmação oficial. |
+| 3. BESS: injeção e recarga | REN 1.162 não lida. Portaria art. 9º, § 13: contratar MUST/MUSD "para permitir a descarga e a recarga total". Fontes secundárias divergem (dupla cobrança × só geração). Art. 149-A não consta da cópia consolidada da REN 1.000. | URLs da seção 3 | Sim, em aberto. A sensibilidade "TUST de consumo também" (3.8.4) é plausível, e a base de cálculo deve ser confirmada na REN 1.162. |
 | 4. Importação da rede | TUST consumo, CDE, Proinfa, ICMS: não encontrado. ESS rateado no consumo atendido pelo SIN, sem dependência horária no módulo 09. | CCEE módulo 09 | O adicional de R$ 250/MWh continua sem fonte. Já é declarado hipótese do autor em 3.5. |
 | 5. Perdas na rede básica | 50% consumo, 50% geração, só para usinas na Rede Básica; centro de gravidade não encontrado. | CCEE módulo 02 | Sim: o modelo não tem fator de perdas. O efeito é sobre a energia de usina ligada à Rede Básica. |
 | 5. ESS | Rateado no consumo atendido pelo SIN; geração recebe. Exceção: deslocamento por inflexibilidade. | CCEE módulo 09 | A venda ao MCP não paga ESS. A compra da rede e a recarga do BESS pagam, como consumo. Hipótese do modelo mantida para venda. |
