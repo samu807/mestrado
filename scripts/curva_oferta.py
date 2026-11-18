@@ -75,7 +75,7 @@ CASOS = {
     # Dimensionamento: eletrolisador (base 17,5 MW) e tanque de H2 no contrato de 3 t/dia (base 2 t)
     **{f"el_{str(e).replace('.', '_')}": (f"Eletrolisador {e:g} MW".replace(".", ","),
                                           {"eletrolisador": {"potencia_max_mw": float(e)}})
-       for e in (10, 25)},
+       for e in (10, 25, 35)},
     # Curva de demanda de H2 por faixas diárias: até N t/dia a R$ 35/kg (comprador de H2 renovável) e o excedente
     # a R$ 16/kg, custo do H2 fóssil (cerca de US$ 3/kg, média europeia de 5 anos, IEA GHR 2026 p. 115, pela PTAX); sem fonte de mercado no Brasil, ambos são hipóteses (sensibilidade na Seção 4.3.8)
     **{f"faixas_{n}t": (f"Demanda: {n} t/dia a R$ 35/kg, excedente a R$ 16/kg",
