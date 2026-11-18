@@ -50,7 +50,7 @@ CASOS = {
     # Custo adicional sobre a energia importada (base R$ 250/MWh): encargos, uso da rede e tributos.
     **{f"importacao_cimp_{c}": (f"Importação, adicional de R$ {c}/MWh",
                                 {"rede": {"h2_verde_estrito": False, "custo_adicional_importacao_rs_mwh": float(c)}})
-       for c in (100, 400)},
+       for c in (100, 150, 200, 400)},
     "importacao_contrato_3t": ("Contrato 3 t/dia, com importação",
                                {"rede": {"h2_verde_estrito": False},
                                 "hidrogenio": {"entrega_min_diaria_kg": 3000.0, "entrega_max_diaria_kg": 3000.0,
